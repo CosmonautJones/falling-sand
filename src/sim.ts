@@ -4,6 +4,13 @@ import { randInt, randShade } from './rng';
 
 let scanDir: 1 | -1 = 1;
 let bornBuf: Uint8Array | null = null;
+let blastKick = 0;
+
+export function consumeBlast(): number {
+  const kick = blastKick;
+  blastKick = 0;
+  return kick;
+}
 
 const N8: ReadonlyArray<readonly [number, number]> = [
   [-1, -1],
@@ -18,6 +25,7 @@ const N8: ReadonlyArray<readonly [number, number]> = [
 
 export function resetSim(): void {
   scanDir = 1;
+  blastKick = 0;
 }
 
 function heavier(src: MaterialId, dst: MaterialId): boolean {
@@ -176,6 +184,7 @@ function detonate(
   const origin = cy * 1024 + cx;
   if (hit.has(origin)) return;
   hit.add(origin);
+  blastKick = Math.max(blastKick, radius);
   const chain: Array<[number, number, number]> = [];
 
   for (let dy = -radius; dy <= radius; dy++) {

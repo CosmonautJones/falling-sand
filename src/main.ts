@@ -1,7 +1,8 @@
 import { Grid } from './grid';
 import { Renderer } from './render';
 import { Material, MATERIALS, STARTER, TRANSMUTED, type MaterialId } from './materials';
-import { step } from './sim';
+import { consumeBlast, step } from './sim';
+import { boom, chime } from './feel';
 import { BRUSH_SIZES, HEIGHT, WIDTH, seedVessel } from './world';
 import { createRite, rainFromCeiling, type RiteName } from './secrets';
 import { whisper } from './codex';
@@ -19,7 +20,9 @@ const probe = requireEl<HTMLDivElement>('#probe');
 const probeName = requireEl<HTMLSpanElement>('#probe .name');
 const probeSwatch = requireEl<HTMLSpanElement>('#probe .swatch');
 const toolbar = requireEl<HTMLDivElement>('#toolbar');
-const status = requireEl<HTMLDivElement>('#status');
+const hud = requireEl<HTMLDivElement>('#hud');
+const curtain = requireEl<HTMLDivElement>('#curtain');
+const reticle = requireEl<HTMLDivElement>('#reticle');
 const lore = requireEl<HTMLParagraphElement>('#lore');
 const title = requireEl<HTMLHeadingElement>('h1');
 const codex = requireEl<HTMLParagraphElement>('#codex');
@@ -144,6 +147,7 @@ function setPaused(next: boolean): void {
   paused = next;
   pauseButton.textContent = paused ? 'play' : 'pause';
   pauseButton.setAttribute('aria-pressed', String(paused));
+  viewport.classList.toggle('is-still', paused);
 }
 
 function selectBrush(id: MaterialId): void {
@@ -382,29 +386,21 @@ window.addEventListener('keydown', (event) => {
   }
 });
 
-function chime(): void {
-  if (typeof AudioContext === 'undefined') return;
-  try {
-    const ctx = new AudioContext();
-    const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(392, now);
-    osc.frequency.exponentialRampToValueAtTime(588, now + 0.12);
-    gain.gain.setValueAtTime(0.04, now);
-    gain.gain.exponentialRampToValueAtTime(0.0008, now + 0.28);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.3);
-    osc.addEventListener('ended', () => {
-      void ctx.close();
-    });
-  } catch {
-    // Autoplay policies may refuse the first chime.
-  }
+function liftCurtain(): void {
+  curtain.classList.add('gone');
 }
+curtain.addEventListener('click', liftCurtain);
+window.setTimeout(liftCurtain, 2200);
+
+viewport.addEventListener('pointermove', (event) => {
+  const { left, top } = viewportBox();
+  reticle.style.left = `${event.clientX - left}px`;
+  reticle.style.top = `${event.clientY - top}px`;
+  reticle.classList.add('is-on');
+});
+viewport.addEventListener('pointerleave', () => {
+  reticle.classList.remove('is-on');
+});
 
 let frames = 0;
 let lastSample = performance.now();
@@ -425,6 +421,11 @@ function frame(now: number): void {
       acc -= STEP_MS;
       steps++;
     }
+    const kick = consumeBlast();
+    if (kick > 0) {
+      renderer.kick(Math.min(1, kick / 6));
+      boom(kick);
+    }
     if (now - lastStar > 45000) {
       lastStar = now;
       rainFromCeiling(grid, Material.Ember, 1);
@@ -441,7 +442,7 @@ function frame(now: number): void {
     const halt = paused ? ' · paused' : '';
     const rate = speed === 1 ? '' : ` · ${speed}×`;
     const z = view.zoom === 1 ? '' : ` · ${view.zoom.toFixed(1)}×`;
-    status.textContent = `${WIDTH}×${HEIGHT} · ${fps.toFixed(0)} fps · ${MATERIALS[brush].name} · size ${brushRadius}${rate}${z}${halt}${find}`;
+    hud.textContent = `${WIDTH}×${HEIGHT} · ${fps.toFixed(0)} fps · ${MATERIALS[brush].name} · size ${brushRadius}${rate}${z}${halt}${find}`;
     frames = 0;
     lastSample = now;
   }

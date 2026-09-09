@@ -32,13 +32,18 @@ describe('shipped page', () => {
     expect(html).toMatch(/id="codex"/);
     expect(html).toMatch(/id="viewport"/);
     expect(html).toMatch(/id="probe"/);
+    expect(html).toMatch(/id="curtain"/);
+    expect(html).toMatch(/id="hud"/);
+    expect(html).toMatch(/id="still"/);
     expect(main).toMatch(/zoomAt|wheel|panBy/);
     expect(main).toMatch(/probe|#probe/);
+    expect(main).toMatch(/consumeBlast/);
 
     const stage = readFileSync(new URL('./stage.ts', import.meta.url), 'utf8');
     expect(stage).toMatch(/from ['"]three['"]/);
     expect(stage).toMatch(/ShaderMaterial|DataTexture/);
     expect(stage).toMatch(/uWonder|caustic|heat/);
+    expect(stage).toMatch(/uShake/);
   });
 
 });

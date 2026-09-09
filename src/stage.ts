@@ -16,6 +16,7 @@ uniform vec2 uGrid;
 uniform float uTime;
 uniform float uGlow;
 uniform float uWonder;
+uniform float uShake;
 in vec2 vUv;
 out vec4 fragColor;
 
@@ -32,6 +33,7 @@ void main() {
   vec2 uv = vUv;
   uv.x += sin(vUv.y * 28.0 + uTime * 0.09) * heat * 0.0035 * uGlow;
   uv.y += cos(vUv.x * 22.0 + uTime * 0.07) * heat * 0.002 * uGlow;
+  uv += (vec2(hash(vec2(uTime, 2.1)), hash(vec2(uTime, 7.7))) - 0.5) * uShake * 0.014;
 
   vec3 c = texture(uMap, uv).rgb;
 
@@ -75,6 +77,10 @@ void main() {
 
   float g = hash(uv * uGrid + uTime);
   c += (g - 0.5) * 0.03 * uGlow;
+  c += vec3(1.0, 0.62, 0.28) * uShake * 0.09;
+  float ca = uShake * 0.0035;
+  c.r = mix(c.r, texture(uMap, uv + vec2(ca, 0.0)).r, 0.55 * uShake);
+  c.b = mix(c.b, texture(uMap, uv - vec2(ca, 0.0)).b, 0.55 * uShake);
 
   fragColor = vec4(c, 1.0);
 }
@@ -98,6 +104,7 @@ export class Stage {
     uTime: { value: number };
     uGlow: { value: number };
     uWonder: { value: number };
+    uShake: { value: number };
   } | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
   private image: ImageData | null = null;
@@ -138,6 +145,7 @@ export class Stage {
       uTime: { value: 0 },
       uGlow: { value: 1 },
       uWonder: { value: 0 },
+      uShake: { value: 0 },
     };
     const material = new THREE.ShaderMaterial({
       uniforms,
@@ -182,13 +190,14 @@ export class Stage {
     this.gl.setSize(w, h, false);
   }
 
-  present(pixels: Uint8ClampedArray, glow: number, wonder = 0): void {
+  present(pixels: Uint8ClampedArray, glow: number, wonder = 0, shake = 0): void {
     if (this.gl && this.tex && this.texData && this.uniforms && this.scene && this.camera) {
       this.texData.set(pixels);
       this.tex.needsUpdate = true;
       this.uniforms.uTime.value += 1;
       this.uniforms.uGlow.value = glow;
       this.uniforms.uWonder.value = wonder;
+      this.uniforms.uShake.value = shake;
       this.syncSize();
       this.gl.render(this.scene, this.camera);
       return;

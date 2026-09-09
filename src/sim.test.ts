@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { Grid } from './grid';
 import { Material } from './materials';
 import { seedRng } from './rng';
-import { resetSim, step } from './sim';
+import { consumeBlast, resetSim, step } from './sim';
 
 function positions(grid: Grid, material: number): Array<{ x: number; y: number }> {
   const out: Array<{ x: number; y: number }> = [];
@@ -655,6 +655,8 @@ describe('step', () => {
     for (let i = 0; i < 4; i++) step(grid);
     expect(grid.count(Material.Tnt)).toBe(0);
     expect(grid.count(Material.Sand)).toBeLessThan(sandBefore);
+    expect(consumeBlast()).toBeGreaterThan(0);
+    expect(consumeBlast()).toBe(0);
   });
 
   it('leaves obsidian standing through a tnt blast', () => {

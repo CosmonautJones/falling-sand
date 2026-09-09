@@ -142,6 +142,7 @@ export class Renderer {
   private readonly stage: Stage;
   private tick = 0;
   private wonder = 0;
+  private shake = 0;
   private readonly still: boolean;
 
   constructor(canvas: HTMLCanvasElement, grid: Grid) {
@@ -156,10 +157,17 @@ export class Renderer {
     if (!this.still) this.tick++;
     const tick = this.still ? 0 : this.tick;
     blitGrid(this.grid, this.data, tick);
-    this.stage.present(this.data, this.still ? 0 : 1, this.wonder);
+    this.stage.present(this.data, this.still ? 0 : 1, this.wonder, this.still ? 0 : this.shake);
+    this.shake *= 0.78;
+    if (this.shake < 0.012) this.shake = 0;
   }
 
   setWonder(on: boolean): void {
     this.wonder = on ? 1 : 0;
+  }
+
+  kick(amount: number): void {
+    if (this.still) return;
+    this.shake = Math.min(1, this.shake + amount);
   }
 }
