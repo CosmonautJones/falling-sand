@@ -1,4 +1,4 @@
-import { Material, SHADE_RANGE, type MaterialId } from './materials';
+import { Material, SHADE_RANGE, seedHeat, HEAT_AMBIENT, type MaterialId } from './materials';
 import { randShade } from './rng';
 
 /**
@@ -15,6 +15,8 @@ export class Grid {
   readonly height: number;
   readonly cells: Uint8Array;
   readonly shades: Int8Array;
+  /** Lagrangian temperature, 0–255, swapped with the grain. */
+  readonly heat: Uint8Array;
 
   constructor(width: number, height: number) {
     if (!Number.isInteger(width) || width <= 0) {
@@ -27,6 +29,8 @@ export class Grid {
     this.height = height;
     this.cells = new Uint8Array(width * height);
     this.shades = new Int8Array(width * height);
+    this.heat = new Uint8Array(width * height);
+    this.heat.fill(HEAT_AMBIENT[Material.Air]);
   }
 
   index(x: number, y: number): number {
@@ -47,11 +51,17 @@ export class Grid {
     return this.shades[this.index(x, y)];
   }
 
+  getHeat(x: number, y: number): number {
+    if (!this.inBounds(x, y)) return HEAT_AMBIENT[Material.Stone];
+    return this.heat[this.index(x, y)];
+  }
+
   set(x: number, y: number, material: MaterialId, shade = 0): void {
     if (!this.inBounds(x, y)) return;
     const i = this.index(x, y);
     this.cells[i] = material;
     this.shades[i] = shade;
+    this.heat[i] = seedHeat(material);
   }
 
   swap(ax: number, ay: number, bx: number, by: number): void {
@@ -64,6 +74,9 @@ export class Grid {
     const shade = this.shades[a];
     this.shades[a] = this.shades[b];
     this.shades[b] = shade;
+    const t = this.heat[a];
+    this.heat[a] = this.heat[b];
+    this.heat[b] = t;
   }
 
   /** Paint a filled circle of `material` centred on (cx, cy). */
@@ -113,6 +126,7 @@ export class Grid {
   clear(): void {
     this.cells.fill(Material.Air);
     this.shades.fill(0);
+    this.heat.fill(HEAT_AMBIENT[Material.Air]);
   }
 
   /** Count of cells holding `material`. Used by tests to assert conservation. */

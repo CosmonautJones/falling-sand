@@ -23,7 +23,7 @@ function isAir(id: number): boolean {
  * Neighbor occlusion darkens settled piles so dunes read as volume, not flat fill.
  */
 export function blitGrid(grid: Grid, data: Uint8ClampedArray, tick = 0): void {
-  const { cells, shades, width, height } = grid;
+  const { cells, shades, heat, width, height } = grid;
   for (let i = 0; i < cells.length; i++) {
     const mat = cells[i] as MaterialId;
     let [r, g, b] = rgbFor(mat, shades[i]);
@@ -104,6 +104,37 @@ export function blitGrid(grid: Grid, data: Uint8ClampedArray, tick = 0): void {
       r = clampByte(236);
       g = clampByte(214);
       b = clampByte(168);
+    }
+
+    if (mat === Material.Mite && shades[i] >= 64) {
+      r = clampByte(r + 36);
+      g = clampByte(g + 18);
+      b = clampByte(b - 8);
+    }
+
+    if (mat === Material.Minnow && tick !== 0) {
+      const dart = ((i * 11 + tick * 5) & 7) - 3;
+      g = clampByte(g + dart + 4);
+      b = clampByte(b + dart + 6);
+    }
+
+    if (mat === Material.Bloom && tick !== 0) {
+      const pulse = ((i * 17 + tick * 3) & 15) - 4;
+      r = clampByte(r + pulse + 8);
+      b = clampByte(b + pulse);
+    }
+
+    const temp = heat[i];
+    if (temp > 64 && mat !== Material.Fire && mat !== Material.Lava && mat !== Material.Ember) {
+      const q = (temp - 64) >> 3;
+      r = clampByte(r + q);
+      b = clampByte(b - (q >> 1));
+    }
+
+    if (mat === Material.Pearl && (y === 0 || isAir(cells[i - width]))) {
+      r = clampByte(r + 24);
+      g = clampByte(g + 20);
+      b = clampByte(b + 16);
     }
 
     if (mat === Material.Acid && tick !== 0) {

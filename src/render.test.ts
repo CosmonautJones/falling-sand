@@ -15,7 +15,12 @@ function uniqueRgb(grid: Grid, data: Uint8ClampedArray, material: number): Set<s
   return unique;
 }
 
-function nearBase(data: Uint8ClampedArray, offset: number, base: readonly [number, number, number], slack: number): void {
+function nearBase(
+  data: Uint8ClampedArray,
+  offset: number,
+  base: readonly [number, number, number],
+  slack: number,
+): void {
   expect(Math.abs(data[offset] - base[0])).toBeLessThanOrEqual(slack);
   expect(Math.abs(data[offset + 1] - base[1])).toBeLessThanOrEqual(slack);
   expect(Math.abs(data[offset + 2] - base[2])).toBeLessThanOrEqual(slack);
@@ -64,11 +69,13 @@ describe('grain colour', () => {
     expect(used).not.toContain(MATERIALS[Material.Fire].color.join(','));
     expect(used).not.toContain(MATERIALS[Material.Plant].color.join(','));
     expect(used).not.toContain(MATERIALS[Material.Oil].color.join(','));
-    expect(new Set([
-      MATERIALS[Material.Fire].color.join(','),
-      MATERIALS[Material.Plant].color.join(','),
-      MATERIALS[Material.Oil].color.join(','),
-    ]).size).toBe(3);
+    expect(
+      new Set([
+        MATERIALS[Material.Fire].color.join(','),
+        MATERIALS[Material.Plant].color.join(','),
+        MATERIALS[Material.Oil].color.join(','),
+      ]).size,
+    ).toBe(3);
     const extra = [
       Material.Seed,
       Material.Ash,
@@ -96,6 +103,10 @@ describe('grain colour', () => {
       Material.Rift,
       Material.Tnt,
       Material.Nitro,
+      Material.Mite,
+      Material.Minnow,
+      Material.Bloom,
+      Material.Pearl,
     ].map((id) => MATERIALS[id].color.join(','));
     expect(new Set(extra).size).toBe(extra.length);
     for (const c of extra) expect(used).not.toContain(c);
@@ -135,7 +146,9 @@ describe('grain colour', () => {
     blitGrid(grid, after);
     const dest = grid.index(2, 1) * 4;
     expect([after[dest], after[dest + 1], after[dest + 2]]).toEqual(rgb);
-    expect([after[src], after[src + 1], after[src + 2]]).toEqual([...MATERIALS[Material.Air].color]);
+    expect([after[src], after[src + 1], after[src + 2]]).toEqual([
+      ...MATERIALS[Material.Air].color,
+    ]);
   });
 
   it('darkens settled sand against neighbors while a lone grain stays undimmed', () => {

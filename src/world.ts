@@ -10,14 +10,7 @@ function grain(id: MaterialId): number {
   return randShade(SHADE_RANGE[id]);
 }
 
-function fill(
-  grid: Grid,
-  x0: number,
-  y0: number,
-  x1: number,
-  y1: number,
-  id: MaterialId,
-): void {
+function fill(grid: Grid, x0: number, y0: number, x1: number, y1: number, id: MaterialId): void {
   for (let y = y0; y <= y1; y++) {
     for (let x = x0; x <= x1; x++) {
       grid.set(x, y, id, grain(id));
@@ -46,6 +39,18 @@ export function seedVessel(grid: Grid): void {
   grid.paint(sandX + sandR, ground - 1, Math.round(sandR * 0.55), Material.Sand);
   grid.set(sandX - 8, ground - sandR - 2, Material.Seed, grain(Material.Seed));
   grid.set(sandX - 5, ground - sandR, Material.Seed, grain(Material.Seed));
+  const duneTop = Math.max(1, ground - sandR);
+  grid.set(sandX, duneTop + 1, Material.Mite, grain(Material.Mite));
+  grid.set(sandX + 3, duneTop + 3, Material.Mite, grain(Material.Mite));
+  grid.set(sandX - 2, ground - 3, Material.Mite, grain(Material.Mite));
+  grid.set(sandX + 6, ground - 2, Material.Mite, grain(Material.Mite));
+  const gx = Math.min(w - wallN - 6, sandX + sandR + 2);
+  grid.set(gx, ground - 1, Material.Mud, grain(Material.Mud));
+  grid.set(gx + 1, ground - 1, Material.Mud, grain(Material.Mud));
+  grid.set(gx, ground - 2, Material.Plant, grain(Material.Plant));
+  grid.set(gx + 1, ground - 2, Material.Plant, grain(Material.Plant));
+  grid.set(gx + 2, ground - 2, Material.Plant, grain(Material.Plant));
+  grid.set(gx + 2, ground - 1, Material.Water, grain(Material.Water));
 
   const wx0 = Math.round(w * 0.4);
   const wx1 = Math.round(w * 0.56);
@@ -53,6 +58,9 @@ export function seedVessel(grid: Grid): void {
   fill(grid, wx0, ground - trough - 3, wx0, ground - 1, Material.Stone);
   fill(grid, wx1, ground - trough - 3, wx1, ground - 1, Material.Stone);
   fill(grid, wx0 + 1, ground - trough + 1, wx1 - 1, ground - 1, Material.Water);
+  const mx = Math.round((wx0 + wx1) / 2);
+  grid.set(mx, ground - 2, Material.Minnow, grain(Material.Minnow));
+  grid.set(mx + 2, ground - 3, Material.Minnow, grain(Material.Minnow));
 
   const woodX = Math.round(w * 0.62);
   grid.paint(woodX, ground - 3, Math.max(4, Math.round(w * 0.012)), Material.Wood);
@@ -85,7 +93,12 @@ export function seedVessel(grid: Grid): void {
   fill(grid, lx - cupW, cupBottom, lx + cupW, cupBottom, Material.Glass);
   fill(grid, lx - cupW, cupBottom, lx - cupW, ground - 1, Material.Glass);
   fill(grid, lx + cupW, cupBottom, lx + cupW, ground - 1, Material.Glass);
-  grid.paint(lx, ground - Math.max(5, Math.round(cupH * 0.45)), Math.max(3, cupW - 7), Material.Lava);
+  grid.paint(
+    lx,
+    ground - Math.max(5, Math.round(cupH * 0.45)),
+    Math.max(3, cupW - 7),
+    Material.Lava,
+  );
 
   if (w >= 40 && h >= 40) {
     const px = wallN + 6;

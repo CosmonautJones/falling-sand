@@ -20,6 +20,10 @@ const LINES: Partial<Record<MaterialId, string>> = {
   [Material.Brick]: 'Mud remembers fire and stands.',
   [Material.Rift]: 'A door of night. What falls in forgets its name.',
   [Material.Nitro]: 'Oil drinks powder and waits for a spark.',
+  [Material.Mite]: 'A grain with legs. It steals.',
+  [Material.Minnow]: 'The trough keeps a silver thought.',
+  [Material.Bloom]: 'The thicket shows its throat.',
+  [Material.Pearl]: 'A minnow dreamed of crystal and woke with a moon.',
 };
 
 export function whisper(id: MaterialId): string {

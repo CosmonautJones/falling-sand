@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  HEAT_CONDUCT,
   isMaterialId,
   Material,
   MATERIALS,
@@ -22,31 +23,39 @@ describe('materials', () => {
   });
 
   it('starts with ice, wood, salt, and lava on the bench, and hides steam-born reagents', () => {
-    expect(STARTER).toEqual(expect.arrayContaining([
-      Material.Ice,
-      Material.Wood,
-      Material.Salt,
-      Material.Lava,
-      Material.Acid,
-      Material.Lead,
-      Material.Tnt,
-    ]));
-    expect(TRANSMUTED).toEqual(expect.arrayContaining([
-      Material.Steam,
-      Material.Ember,
-      Material.Obsidian,
-      Material.Brine,
-      Material.Crystal,
-      Material.Mercury,
-      Material.Gold,
-      Material.Aether,
-      Material.Azoth,
-      Material.Void,
-      Material.Powder,
-      Material.Brick,
-      Material.Rift,
-      Material.Nitro,
-    ]));
+    expect(STARTER).toEqual(
+      expect.arrayContaining([
+        Material.Ice,
+        Material.Wood,
+        Material.Salt,
+        Material.Lava,
+        Material.Acid,
+        Material.Lead,
+        Material.Tnt,
+      ]),
+    );
+    expect(TRANSMUTED).toEqual(
+      expect.arrayContaining([
+        Material.Steam,
+        Material.Ember,
+        Material.Obsidian,
+        Material.Brine,
+        Material.Crystal,
+        Material.Mercury,
+        Material.Gold,
+        Material.Aether,
+        Material.Azoth,
+        Material.Void,
+        Material.Powder,
+        Material.Brick,
+        Material.Rift,
+        Material.Nitro,
+        Material.Mite,
+        Material.Minnow,
+        Material.Bloom,
+        Material.Pearl,
+      ]),
+    );
     for (const id of TRANSMUTED) expect(STARTER).not.toContain(id);
   });
 
@@ -76,5 +85,18 @@ describe('materials', () => {
     expect(MATERIALS[Material.Rift].kind).toBe('static');
     expect(MATERIALS[Material.Tnt].kind).toBe('static');
     expect(MATERIALS[Material.Nitro].kind).toBe('liquid');
+    expect(MATERIALS[Material.Mite].kind).toBe('powder');
+    expect(MATERIALS[Material.Minnow].kind).toBe('powder');
+    expect(MATERIALS[Material.Bloom].kind).toBe('static');
+    expect(MATERIALS[Material.Pearl].kind).toBe('static');
+    expect(MATERIALS[Material.Mite].density).toBeLessThan(MATERIALS[Material.Sand].density);
+    expect(MATERIALS[Material.Minnow].density).toBeLessThan(MATERIALS[Material.Water].density);
+  });
+
+  it('keeps thermal diffusivity inside the CFL bound of the heat step', () => {
+    for (const id of Object.values(Material)) {
+      expect(HEAT_CONDUCT[id]).toBeGreaterThanOrEqual(0);
+      expect(HEAT_CONDUCT[id]).toBeLessThanOrEqual(8);
+    }
   });
 });

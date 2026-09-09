@@ -53,6 +53,14 @@ describe('Grid', () => {
     expect(grid.getShade(2, 2)).toBe(9);
   });
 
+  it('swap moves heat with the material', () => {
+    const grid = new Grid(4, 4);
+    grid.set(1, 1, Material.Sand);
+    grid.heat[grid.index(1, 1)] = 150;
+    grid.swap(1, 1, 2, 2);
+    expect(grid.getHeat(2, 2)).toBe(150);
+  });
+
   it('leaves the grid untouched when a swap target is out of bounds', () => {
     const grid = new Grid(4, 4);
     grid.set(0, 0, Material.Sand);
@@ -84,7 +92,6 @@ describe('Grid', () => {
     expect(grid.get(5, 5)).toBe(Material.Stone);
     expect(grid.get(3, 3)).toBe(Material.Stone);
   });
-
 
   it('clears back to air', () => {
     const grid = new Grid(4, 4);

@@ -22,5 +22,7 @@ describe('vessel', () => {
     expect(grid.count(Material.Lava)).toBeGreaterThan(4);
     expect(grid.count(Material.Salt)).toBeGreaterThan(4);
     expect(grid.count(Material.Seed)).toBeGreaterThan(0);
+    expect(grid.count(Material.Mite)).toBeGreaterThan(0);
+    expect(grid.count(Material.Minnow)).toBeGreaterThan(0);
   });
 });

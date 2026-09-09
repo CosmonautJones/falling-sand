@@ -1,10 +1,28 @@
 import { Grid } from './grid';
-import { Material, MATERIALS, SHADE_RANGE, type MaterialId } from './materials';
+import {
+  HEAT_AMBIENT,
+  HEAT_CONDUCT,
+  HEAT_SOURCE,
+  Material,
+  MATERIALS,
+  SHADE_RANGE,
+  type MaterialId,
+} from './materials';
 import { randInt, randShade } from './rng';
 
 let scanDir: 1 | -1 = 1;
 let bornBuf: Uint8Array | null = null;
+let heatBuf: Uint8Array | null = null;
 let blastKick = 0;
+
+const CONDUCT = new Uint8Array(256);
+const AMBIENT = new Uint8Array(256);
+const SOURCE = new Uint8Array(256);
+for (const id of Object.values(Material)) {
+  CONDUCT[id] = HEAT_CONDUCT[id];
+  AMBIENT[id] = HEAT_AMBIENT[id];
+  SOURCE[id] = HEAT_SOURCE[id];
+}
 
 export function consumeBlast(): number {
   const kick = blastKick;
@@ -122,8 +140,12 @@ function hasNeighbor(grid: Grid, x: number, y: number, want: MaterialId): boolea
 
 function transmute(grid: Grid, x: number, y: number, into: MaterialId, born: Uint8Array): void {
   if (!grid.inBounds(x, y)) return;
+  const i = grid.index(x, y);
+  const prev = grid.heat[i];
   grid.set(x, y, into, randShade(SHADE_RANGE[into]));
-  born[grid.index(x, y)] = 1;
+  const kept = prev > 20 ? prev - 20 : prev;
+  if (kept > grid.heat[i]) grid.heat[i] = kept;
+  born[i] = 1;
 }
 
 function wetNeighbor(grid: Grid, x: number, y: number): boolean {
@@ -144,10 +166,18 @@ function growPlant(grid: Grid, x: number, y: number, born: Uint8Array): void {
     if (n === Material.Air) air.push([nx, ny]);
     if (n === Material.Air || n === Material.Water) grow.push([nx, ny]);
   }
-  if (wet && plants >= 2 && air.length > 0 && randInt(6) === 0) {
-    const [nx, ny] = air[randInt(air.length)];
-    transmute(grid, nx, ny, Material.Seed, born);
-    return;
+  if (wet && plants >= 2 && air.length > 0) {
+    const roll = randInt(6);
+    if (roll === 0) {
+      const [nx, ny] = air[randInt(air.length)];
+      transmute(grid, nx, ny, Material.Seed, born);
+      return;
+    }
+    if (roll === 1) {
+      const [nx, ny] = air[randInt(air.length)];
+      transmute(grid, nx, ny, Material.Bloom, born);
+      return;
+    }
   }
   if (!wet || grow.length === 0) return;
   const [nx, ny] = grow[randInt(grow.length)];
@@ -224,7 +254,7 @@ function detonate(
 
 function igniteCell(grid: Grid, nx: number, ny: number, n: MaterialId, born: Uint8Array): boolean {
   if (!grid.inBounds(nx, ny)) return false;
-  if (n === Material.Plant || n === Material.Oil || n === Material.Seed) {
+  if (n === Material.Plant || n === Material.Oil || n === Material.Seed || n === Material.Bloom) {
     transmute(grid, nx, ny, Material.Fire, born);
     return true;
   }
@@ -314,7 +344,13 @@ function cookLava(grid: Grid, x: number, y: number, born: Uint8Array): boolean {
       transmute(grid, nx, ny, Material.Lava, born);
     }
     if (n === Material.Sand) transmute(grid, nx, ny, Material.Glass, born);
-    if (n === Material.Plant || n === Material.Wood || n === Material.Seed || n === Material.Oil) {
+    if (
+      n === Material.Plant ||
+      n === Material.Wood ||
+      n === Material.Seed ||
+      n === Material.Oil ||
+      n === Material.Bloom
+    ) {
       transmute(grid, nx, ny, Material.Fire, born);
     }
   }
@@ -341,7 +377,15 @@ function cookAcid(grid: Grid, x: number, y: number, born: Uint8Array): boolean {
       transmute(grid, nx, ny, ore, born);
       return false;
     }
-    if (n === Material.Plant || n === Material.Wood || n === Material.Moss || n === Material.Mud) {
+    if (
+      n === Material.Plant ||
+      n === Material.Wood ||
+      n === Material.Moss ||
+      n === Material.Mud ||
+      n === Material.Bloom ||
+      n === Material.Mite ||
+      n === Material.Minnow
+    ) {
       transmute(grid, nx, ny, Material.Air, born);
       return false;
     }
@@ -364,13 +408,26 @@ function devour(grid: Grid, x: number, y: number, born: Uint8Array): void {
       n === Material.Void ||
       n === Material.Crystal ||
       n === Material.Rift ||
-      n === Material.Brick
+      n === Material.Brick ||
+      n === Material.Pearl
     ) {
       continue;
     }
     const life =
-      n === Material.Plant || n === Material.Wood || n === Material.Seed || n === Material.Moss;
-    transmute(grid, nx, ny, life && !hasNeighbor(grid, x, y, Material.Azoth) ? Material.Void : Material.Air, born);
+      n === Material.Plant ||
+      n === Material.Wood ||
+      n === Material.Seed ||
+      n === Material.Moss ||
+      n === Material.Bloom ||
+      n === Material.Mite ||
+      n === Material.Minnow;
+    transmute(
+      grid,
+      nx,
+      ny,
+      life && !hasNeighbor(grid, x, y, Material.Azoth) ? Material.Void : Material.Air,
+      born,
+    );
     return;
   }
 }
@@ -477,7 +534,8 @@ function riftPull(grid: Grid, x: number, y: number, born: Uint8Array): void {
       n === Material.Crystal ||
       n === Material.Gold ||
       n === Material.Stone ||
-      n === Material.Brick
+      n === Material.Brick ||
+      n === Material.Pearl
     ) {
       continue;
     }
@@ -492,10 +550,305 @@ function freezeWater(grid: Grid, x: number, y: number, born: Uint8Array): void {
     const ny = y + dy;
     if (!grid.inBounds(nx, ny)) continue;
     if (born[grid.index(nx, ny)]) continue;
-    if (grid.get(nx, ny) === Material.Water && randInt(6) === 0) {
-      transmute(grid, nx, ny, Material.Ice, born);
+    if (grid.get(nx, ny) !== Material.Water) continue;
+    if (grid.heat[grid.index(nx, ny)] >= 40) continue;
+    if (randInt(6) === 0) transmute(grid, nx, ny, Material.Ice, born);
+  }
+}
+
+const CARRY_SHADE = 90;
+
+function isCarrying(grid: Grid, x: number, y: number): boolean {
+  return grid.getShade(x, y) >= 64;
+}
+
+function isHeat(n: MaterialId): boolean {
+  return n === Material.Fire || n === Material.Lava || n === Material.Ember || n === Material.Acid;
+}
+
+function isForage(n: MaterialId): boolean {
+  return n === Material.Plant || n === Material.Bloom || n === Material.Moss;
+}
+
+function gatherAir(grid: Grid, x: number, y: number): Array<[number, number]> {
+  const air: Array<[number, number]> = [];
+  for (const [dx, dy] of N8) {
+    const nx = x + dx;
+    const ny = y + dy;
+    if (grid.inBounds(nx, ny) && grid.get(nx, ny) === Material.Air) air.push([nx, ny]);
+  }
+  return air;
+}
+
+function tryCritterStep(
+  grid: Grid,
+  x: number,
+  y: number,
+  nx: number,
+  ny: number,
+  born: Uint8Array,
+): boolean {
+  if (!grid.inBounds(nx, ny)) return false;
+  const dst = grid.get(nx, ny);
+  if (
+    dst !== Material.Air &&
+    dst !== Material.Sand &&
+    dst !== Material.Water &&
+    dst !== Material.Ash &&
+    dst !== Material.Brine
+  ) {
+    return false;
+  }
+  grid.swap(x, y, nx, ny);
+  markBorn(grid, born, nx, ny);
+  return true;
+}
+
+function miteDestScore(grid: Grid, nx: number, ny: number, carrying: boolean): number {
+  let s = grid.get(nx, ny) === Material.Air ? 2 : grid.get(nx, ny) === Material.Sand ? 1 : 0;
+  const under = grid.get(nx, ny + 1);
+  if (
+    under !== Material.Air &&
+    under !== Material.Steam &&
+    under !== Material.Aether &&
+    under !== Material.Fire
+  ) {
+    s += 4;
+  }
+  for (const [dx, dy] of N8) {
+    const n = grid.get(nx + dx, ny + dy);
+    if (isForage(n)) s += 8;
+    if (n === Material.Gold && carrying) s += 6;
+    if (isHeat(n)) s -= 14;
+    if (n === Material.Minnow) s -= 4;
+  }
+  return s;
+}
+
+function pickBest(scored: Array<[number, number, number]>): [number, number] | null {
+  if (scored.length === 0) return null;
+  let best = scored[0][2];
+  for (const row of scored) if (row[2] > best) best = row[2];
+  const ties = scored.filter((row) => row[2] === best);
+  const [nx, ny] = ties[randInt(ties.length)];
+  return [nx, ny];
+}
+
+function miteWalk(grid: Grid, x: number, y: number, born: Uint8Array, carrying: boolean): boolean {
+  const scored: Array<[number, number, number]> = [];
+  for (const [dx, dy] of N8) {
+    const nx = x + dx;
+    const ny = y + dy;
+    if (!grid.inBounds(nx, ny)) continue;
+    const dst = grid.get(nx, ny);
+    if (
+      dst !== Material.Air &&
+      dst !== Material.Sand &&
+      dst !== Material.Water &&
+      dst !== Material.Ash &&
+      dst !== Material.Brine
+    ) {
+      continue;
+    }
+    scored.push([nx, ny, miteDestScore(grid, nx, ny, carrying)]);
+  }
+  const dest = pickBest(scored);
+  if (!dest) return false;
+  return tryCritterStep(grid, x, y, dest[0], dest[1], born);
+}
+
+function dropHoard(grid: Grid, x: number, y: number, born: Uint8Array): boolean {
+  const scored: Array<[number, number, number]> = [];
+  for (const [dx, dy] of N8) {
+    const nx = x + dx;
+    const ny = y + dy;
+    if (!grid.inBounds(nx, ny)) continue;
+    if (grid.get(nx, ny) !== Material.Air) continue;
+    scored.push([nx, ny, hasNeighbor(grid, nx, ny, Material.Gold) ? 2 : 0]);
+  }
+  const dest = pickBest(scored);
+  if (!dest) return false;
+  transmute(grid, dest[0], dest[1], Material.Gold, born);
+  grid.set(x, y, Material.Mite, randShade(SHADE_RANGE[Material.Mite]));
+  return true;
+}
+
+function miteAct(grid: Grid, x: number, y: number, born: Uint8Array): boolean {
+  let heat = false;
+  let food: [number, number] | null = null;
+  let gold: [number, number] | null = null;
+  let kin = false;
+  for (const [dx, dy] of N8) {
+    const nx = x + dx;
+    const ny = y + dy;
+    if (!grid.inBounds(nx, ny)) continue;
+    const n = grid.get(nx, ny);
+    if (isHeat(n)) heat = true;
+    if (isForage(n) && !food) food = [nx, ny];
+    if (n === Material.Gold && !gold) gold = [nx, ny];
+    if (n === Material.Mite) kin = true;
+  }
+
+  if (heat) {
+    if (miteWalk(grid, x, y, born, isCarrying(grid, x, y))) return true;
+    transmute(grid, x, y, Material.Ash, born);
+    return true;
+  }
+
+  if (food) {
+    transmute(grid, food[0], food[1], Material.Air, born);
+    const air = gatherAir(grid, x, y);
+    if (kin && air.length > 0 && randInt(5) === 0) {
+      const [nx, ny] = air[randInt(air.length)];
+      transmute(grid, nx, ny, Material.Mite, born);
+    }
+    return true;
+  }
+
+  const carrying = isCarrying(grid, x, y);
+  if (carrying && gold && dropHoard(grid, x, y, born)) return true;
+  if (!carrying && gold) {
+    transmute(grid, gold[0], gold[1], Material.Air, born);
+    grid.set(x, y, Material.Mite, CARRY_SHADE);
+    return true;
+  }
+
+  const below = grid.get(x, y + 1);
+  const hanging =
+    below === Material.Air ||
+    below === Material.Steam ||
+    below === Material.Fire ||
+    below === Material.Aether;
+  if (hanging) {
+    let cling = false;
+    for (const [dx, dy] of N8) {
+      const nx = x + dx;
+      const ny = y + dy;
+      if (!grid.inBounds(nx, ny)) continue;
+      const n = grid.get(nx, ny);
+      if (
+        n === Material.Sand ||
+        n === Material.Stone ||
+        n === Material.Wood ||
+        n === Material.Glass ||
+        n === Material.Mud ||
+        n === Material.Plant ||
+        n === Material.Bloom ||
+        n === Material.Gold ||
+        n === Material.Pearl ||
+        n === Material.Brick ||
+        n === Material.Obsidian ||
+        n === Material.Ice ||
+        n === Material.Moss
+      ) {
+        cling = true;
+        break;
+      }
+    }
+    if (!cling) return false;
+  }
+
+  if (randInt(3) !== 0) return true;
+  miteWalk(grid, x, y, born, carrying);
+  return true;
+}
+
+function minnowScore(grid: Grid, nx: number, ny: number): number {
+  let s = 0;
+  for (const [dx, dy] of N8) {
+    const n = grid.get(nx + dx, ny + dy);
+    if (n === Material.Minnow) s += 5;
+    if (n === Material.Mite) s += 3;
+    if (n === Material.Crystal) s += 2;
+    if (n === Material.Pearl) s += 1;
+    if (
+      n === Material.Oil ||
+      n === Material.Lava ||
+      n === Material.Fire ||
+      n === Material.Acid ||
+      n === Material.Nitro
+    ) {
+      s -= 20;
     }
   }
+  return s;
+}
+
+function minnowAct(grid: Grid, x: number, y: number, born: Uint8Array): boolean {
+  let hurt = false;
+  let mite: [number, number] | null = null;
+  let crystal = false;
+  let kin = false;
+  const water: Array<[number, number]> = [];
+  for (const [dx, dy] of N8) {
+    const nx = x + dx;
+    const ny = y + dy;
+    if (!grid.inBounds(nx, ny)) continue;
+    const n = grid.get(nx, ny);
+    if (
+      n === Material.Oil ||
+      n === Material.Lava ||
+      n === Material.Fire ||
+      n === Material.Acid ||
+      n === Material.Nitro
+    ) {
+      hurt = true;
+    }
+    if (n === Material.Mite && !mite) mite = [nx, ny];
+    if (n === Material.Crystal) crystal = true;
+    if (n === Material.Minnow) kin = true;
+    if (n === Material.Water || n === Material.Brine) water.push([nx, ny]);
+  }
+
+  if (hurt) {
+    transmute(grid, x, y, Material.Ash, born);
+    return true;
+  }
+  if (mite) {
+    transmute(grid, mite[0], mite[1], Material.Water, born);
+    return true;
+  }
+  if (crystal && randInt(6) === 0) {
+    const air = gatherAir(grid, x, y);
+    if (air.length > 0) {
+      const [nx, ny] = air[randInt(air.length)];
+      transmute(grid, nx, ny, Material.Pearl, born);
+      return true;
+    }
+    if (water.length > 0) {
+      const [nx, ny] = water[randInt(water.length)];
+      transmute(grid, nx, ny, Material.Pearl, born);
+      return true;
+    }
+  }
+  if (water.length === 0) {
+    return kin;
+  }
+
+  const scored = water.map(
+    ([nx, ny]) => [nx, ny, minnowScore(grid, nx, ny)] as [number, number, number],
+  );
+  const dest = pickBest(scored);
+  if (!dest) return true;
+  grid.swap(x, y, dest[0], dest[1]);
+  markBorn(grid, born, dest[0], dest[1]);
+  return true;
+}
+
+function hatchMite(grid: Grid, x: number, y: number, born: Uint8Array): void {
+  if (!hasNeighbor(grid, x, y, Material.Plant) && !hasNeighbor(grid, x, y, Material.Bloom)) return;
+  if (!hasNeighbor(grid, x, y, Material.Water) && !hasNeighbor(grid, x, y, Material.Brine)) return;
+  if (randInt(8) !== 0) return;
+  const air = gatherAir(grid, x, y);
+  if (air.length === 0) return;
+  const [nx, ny] = air[randInt(air.length)];
+  transmute(grid, nx, ny, Material.Mite, born);
+}
+
+function dewSteam(grid: Grid, x: number, y: number): boolean {
+  const above = y === 0 ? Material.Stone : grid.get(x, y - 1);
+  const blocked = y === 0 || !MATERIALS[above].movable;
+  return blocked && hasNeighbor(grid, x, y, Material.Steam);
 }
 
 /**
@@ -537,6 +890,20 @@ function react(grid: Grid, x: number, y: number, material: MaterialId, born: Uin
       transmute(grid, x, y, Material.Aether, born);
       return true;
     }
+    if (dewSteam(grid, x, y)) {
+      transmute(grid, x, y, Material.Water, born);
+      return true;
+    }
+    return false;
+  }
+  if (material === Material.Mite) {
+    return miteAct(grid, x, y, born);
+  }
+  if (material === Material.Minnow) {
+    return minnowAct(grid, x, y, born);
+  }
+  if (material === Material.Mud) {
+    hatchMite(grid, x, y, born);
     return false;
   }
   if (material === Material.Acid) {
@@ -652,16 +1019,87 @@ function react(grid: Grid, x: number, y: number, material: MaterialId, born: Uin
     return cookLava(grid, x, y, born);
   }
   if (material === Material.Ember) {
+    const fueled = smolderEmber(grid, x, y, born);
     if (wetNeighbor(grid, x, y)) {
       transmute(grid, x, y, Material.Steam, born);
       return true;
     }
-    const fueled = smolderEmber(grid, x, y, born);
     const moved = tryDownAndDiags(grid, x, y, born);
     if (!moved && !fueled) transmute(grid, x, y, Material.Ash, born);
     return true;
   }
   return false;
+}
+
+function heatScratch(length: number): Uint8Array {
+  if (!heatBuf || heatBuf.length !== length) heatBuf = new Uint8Array(length);
+  return heatBuf;
+}
+
+/**
+ * One explicit Euler sweep of
+ *   T' = T + (α/32) ∇²T + (λ/256)(T∞ − T)
+ * Integer-only, ping-pong scratch. α is capped at 8 so 1 − α/8 ≥ 0 (CFL).
+ */
+function thermals(grid: Grid, born: Uint8Array): void {
+  const { cells, heat, width: w, height: h } = grid;
+  const n = cells.length;
+  for (let i = 0; i < n; i++) {
+    const src = SOURCE[cells[i]];
+    if (src > heat[i]) heat[i] = src;
+  }
+
+  // Advection before diffusion (operator split): hot liquid rises while it still holds heat.
+  for (let y = h - 1; y >= 1; y--) {
+    for (let x = 0; x < w; x++) {
+      if (born[y * w + x]) continue;
+      tryBuoyancy(grid, x, y, born);
+    }
+  }
+
+  const out = heatScratch(n);
+  for (let y = 0; y < h; y++) {
+    const row = y * w;
+    for (let x = 0; x < w; x++) {
+      const i = row + x;
+      const t = heat[i];
+      const up = y > 0 ? heat[i - w] : t;
+      const dn = y < h - 1 ? heat[i + w] : t;
+      const rt = x < w - 1 ? heat[i + 1] : t;
+      const lf = x > 0 ? heat[i - 1] : t;
+      const lap = up + dn + rt + lf - (t << 2);
+      let next = t + ((CONDUCT[cells[i]] * lap) >> 5);
+      const mat = cells[i];
+      const leak = mat === Material.Air || mat === Material.Steam ? 10 : 2;
+      next += ((AMBIENT[mat] - next) * leak) >> 8;
+      out[i] = next < 0 ? 0 : next > 255 ? 255 : next;
+    }
+  }
+  heat.set(out);
+
+  for (let y = 0; y < h; y++) {
+    const row = y * w;
+    for (let x = 0; x < w; x++) {
+      const i = row + x;
+      if (born[i]) continue;
+      const mat = cells[i];
+      const t = heat[i];
+      if (mat === Material.Ice && t >= 72) {
+        transmute(grid, x, y, Material.Water, born);
+      }
+    }
+  }
+}
+
+function tryBuoyancy(grid: Grid, x: number, y: number, born: Uint8Array): boolean {
+  if (y === 0) return false;
+  const mat = grid.get(x, y);
+  if (SOURCE[mat] > 0) return false;
+  if (grid.get(x, y - 1) !== mat) return false;
+  if (grid.getHeat(x, y) < grid.getHeat(x, y - 1) + 24) return false;
+  grid.swap(x, y, x, y - 1);
+  markBorn(grid, born, x, y - 1);
+  return true;
 }
 
 function process(grid: Grid, x: number, y: number, dir: 1 | -1, born: Uint8Array): number {
@@ -695,6 +1133,7 @@ export function step(grid: Grid): void {
   const dir = scanDir;
   scanDir = scanDir === 1 ? -1 : 1;
   const born = bornBuffer(grid.cells.length);
+  thermals(grid, born);
 
   for (let y = grid.height - 1; y >= 0; y--) {
     if (dir === 1) {
