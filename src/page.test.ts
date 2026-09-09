@@ -46,4 +46,12 @@ describe('shipped page', () => {
     expect(stage).toMatch(/uShake/);
   });
 
+  it('fits the vessel with the toolbar in one window instead of filling the view', () => {
+    const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+    expect(html).toMatch(/100dvh/);
+    expect(html).toMatch(/container-type:\s*size/);
+    expect(html).toMatch(/100cqh/);
+    expect(html).toMatch(/100cqw/);
+    expect(html).toMatch(/body\s*\{[^}]*overflow:\s*hidden/s);
+  });
 });
