@@ -5,7 +5,7 @@ import { consumeBlast, step } from './sim';
 import { boom, chime } from './feel';
 import { BRUSH_SIZES, HEIGHT, WIDTH, seedVessel } from './world';
 import { createRite, rainFromCeiling, type RiteName } from './secrets';
-import { whisper } from './codex';
+import { blanks, stained, whisper } from './codex';
 import { createView, panBy, screenToCell, zoomAt } from './view';
 
 function requireEl<T extends Element>(selector: string): T {
@@ -26,6 +26,10 @@ const reticle = requireEl<HTMLDivElement>('#reticle');
 const lore = requireEl<HTMLParagraphElement>('#lore');
 const title = requireEl<HTMLHeadingElement>('h1');
 const codex = requireEl<HTMLParagraphElement>('#codex');
+const folio = requireEl<HTMLElement>('#folio');
+const folioCount = requireEl<HTMLSpanElement>('#folio-count');
+const folioLeaves = requireEl<HTMLOListElement>('#folio-leaves');
+const folioShut = requireEl<HTMLButtonElement>('#folio-shut');
 
 const grid = new Grid(WIDTH, HEIGHT);
 seedVessel(grid);
@@ -143,6 +147,47 @@ resetButton.addEventListener('click', () => {
 });
 tools.append(resetButton);
 
+const folioButton = document.createElement('button');
+folioButton.type = 'button';
+folioButton.textContent = 'codex';
+folioButton.setAttribute('aria-expanded', 'false');
+folioButton.setAttribute('aria-controls', 'folio');
+folioButton.addEventListener('click', () => setFolioOpen(!folio.classList.contains('is-open')));
+tools.append(folioButton);
+
+function paintFolio(): void {
+  const pages = stained(discovered);
+  folioCount.textContent = `${pages.length} stained · ${blanks(discovered)} blank`;
+  const nodes: HTMLLIElement[] = [];
+  for (const leaf of pages) {
+    const item = document.createElement('li');
+    const heading = document.createElement('h2');
+    const swatch = document.createElement('span');
+    swatch.className = 'swatch';
+    const [r, g, b] = MATERIALS[leaf.id].color;
+    swatch.style.background = `rgb(${r},${g},${b})`;
+    heading.append(swatch, document.createTextNode(MATERIALS[leaf.id].name));
+    const line = document.createElement('p');
+    line.className = 'whisper';
+    line.textContent = leaf.whisper;
+    const body = document.createElement('p');
+    body.className = 'leaf';
+    body.textContent = leaf.leaf;
+    item.append(heading, line, body);
+    nodes.push(item);
+  }
+  folioLeaves.replaceChildren(...nodes);
+}
+
+function setFolioOpen(open: boolean): void {
+  folio.classList.toggle('is-open', open);
+  folio.setAttribute('aria-hidden', String(!open));
+  folioButton.setAttribute('aria-expanded', String(open));
+  if (open) paintFolio();
+}
+
+folioShut.addEventListener('click', () => setFolioOpen(false));
+
 function setPaused(next: boolean): void {
   paused = next;
   pauseButton.textContent = paused ? 'play' : 'pause';
@@ -171,6 +216,7 @@ function reveal(id: MaterialId, note?: string): void {
   if (button) button.hidden = false;
   const line = note ?? whisper(id);
   if (line) codex.textContent = line;
+  if (folio.classList.contains('is-open')) paintFolio();
   chime();
 }
 
@@ -294,26 +340,30 @@ viewport.addEventListener('pointerdown', (event) => {
   capturePointer(event);
   pourAt(x, y);
 });
-viewport.addEventListener('pointermove', (event) => {
-  if (gesture === 'pan' || gesture === 'probe') {
-    if (gesture === 'probe') {
-      const dist = Math.hypot(event.clientX - downAt.x, event.clientY - downAt.y);
-      if (dist > 5) gesture = 'pan';
-      else return;
+viewport.addEventListener(
+  'pointermove',
+  (event) => {
+    if (gesture === 'pan' || gesture === 'probe') {
+      if (gesture === 'probe') {
+        const dist = Math.hypot(event.clientX - downAt.x, event.clientY - downAt.y);
+        if (dist > 5) gesture = 'pan';
+        else return;
+      }
+      const { vw, vh } = viewportBox();
+      view = panBy(view, event.clientX - lastDrag.x, event.clientY - lastDrag.y, vw, vh);
+      lastDrag = { x: event.clientX, y: event.clientY };
+      applyView();
+      const { x, y } = cellFromPointer(event);
+      showProbe(x, y, event.clientX, event.clientY);
+      return;
     }
-    const { vw, vh } = viewportBox();
-    view = panBy(view, event.clientX - lastDrag.x, event.clientY - lastDrag.y, vw, vh);
-    lastDrag = { x: event.clientX, y: event.clientY };
-    applyView();
-    const { x, y } = cellFromPointer(event);
-    showProbe(x, y, event.clientX, event.clientY);
-    return;
-  }
-  if (gesture === 'paint' || painting) {
-    const { x, y } = cellFromPointer(event);
-    pourAt(x, y);
-  }
-}, { capture: true });
+    if (gesture === 'paint' || painting) {
+      const { x, y } = cellFromPointer(event);
+      pourAt(x, y);
+    }
+  },
+  { capture: true },
+);
 function endPaint(event: PointerEvent): void {
   gesture = 'none';
   painting = false;
@@ -354,13 +404,21 @@ title.addEventListener('click', () => {
 
 window.addEventListener('keydown', (event) => {
   const target = event.target;
-  if (target instanceof HTMLElement && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+  if (
+    target instanceof HTMLElement &&
+    (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')
+  ) {
     return;
   }
   const gift = rite.key(event.key);
   if (gift) {
     event.preventDefault();
     enact(gift);
+    return;
+  }
+  if (event.key === 'Escape' && folio.classList.contains('is-open')) {
+    event.preventDefault();
+    setFolioOpen(false);
     return;
   }
   if (event.code === 'Space') {

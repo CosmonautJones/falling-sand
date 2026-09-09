@@ -35,6 +35,8 @@ describe('shipped page', () => {
     expect(html).toMatch(/id="curtain"/);
     expect(html).toMatch(/id="hud"/);
     expect(html).toMatch(/id="still"/);
+    expect(html).toMatch(/id="folio"/);
+    expect(main).toMatch(/paintFolio|stained\(/);
     expect(main).toMatch(/zoomAt|wheel|panBy/);
     expect(main).toMatch(/probe|#probe/);
     expect(main).toMatch(/consumeBlast/);

@@ -84,6 +84,86 @@
         min-height: 1.4em;
         color: #d4b56a;
       }
+      #folio {
+        display: none;
+        position: fixed;
+        z-index: 20;
+        top: 8px;
+        right: 8px;
+        bottom: 8px;
+        width: min(26rem, 94vw);
+        flex-direction: column;
+        background: #14100c;
+        border: 1px solid var(--brass);
+        box-shadow:
+          inset 0 1px 0 rgba(232, 201, 122, 0.35),
+          0 24px 48px rgba(0, 0, 0, 0.55);
+        color: var(--ink);
+      }
+      #folio.is-open {
+        display: flex;
+      }
+      #folio-head {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        padding: 12px 14px 8px;
+        border-bottom: 1px solid var(--lead);
+        flex: 0 0 auto;
+      }
+      #folio-head strong {
+        font-size: 13px;
+        letter-spacing: 0.22em;
+        color: var(--brass);
+        font-weight: 600;
+      }
+      #folio-count {
+        flex: 1;
+        font-size: 13px;
+        font-style: italic;
+        color: var(--paper);
+      }
+      #folio-leaves {
+        list-style: none;
+        margin: 0;
+        padding: 4px 16px 20px;
+        overflow: auto;
+      }
+      #folio-leaves li {
+        border-top: 1px solid #2a2218;
+        padding: 11px 0 10px;
+      }
+      #folio-leaves li:first-child {
+        border-top: 0;
+      }
+      #folio-leaves h2 {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 4px;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        color: var(--ink);
+      }
+      #folio-leaves .swatch {
+        width: 11px;
+        height: 11px;
+        border: 1px solid #5a4630;
+        flex: 0 0 auto;
+      }
+      #folio-leaves .whisper {
+        margin: 0 0 6px;
+        font-style: italic;
+        color: #d4b56a;
+        font-size: 14px;
+      }
+      #folio-leaves .leaf {
+        margin: 0;
+        color: var(--paper);
+        font-size: 14px;
+        line-height: 1.4;
+      }
       kbd {
         font:
           12px/1 ui-monospace,
@@ -369,6 +449,14 @@
         <div id="reticle"></div>
       </div>
     </figure>
+    <aside id="folio" role="dialog" aria-labelledby="folio-title" aria-hidden="true">
+      <div id="folio-head">
+        <strong id="folio-title">Codex</strong>
+        <span id="folio-count"></span>
+        <button type="button" id="folio-shut">close</button>
+      </div>
+      <ol id="folio-leaves"></ol>
+    </aside>
     <div id="curtain">
       <strong>ALEMBIC</strong>
       <span>solve et coagula</span>
