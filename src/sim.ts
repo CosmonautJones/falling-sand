@@ -50,8 +50,13 @@ function heavier(src: MaterialId, dst: MaterialId): boolean {
   return MATERIALS[src].density > MATERIALS[dst].density;
 }
 
+function isCritter(n: MaterialId): boolean {
+  return n === Material.Mite || n === Material.Minnow;
+}
+
 function trySwap(grid: Grid, x: number, y: number, nx: number, ny: number): boolean {
   const dst = grid.get(nx, ny);
+  if (isCritter(dst)) return false;
   if (!MATERIALS[dst].movable) return false;
   if (!heavier(grid.get(x, y), dst)) return false;
   grid.swap(x, y, nx, ny);
@@ -61,6 +66,7 @@ function trySwap(grid: Grid, x: number, y: number, nx: number, ny: number): bool
 /** Rise into a denser movable cell (steam through air or water). */
 function trySwapUp(grid: Grid, x: number, y: number, nx: number, ny: number): boolean {
   const dst = grid.get(nx, ny);
+  if (isCritter(dst)) return false;
   if (!MATERIALS[dst].movable) return false;
   if (MATERIALS[grid.get(x, y)].density >= MATERIALS[dst].density) return false;
   grid.swap(x, y, nx, ny);
@@ -141,8 +147,18 @@ function hasNeighbor(grid: Grid, x: number, y: number, want: MaterialId): boolea
 function transmute(grid: Grid, x: number, y: number, into: MaterialId, born: Uint8Array): void {
   if (!grid.inBounds(x, y)) return;
   const i = grid.index(x, y);
+  let dest = into;
+  if (grid.cells[i] === Material.Mite && grid.shades[i] >= 64 && dest !== Material.Gold) {
+    const air = gatherAir(grid, x, y);
+    if (air.length > 0) {
+      const [ax, ay] = air[randInt(air.length)];
+      transmute(grid, ax, ay, Material.Gold, born);
+    } else {
+      dest = Material.Gold;
+    }
+  }
   const prev = grid.heat[i];
-  grid.set(x, y, into, randShade(SHADE_RANGE[into]));
+  grid.set(x, y, dest, randShade(SHADE_RANGE[dest]));
   const kept = prev > 20 ? prev - 20 : prev;
   if (kept > grid.heat[i]) grid.heat[i] = kept;
   born[i] = 1;
@@ -570,6 +586,13 @@ function isForage(n: MaterialId): boolean {
   return n === Material.Plant || n === Material.Bloom || n === Material.Moss;
 }
 
+function forageRank(n: MaterialId): number {
+  if (n === Material.Bloom) return 3;
+  if (n === Material.Plant) return 2;
+  if (n === Material.Moss) return 1;
+  return 0;
+}
+
 function gatherAir(grid: Grid, x: number, y: number): Array<[number, number]> {
   const air: Array<[number, number]> = [];
   for (const [dx, dy] of N8) {
@@ -604,8 +627,23 @@ function tryCritterStep(
   return true;
 }
 
-function miteDestScore(grid: Grid, nx: number, ny: number, carrying: boolean): number {
-  let s = grid.get(nx, ny) === Material.Air ? 2 : grid.get(nx, ny) === Material.Sand ? 1 : 0;
+function miteDestScore(
+  grid: Grid,
+  fromX: number,
+  fromY: number,
+  nx: number,
+  ny: number,
+  carrying: boolean,
+): number {
+  const dest = grid.get(nx, ny);
+  const wet = dest === Material.Water || dest === Material.Brine;
+  let s = dest === Material.Air ? 2 : dest === Material.Sand ? 4 : 0;
+  if (wet) s -= 8;
+  const from = grid.get(fromX, fromY);
+  if (from === Material.Water || from === Material.Brine) {
+    if (dest === Material.Sand || dest === Material.Mud) s += 14;
+    if (dest === Material.Air) s += 10;
+  }
   const under = grid.get(nx, ny + 1);
   if (
     under !== Material.Air &&
@@ -617,10 +655,11 @@ function miteDestScore(grid: Grid, nx: number, ny: number, carrying: boolean): n
   }
   for (const [dx, dy] of N8) {
     const n = grid.get(nx + dx, ny + dy);
-    if (isForage(n)) s += 8;
+    if (n === Material.Bloom) s += 12;
+    else if (isForage(n)) s += 8;
     if (n === Material.Gold && carrying) s += 6;
     if (isHeat(n)) s -= 14;
-    if (n === Material.Minnow) s -= 4;
+    if (n === Material.Minnow) s -= 10;
   }
   return s;
 }
@@ -650,7 +689,7 @@ function miteWalk(grid: Grid, x: number, y: number, born: Uint8Array, carrying: 
     ) {
       continue;
     }
-    scored.push([nx, ny, miteDestScore(grid, nx, ny, carrying)]);
+    scored.push([nx, ny, miteDestScore(grid, x, y, nx, ny, carrying)]);
   }
   const dest = pickBest(scored);
   if (!dest) return false;
@@ -676,6 +715,7 @@ function dropHoard(grid: Grid, x: number, y: number, born: Uint8Array): boolean 
 function miteAct(grid: Grid, x: number, y: number, born: Uint8Array): boolean {
   let heat = false;
   let food: [number, number] | null = null;
+  let foodRank = 0;
   let gold: [number, number] | null = null;
   let kin = false;
   for (const [dx, dy] of N8) {
@@ -684,7 +724,11 @@ function miteAct(grid: Grid, x: number, y: number, born: Uint8Array): boolean {
     if (!grid.inBounds(nx, ny)) continue;
     const n = grid.get(nx, ny);
     if (isHeat(n)) heat = true;
-    if (isForage(n) && !food) food = [nx, ny];
+    const rank = forageRank(n);
+    if (rank > foodRank) {
+      foodRank = rank;
+      food = [nx, ny];
+    }
     if (n === Material.Gold && !gold) gold = [nx, ny];
     if (n === Material.Mite) kin = true;
   }
@@ -755,10 +799,14 @@ function miteAct(grid: Grid, x: number, y: number, born: Uint8Array): boolean {
 
 function minnowScore(grid: Grid, nx: number, ny: number): number {
   let s = 0;
+  const t = grid.getHeat(nx, ny);
+  if (t > 40) s -= t >> 2;
+  if (ny > 0 && grid.get(nx, ny - 1) === Material.Air) s += 2;
   for (const [dx, dy] of N8) {
     const n = grid.get(nx + dx, ny + dy);
     if (n === Material.Minnow) s += 5;
     if (n === Material.Mite) s += 3;
+    if (n === Material.Seed) s += 4;
     if (n === Material.Crystal) s += 2;
     if (n === Material.Pearl) s += 1;
     if (
@@ -777,6 +825,7 @@ function minnowScore(grid: Grid, nx: number, ny: number): number {
 function minnowAct(grid: Grid, x: number, y: number, born: Uint8Array): boolean {
   let hurt = false;
   let mite: [number, number] | null = null;
+  let seed: [number, number] | null = null;
   let crystal = false;
   let kin = false;
   const water: Array<[number, number]> = [];
@@ -795,6 +844,7 @@ function minnowAct(grid: Grid, x: number, y: number, born: Uint8Array): boolean 
       hurt = true;
     }
     if (n === Material.Mite && !mite) mite = [nx, ny];
+    if (n === Material.Seed && !seed) seed = [nx, ny];
     if (n === Material.Crystal) crystal = true;
     if (n === Material.Minnow) kin = true;
     if (n === Material.Water || n === Material.Brine) water.push([nx, ny]);
@@ -806,6 +856,10 @@ function minnowAct(grid: Grid, x: number, y: number, born: Uint8Array): boolean 
   }
   if (mite) {
     transmute(grid, mite[0], mite[1], Material.Water, born);
+    return true;
+  }
+  if (seed) {
+    transmute(grid, seed[0], seed[1], Material.Water, born);
     return true;
   }
   if (crystal && randInt(6) === 0) {

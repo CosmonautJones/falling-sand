@@ -76,11 +76,15 @@ describe('life', () => {
     }
     grid.set(3, 3, Material.Mite);
     const sand = grid.count(Material.Sand);
-    for (let i = 0; i < 24; i++) step(grid);
+    let travelled = false;
+    for (let i = 0; i < 48; i++) {
+      step(grid);
+      const [mite] = positions(grid, Material.Mite);
+      if (mite && (mite.x !== 3 || mite.y !== 3)) travelled = true;
+    }
     expect(grid.count(Material.Mite)).toBe(1);
     expect(grid.count(Material.Sand)).toBe(sand);
-    const [mite] = positions(grid, Material.Mite);
-    expect(mite.x !== 3 || mite.y !== 3).toBe(true);
+    expect(travelled).toBe(true);
   });
 
   it('lets a mite eat a neighboring plant', () => {
@@ -252,5 +256,70 @@ describe('life', () => {
     expect(grid.count(Material.Mite)).toBeGreaterThanOrEqual(3);
     expect(grid.count(Material.Minnow)).toBeGreaterThanOrEqual(2);
     expect(grid.count(Material.Plant)).toBeGreaterThanOrEqual(2);
+  });
+
+  it('spills stolen gold when a laden mite dies of heat', () => {
+    const grid = new Grid(5, 5);
+    for (let y = 2; y <= 4; y++) {
+      for (let x = 1; x <= 3; x++) grid.set(x, y, Material.Stone);
+    }
+    grid.set(2, 3, Material.Mite, 90);
+    grid.set(2, 2, Material.Fire);
+    for (let i = 0; i < 8; i++) step(grid);
+    expect(grid.count(Material.Gold)).toBeGreaterThanOrEqual(1);
+    expect(grid.count(Material.Mite)).toBe(0);
+  });
+
+  it('leaves gold behind when a minnow eats a laden mite', () => {
+    const grid = new Grid(6, 5);
+    stoneFloor(grid, 4);
+    grid.set(1, 3, Material.Water);
+    grid.set(2, 3, Material.Water);
+    grid.set(1, 3, Material.Minnow);
+    grid.set(2, 3, Material.Mite, 90);
+    for (let i = 0; i < 8; i++) step(grid);
+    expect(grid.count(Material.Mite)).toBe(0);
+    expect(grid.count(Material.Gold)).toBeGreaterThanOrEqual(1);
+  });
+
+  it('eats bloom before neighboring plant', () => {
+    const grid = new Grid(6, 5);
+    stoneFloor(grid, 4);
+    grid.set(2, 3, Material.Mite);
+    grid.set(1, 3, Material.Plant);
+    grid.set(3, 3, Material.Bloom);
+    step(grid);
+    expect(grid.count(Material.Bloom)).toBe(0);
+    expect(grid.count(Material.Plant)).toBe(1);
+  });
+
+  it('climbs out of water toward sand instead of swimming', () => {
+    const grid = new Grid(7, 5);
+    stoneFloor(grid, 4);
+    grid.set(1, 3, Material.Sand);
+    grid.set(2, 3, Material.Water);
+    grid.set(3, 3, Material.Water);
+    grid.set(2, 3, Material.Mite);
+    for (let i = 0; i < 24; i++) step(grid);
+    expect(grid.count(Material.Mite)).toBe(1);
+    const [mite] = positions(grid, Material.Mite);
+    expect(mite.x).toBeLessThanOrEqual(1);
+  });
+
+  it('sends a minnow away from fire at the edge of the pool', () => {
+    const grid = new Grid(7, 5);
+    for (let x = 0; x < 7; x++) {
+      grid.set(x, 2, Material.Stone);
+      grid.set(x, 4, Material.Stone);
+    }
+    grid.set(0, 3, Material.Stone);
+    grid.set(1, 3, Material.Water);
+    grid.set(2, 3, Material.Minnow);
+    grid.set(3, 3, Material.Water);
+    grid.set(4, 3, Material.Fire);
+    grid.set(5, 3, Material.Stone);
+    step(grid);
+    const [fish] = positions(grid, Material.Minnow);
+    expect(fish.x).toBe(1);
   });
 });

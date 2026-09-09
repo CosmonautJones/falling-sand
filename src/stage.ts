@@ -31,8 +31,8 @@ void main() {
   float wet = max(probe.b - probe.r * 0.65 - 0.12, 0.0);
 
   vec2 uv = vUv;
-  uv.x += sin(vUv.y * 28.0 + uTime * 0.09) * heat * 0.0035 * uGlow;
-  uv.y += cos(vUv.x * 22.0 + uTime * 0.07) * heat * 0.002 * uGlow;
+  uv.x += sin(vUv.y * 28.0 + uTime * 0.05) * heat * 0.0012 * uGlow;
+  uv.y += cos(vUv.x * 22.0 + uTime * 0.04) * heat * 0.0007 * uGlow;
   uv += (vec2(hash(vec2(uTime, 2.1)), hash(vec2(uTime, 7.7))) - 0.5) * uShake * 0.014;
 
   vec3 c = texture(uMap, uv).rgb;
@@ -54,7 +54,7 @@ void main() {
 
   float caustic = sin((uv.x * uGrid.x) * 0.37 + uTime * 0.11) *
                   sin((uv.y * uGrid.y) * 0.51 - uTime * 0.09);
-  c += wet * caustic * uGlow * vec3(0.08, 0.16, 0.28);
+  c += wet * caustic * uGlow * vec3(0.03, 0.06, 0.10);
 
   float gold = max(c.r - 0.48, 0.0) * max(c.g - 0.32, 0.0) * (1.0 - c.b);
   float spark = step(0.92, hash(floor(uv * uGrid) + floor(uTime * 0.25)));
@@ -69,14 +69,14 @@ void main() {
   c *= vig;
 
   float dark = 1.0 - smoothstep(0.0, 0.22, dot(c, vec3(0.33)));
-  float mote = step(0.99955, hash(floor(uv * uGrid * 0.35) + vec2(uTime * 0.003, 0.0)));
-  c += dark * mote * 0.1 * uGlow;
+  float mote = step(0.99972, hash(floor(uv * uGrid * 0.35) + vec2(uTime * 0.002, 0.0)));
+  c += dark * mote * 0.045 * uGlow;
 
   c += uWonder * vec3(0.16, 0.05, 0.22) * (0.45 + 0.55 * sin(vUv.x * 7.0 + uTime * 0.04));
   c += uWonder * vec3(0.05, 0.12, 0.18) * (0.5 + 0.5 * sin(vUv.y * 5.0 - uTime * 0.03));
 
   float g = hash(uv * uGrid + uTime);
-  c += (g - 0.5) * 0.03 * uGlow;
+  c += (g - 0.5) * 0.012 * uGlow;
   c += vec3(1.0, 0.62, 0.28) * uShake * 0.09;
   float ca = uShake * 0.0035;
   c.r = mix(c.r, texture(uMap, uv + vec2(ca, 0.0)).r, 0.55 * uShake);

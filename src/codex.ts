@@ -141,11 +141,11 @@ const PAGES: Record<MaterialId, { whisper: string; leaf: string }> = {
   },
   [Material.Mite]: {
     whisper: 'A grain with legs. It steals.',
-    leaf: 'Camouflaged in sand, it crawls and burrows. It grazes plant, bloom, moss. Heat sends it running. Gold it picks up and only hoards beside more gold. Wet mud against plant hatches more.',
+    leaf: 'Camouflaged in sand, it crawls, burrows, and will not swim if it can climb out. Bloom before plant before moss. Heat sends it running; if it dies laden, the gold spills. Minnows hunt it at the shore. Gold it only hoards beside more gold. Wet mud against plant hatches more.',
   },
   [Material.Minnow]: {
     whisper: 'The trough keeps a silver thought.',
-    leaf: 'Schools in water. Eats a mite that touches the pool. Oil, lava, fire, acid cook it to ash. Crystal nearby, it sometimes dreams a pearl.',
+    leaf: 'Schools, darts the meniscus, and swims off heat. Eats a mite — and any seed — that touches the pool; stolen gold is left behind. Oil, lava, fire, acid cook it to ash. Crystal nearby, it sometimes dreams a pearl.',
   },
   [Material.Bloom]: {
     whisper: 'The thicket shows its throat.',

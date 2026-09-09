@@ -68,16 +68,16 @@ export function blitGrid(grid: Grid, data: Uint8ClampedArray, tick = 0): void {
     }
 
     if (mat === Material.Water && tick !== 0) {
-      const wiggle = ((i + tick) & 7) - 3;
+      const wiggle = ((i + (tick >> 2)) & 3) - 1;
       g = clampByte(g + wiggle);
-      b = clampByte(b + wiggle + 2);
+      b = clampByte(b + wiggle + 1);
     }
 
     if (mat === Material.Steam && tick !== 0) {
-      const wisp = ((i * 7 + tick * 3) & 7) - 3;
+      const wisp = ((i * 7 + (tick >> 2) * 3) & 3) - 1;
       r = clampByte(r + wisp);
       g = clampByte(g + wisp);
-      b = clampByte(b + wisp + 2);
+      b = clampByte(b + wisp + 1);
     }
 
     if (mat === Material.Rift && tick !== 0) {
@@ -113,7 +113,7 @@ export function blitGrid(grid: Grid, data: Uint8ClampedArray, tick = 0): void {
     }
 
     if (mat === Material.Minnow && tick !== 0) {
-      const dart = ((i * 11 + tick * 5) & 7) - 3;
+      const dart = ((i * 11 + (tick >> 1) * 5) & 7) - 3;
       g = clampByte(g + dart + 4);
       b = clampByte(b + dart + 6);
     }
