@@ -25,7 +25,6 @@ float hash(vec2 p) {
 }
 
 void main() {
-  vec2 texel = 1.0 / uGrid;
   vec3 probe = texture(uMap, vUv).rgb;
   float heat = max(probe.r - probe.b * 0.88 - 0.16, 0.0);
   float wet = max(probe.b - probe.r * 0.65 - 0.12, 0.0);
@@ -33,24 +32,12 @@ void main() {
   vec2 uv = vUv;
   uv.x += sin(vUv.y * 28.0 + uTime * 0.05) * heat * 0.0012 * uGlow;
   uv.y += cos(vUv.x * 22.0 + uTime * 0.04) * heat * 0.0007 * uGlow;
-  uv += (vec2(hash(vec2(uTime, 2.1)), hash(vec2(uTime, 7.7))) - 0.5) * uShake * 0.014;
+  if (uShake > 0.001) {
+    uv += (vec2(hash(vec2(uTime, 2.1)), hash(vec2(uTime, 7.7))) - 0.5) * uShake * 0.014;
+  }
 
   vec3 c = texture(uMap, uv).rgb;
-
-  vec3 glow = vec3(0.0);
-  float heatSum = 0.0;
-  for (int j = -1; j <= 1; j++) {
-    for (int i = -1; i <= 1; i++) {
-      vec2 o = vec2(float(i), float(j)) * texel * 2.2;
-      vec3 n = texture(uMap, uv + o).rgb;
-      float h = max(n.r - n.b * 0.88 - 0.16, 0.0);
-      float w = max(1.0 - length(vec2(float(i), float(j))) / 2.1, 0.0);
-      glow += n * h * w;
-      heatSum += h * w;
-    }
-  }
-  c += glow * (0.28 * uGlow);
-  c += vec3(0.55, 0.16, 0.03) * heatSum * 0.07 * uGlow;
+  c += vec3(0.45, 0.12, 0.03) * heat * 0.12 * uGlow;
 
   float caustic = sin((uv.x * uGrid.x) * 0.37 + uTime * 0.11) *
                   sin((uv.y * uGrid.y) * 0.51 - uTime * 0.09);
@@ -65,30 +52,25 @@ void main() {
 
   vec2 p = vUv * 2.0 - 1.0;
   p.x *= 1.06;
-  float vig = 1.0 - dot(p, p) * 0.22;
-  c *= vig;
-
-  float dark = 1.0 - smoothstep(0.0, 0.22, dot(c, vec3(0.33)));
-  float mote = step(0.99972, hash(floor(uv * uGrid * 0.35) + vec2(uTime * 0.002, 0.0)));
-  c += dark * mote * 0.045 * uGlow;
+  c *= 1.0 - dot(p, p) * 0.22;
 
   c += uWonder * vec3(0.16, 0.05, 0.22) * (0.45 + 0.55 * sin(vUv.x * 7.0 + uTime * 0.04));
   c += uWonder * vec3(0.05, 0.12, 0.18) * (0.5 + 0.5 * sin(vUv.y * 5.0 - uTime * 0.03));
 
-  float g = hash(uv * uGrid + uTime);
-  c += (g - 0.5) * 0.012 * uGlow;
-  c += vec3(1.0, 0.62, 0.28) * uShake * 0.09;
-  float ca = uShake * 0.0035;
-  c.r = mix(c.r, texture(uMap, uv + vec2(ca, 0.0)).r, 0.55 * uShake);
-  c.b = mix(c.b, texture(uMap, uv - vec2(ca, 0.0)).b, 0.55 * uShake);
+  if (uShake > 0.001) {
+    c += vec3(1.0, 0.62, 0.28) * uShake * 0.09;
+    float ca = uShake * 0.0035;
+    c.r = mix(c.r, texture(uMap, uv + vec2(ca, 0.0)).r, 0.55 * uShake);
+    c.b = mix(c.b, texture(uMap, uv - vec2(ca, 0.0)).b, 0.55 * uShake);
+  }
 
   fragColor = vec4(c, 1.0);
 }
 `;
 
 /**
- * Display path for the vessel: Three.js nearest-neighbour upscale with heat
- * bloom, water caustics, and a Magnum Opus aurora when WebGL is available.
+ * Display path: shade at grain resolution, CSS nearest-neighbour upscale.
+ * Chrome then composites a 480×270 buffer instead of a 4K fragment storm.
  */
 export class Stage {
   private readonly canvas: HTMLCanvasElement;
@@ -108,8 +90,6 @@ export class Stage {
   } | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
   private image: ImageData | null = null;
-  private viewW = 0;
-  private viewH = 0;
 
   constructor(canvas: HTMLCanvasElement, grid: Grid) {
     this.canvas = canvas;
@@ -122,21 +102,38 @@ export class Stage {
   }
 
   private initGl(): void {
+    const gl = this.canvas.getContext('webgl2', {
+      alpha: false,
+      antialias: false,
+      depth: false,
+      stencil: false,
+      desynchronized: true,
+      powerPreference: 'high-performance',
+      preserveDrawingBuffer: false,
+    });
     const renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,
+      context: gl ?? undefined,
       antialias: false,
       alpha: false,
       powerPreference: 'high-performance',
+      depth: false,
+      stencil: false,
     });
     renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
     renderer.setClearColor(0x0e0c12, 1);
     renderer.debug.checkShaderErrors = true;
+    renderer.setPixelRatio(1);
+    renderer.setSize(this.grid.width, this.grid.height, false);
 
     const texData = new Uint8Array(this.grid.width * this.grid.height * 4);
     const tex = new THREE.DataTexture(texData, this.grid.width, this.grid.height);
     tex.flipY = true;
     tex.needsUpdate = true;
     tex.colorSpace = THREE.NoColorSpace;
+    tex.magFilter = THREE.NearestFilter;
+    tex.minFilter = THREE.NearestFilter;
+    tex.generateMipmaps = false;
     this.texData = texData;
 
     const uniforms = {
@@ -166,7 +163,6 @@ export class Stage {
     this.camera = camera;
     this.tex = tex;
     this.uniforms = uniforms;
-    this.syncSize();
   }
 
   private init2d(): void {
@@ -178,18 +174,6 @@ export class Stage {
     this.image = ctx.createImageData(this.grid.width, this.grid.height);
   }
 
-  private syncSize(): void {
-    if (!this.gl) return;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const w = Math.max(1, Math.floor(this.canvas.clientWidth));
-    const h = Math.max(1, Math.floor(this.canvas.clientHeight));
-    if (w === this.viewW && h === this.viewH) return;
-    this.viewW = w;
-    this.viewH = h;
-    this.gl.setPixelRatio(dpr);
-    this.gl.setSize(w, h, false);
-  }
-
   present(pixels: Uint8ClampedArray, glow: number, wonder = 0, shake = 0): void {
     if (this.gl && this.tex && this.texData && this.uniforms && this.scene && this.camera) {
       this.texData.set(pixels);
@@ -198,7 +182,6 @@ export class Stage {
       this.uniforms.uGlow.value = glow;
       this.uniforms.uWonder.value = wonder;
       this.uniforms.uShake.value = shake;
-      this.syncSize();
       this.gl.render(this.scene, this.camera);
       return;
     }

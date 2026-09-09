@@ -24,14 +24,30 @@ function isAir(id: number): boolean {
  */
 export function blitGrid(grid: Grid, data: Uint8ClampedArray, tick = 0): void {
   const { cells, shades, heat, width, height } = grid;
+  const [ar, ag, ab] = MATERIALS[Material.Air].color;
   for (let i = 0; i < cells.length; i++) {
     const mat = cells[i] as MaterialId;
+    if (mat === Material.Air) {
+      const temp = heat[i];
+      let r = ar;
+      let b = ab;
+      if (temp > 64) {
+        const q = (temp - 64) >> 3;
+        r = clampByte(r + q);
+        b = clampByte(b - (q >> 1));
+      }
+      const o = i * 4;
+      data[o] = r;
+      data[o + 1] = ag;
+      data[o + 2] = b;
+      data[o + 3] = 255;
+      continue;
+    }
     let [r, g, b] = rgbFor(mat, shades[i]);
     const x = i % width;
     const y = (i / width) | 0;
 
     if (
-      mat !== Material.Air &&
       mat !== Material.Fire &&
       mat !== Material.Glass &&
       mat !== Material.Crystal &&

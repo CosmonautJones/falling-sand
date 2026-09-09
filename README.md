@@ -18,10 +18,12 @@ upscale — heat haze, water caustics, gold spark, blast shake, Magnum Opus auro
 
 ```bash
 npm install
-npm run dev      # http://127.0.0.1:5173/
+npm run dev      # http://localhost:5173/
 npm test
 npm run typecheck
 ```
+
+The vessel draws at 480×270 grains. Chrome nearest-neighbour upscales that buffer — it should not shade a 4K framebuffer for a pixel grid. In Chrome: ⋮ → **Cast, save, and share** → **Install page as app**, or **More tools** → **Create shortcut** → Open as window. That is the standalone window; no Electron.
 
 The vessel boots charged: dunes that crawl if you wait, a trough with a silver
 thought, ice, a glass cup of lava, two red casks by the wood, and an unlit

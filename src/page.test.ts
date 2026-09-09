@@ -46,6 +46,11 @@ describe('shipped page', () => {
     expect(stage).toMatch(/ShaderMaterial|DataTexture/);
     expect(stage).toMatch(/uWonder|caustic|heat/);
     expect(stage).toMatch(/uShake/);
+    expect(stage).toMatch(/NearestFilter/);
+    expect(stage).toMatch(/setSize\(this\.grid\.width,\s*this\.grid\.height/);
+    expect(stage).toMatch(/desynchronized:\s*true/);
+    expect(html).toMatch(/rel="manifest"/);
+    expect(html).toMatch(/theme-color/);
   });
 
   it('fits the vessel with the toolbar in one window instead of filling the view', () => {
