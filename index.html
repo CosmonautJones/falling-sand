@@ -3,38 +3,190 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Falling Sand</title>
+    <title>Alembic</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%231a1410'/><circle cx='8' cy='9' r='5' fill='%23b08948'/><circle cx='8' cy='9' r='2' fill='%23ff6a0c'/></svg>" />
     <style>
+      :root {
+        --lampblack: #140f0c;
+        --paper: #cbb89a;
+        --brass: #c49a4a;
+        --lead: #3a3128;
+        --soot: #241c16;
+        --ink: #f0e2c4;
+      }
       html, body {
         margin: 0;
-        height: 100%;
-        background: #0b0b10;
-        color: #d8d8e0;
-        font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+        min-height: 100%;
+        background:
+          radial-gradient(80% 50% at 50% -10%, rgba(176, 137, 72, 0.16), transparent 52%),
+          var(--lampblack);
+        color: var(--ink);
+        font: 15px/1.5 Palatino, "Palatino Linotype", "Book Antiqua", Georgia, serif;
+        -webkit-font-smoothing: antialiased;
       }
-      body { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 16px; }
-      canvas {
-        image-rendering: pixelated;
-        border: 1px solid #2a2a36;
-        width: min(90vw, 720px);
-        height: auto;
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        padding: 18px 12px 28px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 34px;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        line-height: 1.1;
+        color: var(--brass);
+        text-shadow: 0 1px 0 #3a2a10, 0 -1px 0 #e8c97a;
+        cursor: pointer;
+        user-select: none;
+      }
+      h1.opus {
+        letter-spacing: 0.18em;
+        color: #e8b86a;
+      }
+      h1:focus-visible {
+        outline: 2px solid var(--brass);
+        outline-offset: 4px;
+      }
+      #lore, #codex {
+        max-width: 46rem;
+        margin: 0;
+        color: var(--paper);
+        font-style: italic;
+        line-height: 1.45;
+        text-wrap: pretty;
+        text-align: center;
+      }
+      #codex {
+        min-height: 1.45em;
+        color: #d4b56a;
+      }
+      kbd {
+        font: 12px/1 ui-monospace, "Cascadia Code", Consolas, monospace;
+        border: 1px solid var(--lead);
+        padding: 1px 5px;
+        color: var(--brass);
+      }
+      #toolbar {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: center;
+        width: min(96vw, 1440px);
+      }
+      #palette, #tools {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      button {
+        background: var(--soot);
+        color: var(--ink);
+        border: 1px solid var(--lead);
+        padding: 6px 10px;
+        cursor: pointer;
+        font: 13px/1.2 Palatino, "Palatino Linotype", Georgia, serif;
+      }
+      #palette button {
+        min-width: 4.6em;
+        letter-spacing: 0.02em;
+        box-shadow: inset 0 -8px 10px rgba(0, 0, 0, 0.18);
+      }
+      button:hover { border-color: var(--brass); }
+      button:focus-visible {
+        outline: 2px solid var(--brass);
+        outline-offset: 2px;
+      }
+      button[aria-pressed="true"] {
+        border-color: var(--paper);
+        box-shadow: inset 0 0 0 1px var(--paper);
+      }
+      .vessel {
+        margin: 0;
+        padding: 11px;
+        background:
+          radial-gradient(120% 80% at 50% 0%, rgba(176, 137, 72, 0.22), transparent 46%),
+          var(--lead);
+        box-shadow:
+          inset 0 1px 0 rgba(232, 201, 122, 0.65),
+          inset 0 0 0 1px #2a2118,
+          0 0 0 1px #5a4630,
+          0 32px 56px rgba(0, 0, 0, 0.55);
+        width: min(96vw, 1440px);
+        box-sizing: border-box;
+        position: relative;
+      }
+      #viewport {
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        aspect-ratio: 480 / 270;
+        background: #0b090e;
         touch-action: none;
       }
-      #toolbar { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
-      button {
-        background: #1a1a24;
-        color: #d8d8e0;
-        border: 1px solid #2a2a36;
-        padding: 6px 12px;
-        cursor: pointer;
-        font: inherit;
+      canvas {
+        display: block;
+        image-rendering: pixelated;
+        width: 100%;
+        height: 100%;
+        aspect-ratio: 480 / 270;
+        touch-action: none;
+        cursor: crosshair;
+        background: #0b090e;
+        transform-origin: 0 0;
       }
-      button[aria-pressed="true"] { background: #2f2f42; border-color: #4a4a60; }
+      #probe {
+        position: absolute;
+        z-index: 2;
+        display: none;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 8px 4px 5px;
+        background: #1a1410;
+        border: 1px solid var(--brass);
+        color: var(--ink);
+        font: 13px/1 Palatino, "Palatino Linotype", Georgia, serif;
+        letter-spacing: 0.04em;
+        pointer-events: none;
+        white-space: nowrap;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
+      }
+      #probe.is-on { display: flex; }
+      #probe .swatch {
+        width: 11px;
+        height: 11px;
+        border: 1px solid #5a4630;
+        flex: 0 0 auto;
+      }
+      #status {
+        font-variant-numeric: tabular-nums;
+        font-size: 13px;
+        color: var(--paper);
+      }
+      @media (max-width: 640px) {
+        h1 { font-size: 24px; letter-spacing: 0.08em; }
+        #lore { font-size: 14px; }
+        #palette button { min-width: 3.8em; padding: 6px 8px; }
+      }
     </style>
   </head>
   <body>
+    <h1>Alembic</h1>
+    <p id="lore">
+      Hold to pour. Right-click names a grain; hold right-click to pan when zoomed.
+      Scroll zooms. Casks remember fire. Space pauses; <kbd>[</kbd> <kbd>]</kbd> the brush.
+    </p>
+    <p id="codex"></p>
     <div id="toolbar"></div>
-    <canvas id="stage"></canvas>
+    <figure class="vessel">
+      <div id="viewport">
+        <canvas id="stage"></canvas>
+        <div id="probe" role="status"><span class="swatch"></span><span class="name">air</span></div>
+      </div>
+    </figure>
     <div id="status"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

@@ -3,3 +3,12 @@ dist/
 .vite/
 *.local
 .DS_Store
+.playwright-cli/
+qa-shots/
+
+# Local CodeGraph index (not source)
+.codegraph/
+
+# Local agent / worktree metadata
+.claude/
+

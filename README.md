@@ -1,48 +1,74 @@
-# falling-sand
+# Alembic
 
-A browser falling-sand toy: a dense cell grid of materials, stepped once per frame and blitted
-to a canvas one pixel per cell.
+A niche falling-sand vessel: charge it with reagents, then let the garden
+run. New stuff is transmuted, not picked from a giant palette. The Great Work
+is hidden in the reactions — and in a few rites the vessel will not name.
 
-## Current state
+The world is a 480×270 grain field, drawn through a Three.js nearest-neighbour
+upscale: heat bloom, water caustics, gold spark, Magnum Opus aurora.
 
-The scaffold is real but the physics is a stub. `src/sim.ts` moves sand straight down into air
-and does nothing else — water is inert, air is just an empty label, and sand piles into
-flat-topped columns. `src/sim.test.ts` documents those gaps as explicit failing-by-design
-expectations rather than leaving them implicit.
-
-| File | Role |
-| --- | --- |
-| `src/grid.ts` | Flat `Uint8Array` cell store. Out-of-bounds reads return Stone, so the world is an enclosed box. |
-| `src/materials.ts` | Material ids, colours, densities, movability. |
-| `src/sim.ts` | **The baseline to replace.** Naive sand-only step. |
-| `src/render.ts` | Reused `ImageData` blit, one pixel per cell. |
-| `src/main.ts` | Canvas wiring, brush input, RAF loop, fps readout. |
-
-## The objective
-
-Replace the baseline step with a real simulation engine that models:
-
-1. **Air as a moving medium** — pressure, not just an empty cell label. Air should be displaced
-   by falling solids, compress under them, and push back.
-2. **Liquids with flow and density exchange** — water spreads laterally, seeks its own level,
-   and heavier materials sink through it while lighter ones rise.
-3. **Granular solids with an angle of repose** — sand slides down slopes instead of stacking
-   into vertical columns.
-
-### Constraints
-
-- 240 x 160 cells (38,400) sustaining 60 fps in a browser on a mid-range laptop.
-- Mass conservation: no material may be created or destroyed by movement.
-- No update-order artifacts strong enough to be visible as a directional drift.
-- TypeScript strict mode, no `any`. Tests are mandatory and must not regress.
-- Deterministic given a seed — the test suite has to be able to assert on exact grid states.
-
-## Commands
+## Run
 
 ```bash
 npm install
-npm test          # vitest run
-npm run typecheck # tsc --noEmit
-npm run dev       # vite dev server
-npm run build     # typecheck + vite build
+npm run dev      # http://127.0.0.1:5173/
+npm test
+npm run typecheck
 ```
+
+## How to play
+
+The vessel starts charged. Hold to pour — strokes interpolate, a still hold
+keeps dripping. Right-click names the grain under the cursor; hold right-click and drag to
+pan after zooming. Scroll zooms toward the cursor. Double-click resets the
+view. Alt-click samples a grain (and unlocks it). Space pauses;
+`[` / `]` change brush size; `1`–`0` pick the first ten bench reagents.
+½× / 1× / 2× set the clock.
+
+Start with sand, water, stone, seed, oil, fire, air, ice, wood, salt, lava,
+acid, and lead. Everything else unlocks when the vessel makes it.
+
+- Seed + water (or mud) → **plant**. Wet plants grow and a thicket drops more seed.
+- Fire + sand → **glass**. Fire without fuel → **ash**. Fire + water → **steam**.
+- Ash + water → **mud**. Moss creeps along wet stone on its own.
+- Oil floats on water and burns. Water still kills fire.
+- Ice freezes neighboring water and melts beside fire.
+- Salt dissolves into **brine**. Hot brine leaves **crystal**.
+- Wood burns to fire or falling **ember**.
+- Lava swallows stone, vitrifies sand, and quenches in water as **obsidian** + steam.
+- Steam rises, bubbles through water, and condenses on ice. Steam + crystal → **aether**.
+- Acid eats stone to sand, and plant-matter to air. Acid + lead → **mercury**.
+- Mercury + lead + fire → **gold**. Azoth turns lead to gold without the fire.
+- Gold + aether + crystal → **azoth**. The Work is finished.
+- Salt + ash → **powder**. Powder next to fire flashes.
+- Fire boxed in eight obsidian → **void**. Void spreads through living stuff; azoth keeps it back.
+- Mud + fire → **brick**. Ash on a plant is bone-meal.
+- Sand resting on brine petrifies to stone.
+- Powder burns as a **fuse**, one hop a tick.
+- Acid biting stone sometimes yields **lead** (rarely gold).
+- A tall gold column kissed by aether at the tip **strikes** fire at the base.
+- Crystal hanging over air beside ice **drips**.
+- An obsidian frame (inner at least 2×2) lit with fire becomes a **rift**. What touches it turns to aether.
+- **Tnt** on the bench. Fire, ember, lava, or a burning fuse sets it off. Obsidian, azoth, and rifts hold. Nearby tnt chains. Sand gets thrown.
+- Oil + powder → **nitro**, a meaner liquid blast.
+- Sand falling into a pool **splashes** the liquid up. One grain, one step — the pile just has more to say.
+
+Clear empties the vessel; reset restores the opening scene. Discoveries stay.
+
+There are rites. The name on the page can be struck. Old sequences still work.
+A few words from the art, typed into the dark, are answered.
+
+## Layout
+
+| File | Role |
+| --- | --- |
+| `src/grid.ts` | Cell ids + per-grain shade. Occupancy scan. Line stamps. |
+| `src/materials.ts` | Palette, colour, density, kind. |
+| `src/sim.ts` | Motion, growth, fire, ice, lava, the Great Work. |
+| `src/secrets.ts` | Title strikes, konami, named rites, ceiling rain. |
+| `src/codex.ts` | Whispered lines when a reagent is first seen. |
+| `src/render.ts` | `blitGrid` (shade, flicker, sparkle, occlusion). |
+| `src/stage.ts` | Three.js DataTexture quad + 2d fallback. |
+| `src/world.ts` | Size, brushes, opening scene. |
+| `src/main.ts` | Palette, pour, pause, keyboard, rites, RAF loop. |
+| `src/rng.ts` | Seedable PRNG for shade and diagonal choice. |
