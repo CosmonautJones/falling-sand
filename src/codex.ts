@@ -141,7 +141,7 @@ const PAGES: Record<MaterialId, { whisper: string; leaf: string }> = {
   },
   [Material.Mite]: {
     whisper: 'A grain with legs. It steals.',
-    leaf: 'Camouflaged in sand, it crawls, burrows, and will not swim if it can climb out. Bloom before plant before moss. Heat sends it running; if it dies laden, gold or mud spills. Minnows hunt it at the shore. Gold it only hoards beside more gold. Alone it lifts mud; two kin and it sets the clod down. A huddle of three stays put. They lay a scent empty mites shun and laden mites follow home. Wet mud against plant hatches more.',
+    leaf: 'Camouflaged in sand, it crawls, burrows, and will not swim if it can climb out. Bloom before plant before moss. Heat sends it running; if it dies laden, gold or mud spills. Minnows hunt it at the shore. Gold it only hoards beside more gold. Loose mud it will haul, and set down beside kin or more mud; a nest against plant it will not steal. A huddle mills instead of scattering. They lay a scent empty mites shun and laden mites follow home. Wet mud against plant hatches more.',
   },
   [Material.Minnow]: {
     whisper: 'The trough keeps a silver thought.',

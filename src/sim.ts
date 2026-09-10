@@ -577,7 +577,7 @@ function freezeWater(grid: Grid, x: number, y: number, born: Uint8Array): void {
 }
 
 const GOLD_CARRY_SHADE = 90;
-const MUD_CARRY_SHADE = -90;
+const MUD_CARRY_SHADE = -40;
 const GOLD_CARRY_MIN = 64;
 const MUD_CARRY_MAX = -40;
 
@@ -684,7 +684,7 @@ function miteDestScore(
     if (n === Material.Minnow) s -= 10;
   }
   const trail = grid.getTrail(nx, ny);
-  if (cargo === null) s -= trail >> 5;
+  if (cargo === null) s -= trail >> 6;
   else s += trail >> 4;
   return s;
 }
@@ -795,6 +795,14 @@ function pickUp(
   grid.set(x, y, Material.Mite, shade);
 }
 
+function isNestMud(grid: Grid, x: number, y: number): boolean {
+  return hasNeighbor(grid, x, y, Material.Plant) || hasNeighbor(grid, x, y, Material.Bloom);
+}
+
+function isNestForage(grid: Grid, x: number, y: number): boolean {
+  return hasNeighbor(grid, x, y, Material.Mud);
+}
+
 function miteCling(grid: Grid, x: number, y: number): boolean {
   for (const [dx, dy] of N8) {
     const nx = x + dx;
@@ -832,7 +840,7 @@ function miteAct(grid: Grid, x: number, y: number, born: Uint8Array): boolean {
     return true;
   }
 
-  if (sense.food) {
+  if (sense.food && !isNestForage(grid, sense.food[0], sense.food[1])) {
     transmute(grid, sense.food[0], sense.food[1], Material.Air, born);
     const air = gatherAir(grid, x, y);
     if (sense.kin > 0 && air.length > 0 && randInt(5) === 0) {
@@ -855,10 +863,21 @@ function miteAct(grid: Grid, x: number, y: number, born: Uint8Array): boolean {
     pickUp(grid, x, y, sense.gold, GOLD_CARRY_SHADE, born);
     return true;
   }
-  if (cargo === 'mud' && sense.kin >= 2 && dropCargo(grid, x, y, born, Material.Mud, () => 0)) {
+  if (
+    cargo === 'mud' &&
+    (sense.kin >= 2 || sense.mud) &&
+    dropCargo(grid, x, y, born, Material.Mud, (nx, ny) =>
+      hasNeighbor(grid, nx, ny, Material.Mud) ? 2 : 0,
+    )
+  ) {
     return true;
   }
-  if (cargo === null && sense.mud && sense.kin < 2) {
+  if (
+    cargo === null &&
+    sense.mud &&
+    sense.kin < 2 &&
+    !isNestMud(grid, sense.mud[0], sense.mud[1])
+  ) {
     pickUp(grid, x, y, sense.mud, MUD_CARRY_SHADE, born);
     return true;
   }
@@ -871,8 +890,7 @@ function miteAct(grid: Grid, x: number, y: number, born: Uint8Array): boolean {
     below === Material.Aether;
   if (hanging && !miteCling(grid, x, y)) return false;
 
-  if (sense.kin >= 2) return true;
-  if (randInt(3) !== 0) return true;
+  if (randInt(sense.kin >= 2 ? 8 : 3) !== 0) return true;
   miteWalk(grid, x, y, born, cargo);
   return true;
 }

@@ -354,7 +354,7 @@ describe('life', () => {
       const grid = new Grid(7, 6);
       fillStone(grid);
       grid.set(2, 2, Material.Mite);
-      grid.set(3, 2, Material.Mite, -90);
+      grid.set(3, 2, Material.Mite, -40);
       grid.set(2, 3, Material.Mite);
       grid.set(3, 3, Material.Mite);
       grid.set(4, 1, Material.Air);
@@ -380,7 +380,7 @@ describe('life', () => {
     it('will not drop mud until two kin are beside it', () => {
       const grid = new Grid(7, 5);
       stoneFloor(grid, 4);
-      grid.set(2, 3, Material.Mite, -90);
+      grid.set(2, 3, Material.Mite, -40);
       step(grid);
       expect(grid.count(Material.Mud)).toBe(0);
       expect(laden(grid, (s) => s <= -40)).toBe(1);
@@ -400,7 +400,7 @@ describe('life', () => {
     it('keeps a mud clod instead of stealing neighboring gold', () => {
       const grid = new Grid(7, 5);
       stoneFloor(grid, 4);
-      grid.set(2, 3, Material.Mite, -90);
+      grid.set(2, 3, Material.Mite, -40);
       grid.set(3, 3, Material.Gold);
       step(grid);
       expect(grid.count(Material.Gold)).toBe(1);
@@ -413,7 +413,7 @@ describe('life', () => {
       for (let y = 2; y <= 4; y++) {
         for (let x = 1; x <= 3; x++) grid.set(x, y, Material.Stone);
       }
-      grid.set(2, 3, Material.Mite, -90);
+      grid.set(2, 3, Material.Mite, -40);
       grid.set(2, 2, Material.Fire);
       for (let i = 0; i < 8; i++) step(grid);
       expect(grid.count(Material.Mud) + grid.count(Material.Brick)).toBeGreaterThanOrEqual(1);
@@ -427,23 +427,83 @@ describe('life', () => {
       grid.set(1, 3, Material.Water);
       grid.set(2, 3, Material.Water);
       grid.set(1, 3, Material.Minnow);
-      grid.set(2, 3, Material.Mite, -90);
+      grid.set(2, 3, Material.Mite, -40);
       for (let i = 0; i < 8; i++) step(grid);
       expect(grid.count(Material.Mite)).toBe(0);
       expect(grid.count(Material.Mud)).toBeGreaterThanOrEqual(1);
     });
 
-    it('holds an L of three mites on a floor instead of letting them wander apart', () => {
+    it('lets a three-mite huddle mill in place instead of freezing', () => {
+      const grid = new Grid(12, 6);
+      stoneFloor(grid, 5);
+      grid.set(5, 4, Material.Mite);
+      grid.set(6, 4, Material.Mite);
+      grid.set(5, 3, Material.Mite);
+      const home = new Set(['5,4', '6,4', '5,3']);
+      let milled = false;
+      for (let i = 0; i < 48; i++) {
+        step(grid);
+        const cells = new Set(positions(grid, Material.Mite).map((p) => `${p.x},${p.y}`));
+        if (![...cells].every((c) => home.has(c)) || cells.size !== home.size) milled = true;
+      }
+      const now = positions(grid, Material.Mite);
+      expect(now).toHaveLength(3);
+      const xs = now.map((p) => p.x);
+      const ys = now.map((p) => p.y);
+      expect(Math.max(...xs) - Math.min(...xs)).toBeLessThanOrEqual(4);
+      expect(Math.max(...ys) - Math.min(...ys)).toBeLessThanOrEqual(3);
+      expect(milled).toBe(true);
+    });
+
+    it('does not steal mud that sits against plant', () => {
+      const grid = new Grid(8, 5);
+      stoneFloor(grid, 4);
+      grid.set(2, 3, Material.Mite);
+      grid.set(3, 3, Material.Mud);
+      grid.set(4, 3, Material.Plant);
+      grid.set(4, 2, Material.Water);
+      step(grid);
+      expect(grid.count(Material.Mud)).toBe(1);
+      expect(laden(grid, (s) => s <= -40)).toBe(0);
+    });
+
+    it('leaves a wet mud-and-plant nest alone long enough to hatch', () => {
       const grid = new Grid(10, 6);
       stoneFloor(grid, 5);
-      grid.set(4, 4, Material.Mite);
-      grid.set(5, 4, Material.Mite);
-      grid.set(4, 3, Material.Mite);
-      const home = new Set(['4,4', '5,4', '4,3']);
-      for (let i = 0; i < 12; i++) step(grid);
-      expect(grid.count(Material.Mite)).toBe(3);
-      const now = new Set(positions(grid, Material.Mite).map((p) => `${p.x},${p.y}`));
-      expect(now).toEqual(home);
+      grid.set(1, 4, Material.Mite);
+      grid.set(5, 4, Material.Mud);
+      grid.set(6, 4, Material.Plant);
+      grid.set(6, 3, Material.Water);
+      for (let i = 0; i < 80; i++) step(grid);
+      expect(grid.count(Material.Mud)).toBeGreaterThanOrEqual(1);
+      expect(laden(grid, (s) => s <= -40)).toBe(0);
+    });
+
+    it('lets a mud-laden loner set its clod down beside more mud', () => {
+      const grid = new Grid(7, 5);
+      stoneFloor(grid, 4);
+      grid.set(2, 3, Material.Mite, -48);
+      grid.set(3, 3, Material.Mud);
+      step(grid);
+      expect(grid.count(Material.Mud)).toBeGreaterThanOrEqual(2);
+      expect(grid.count(Material.Mite)).toBe(1);
+    });
+
+    it('keeps a mud-laden mite near sand colour instead of going black', () => {
+      const grid = new Grid(7, 5);
+      stoneFloor(grid, 4);
+      grid.set(2, 3, Material.Mite);
+      grid.set(3, 3, Material.Mud);
+      step(grid);
+      const [mite] = positions(grid, Material.Mite);
+      expect(grid.getShade(mite.x, mite.y)).toBeLessThanOrEqual(-40);
+      const data = new Uint8ClampedArray(7 * 5 * 4);
+      blitGrid(grid, data, 0);
+      const o = (mite.y * 7 + mite.x) * 4;
+      const sand = MATERIALS[Material.Sand].color;
+      const dist = Math.hypot(data[o] - sand[0], data[o + 1] - sand[1], data[o + 2] - sand[2]);
+      expect(dist).toBeLessThan(110);
+      expect(data[o + 2]).toBeGreaterThan(20);
     });
 
     it('walks a loner toward a huddle rather than onto sand away from it', () => {

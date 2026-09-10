@@ -128,6 +128,12 @@ export function blitGrid(grid: Grid, data: Uint8ClampedArray, tick = 0): void {
       b = clampByte(b - 8);
     }
 
+    if (mat === Material.Mite && shades[i] <= -40) {
+      r = clampByte(r + 22);
+      g = clampByte(g + 10);
+      b = clampByte(b + 4);
+    }
+
     if (mat === Material.Minnow && tick !== 0) {
       const dart = ((i * 11 + (tick >> 1) * 5) & 7) - 3;
       g = clampByte(g + dart + 4);
