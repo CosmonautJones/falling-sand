@@ -17,6 +17,8 @@ export class Grid {
   readonly shades: Int8Array;
   /** Lagrangian temperature, 0–255, swapped with the grain. */
   readonly heat: Uint8Array;
+  /** Eulerian scent, 0–255, stays on the cell when grains swap. */
+  readonly trails: Uint8Array;
 
   constructor(width: number, height: number) {
     if (!Number.isInteger(width) || width <= 0) {
@@ -31,6 +33,7 @@ export class Grid {
     this.shades = new Int8Array(width * height);
     this.heat = new Uint8Array(width * height);
     this.heat.fill(HEAT_AMBIENT[Material.Air]);
+    this.trails = new Uint8Array(width * height);
   }
 
   index(x: number, y: number): number {
@@ -54,6 +57,11 @@ export class Grid {
   getHeat(x: number, y: number): number {
     if (!this.inBounds(x, y)) return HEAT_AMBIENT[Material.Stone];
     return this.heat[this.index(x, y)];
+  }
+
+  getTrail(x: number, y: number): number {
+    if (!this.inBounds(x, y)) return 0;
+    return this.trails[this.index(x, y)];
   }
 
   set(x: number, y: number, material: MaterialId, shade = 0): void {
@@ -127,6 +135,7 @@ export class Grid {
     this.cells.fill(Material.Air);
     this.shades.fill(0);
     this.heat.fill(HEAT_AMBIENT[Material.Air]);
+    this.trails.fill(0);
   }
 
   /** Count of cells holding `material`. Used by tests to assert conservation. */

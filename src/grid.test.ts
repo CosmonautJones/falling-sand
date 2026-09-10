@@ -100,5 +100,29 @@ describe('Grid', () => {
     grid.clear();
     expect(grid.count(Material.Air)).toBe(16);
     expect(grid.getShade(0, 0)).toBe(0);
+    expect(grid.getTrail(0, 0)).toBe(0);
+  });
+
+  it('starts with no scent on the ground', () => {
+    const grid = new Grid(4, 4);
+    expect(grid.getTrail(1, 1)).toBe(0);
+    expect(grid.getTrail(-1, 0)).toBe(0);
+  });
+
+  it('leaves scent on the cell when grains swap, unlike heat', () => {
+    const grid = new Grid(4, 4);
+    grid.set(1, 1, Material.Sand);
+    grid.trails[grid.index(1, 1)] = 80;
+    grid.trails[grid.index(2, 2)] = 10;
+    grid.swap(1, 1, 2, 2);
+    expect(grid.getTrail(1, 1)).toBe(80);
+    expect(grid.getTrail(2, 2)).toBe(10);
+  });
+
+  it('does not wipe scent when a new grain is painted on a cell', () => {
+    const grid = new Grid(4, 4);
+    grid.trails[grid.index(1, 1)] = 70;
+    grid.set(1, 1, Material.Sand);
+    expect(grid.getTrail(1, 1)).toBe(70);
   });
 });

@@ -13,6 +13,7 @@ import { randInt, randShade } from './rng';
 let scanDir: 1 | -1 = 1;
 let bornBuf: Uint8Array | null = null;
 let heatBuf: Uint8Array | null = null;
+let trailBuf: Uint8Array | null = null;
 let blastKick = 0;
 
 const CONDUCT = new Uint8Array(256);
@@ -682,6 +683,9 @@ function miteDestScore(
     if (isHeat(n)) s -= 14;
     if (n === Material.Minnow) s -= 10;
   }
+  const trail = grid.getTrail(nx, ny);
+  if (cargo === null) s -= trail >> 5;
+  else s += trail >> 4;
   return s;
 }
 
@@ -1166,6 +1170,50 @@ function heatScratch(length: number): Uint8Array {
   return heatBuf;
 }
 
+function trailScratch(length: number): Uint8Array {
+  if (!trailBuf || trailBuf.length !== length) trailBuf = new Uint8Array(length);
+  return trailBuf;
+}
+
+const TRAIL_ALPHA = 6;
+const TRAIL_EVAP = 12;
+const TRAIL_LAY = 6;
+const TRAIL_LAY_LADEN = 14;
+
+/**
+ * Eulerian scent: mites deposit, then
+ *   T' = T + (α/32) ∇²T − λT
+ * with α ≤ 8 so 1 − α/8 ≥ 0.
+ */
+function stigmergy(grid: Grid): void {
+  const { cells, shades, trails, width: w, height: h } = grid;
+  const n = cells.length;
+  for (let i = 0; i < n; i++) {
+    if (cells[i] !== Material.Mite) continue;
+    const add = cargoOf(shades[i]) === null ? TRAIL_LAY : TRAIL_LAY_LADEN;
+    const next = trails[i] + add;
+    trails[i] = next > 255 ? 255 : next;
+  }
+
+  const out = trailScratch(n);
+  for (let y = 0; y < h; y++) {
+    const row = y * w;
+    for (let x = 0; x < w; x++) {
+      const i = row + x;
+      const t = trails[i];
+      const up = y > 0 ? trails[i - w] : t;
+      const dn = y < h - 1 ? trails[i + w] : t;
+      const rt = x < w - 1 ? trails[i + 1] : t;
+      const lf = x > 0 ? trails[i - 1] : t;
+      const lap = up + dn + rt + lf - (t << 2);
+      let next = t + ((TRAIL_ALPHA * lap) >> 5);
+      next -= (TRAIL_EVAP * t) >> 8;
+      out[i] = next < 0 ? 0 : next > 255 ? 255 : next;
+    }
+  }
+  trails.set(out);
+}
+
 /**
  * One explicit Euler sweep of
  *   T' = T + (α/32) ∇²T + (λ/256)(T∞ − T)
@@ -1276,4 +1324,6 @@ export function step(grid: Grid): void {
       }
     }
   }
+
+  stigmergy(grid);
 }

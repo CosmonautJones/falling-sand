@@ -462,4 +462,102 @@ describe('life', () => {
       expect(wanderer?.x).toBeLessThan(7);
     });
   });
+
+  describe('mite trails', () => {
+    it('lets a still mite lay scent on its cell', () => {
+      const grid = new Grid(5, 5);
+      fillStone(grid);
+      grid.set(2, 2, Material.Mite);
+      step(grid);
+      expect(grid.getTrail(2, 2)).toBeGreaterThan(0);
+    });
+
+    it('lets a gold-laden mite lay more scent than an empty one', () => {
+      seedRng(1);
+      resetSim();
+      const empty = new Grid(5, 5);
+      fillStone(empty);
+      empty.set(2, 2, Material.Mite);
+      step(empty);
+
+      seedRng(1);
+      resetSim();
+      const laden = new Grid(5, 5);
+      fillStone(laden);
+      laden.set(2, 2, Material.Mite, 90);
+      step(laden);
+
+      expect(laden.getTrail(2, 2)).toBeGreaterThan(empty.getTrail(2, 2));
+    });
+
+    it('evaporates scent when no mite is laying it', () => {
+      const grid = new Grid(5, 5);
+      grid.trails[grid.index(2, 2)] = 200;
+      for (let i = 0; i < 24; i++) step(grid);
+      expect(grid.getTrail(2, 2)).toBeLessThan(200);
+    });
+
+    it('spreads scent into neighboring cells', () => {
+      const grid = new Grid(5, 5);
+      grid.trails[grid.index(2, 2)] = 200;
+      step(grid);
+      expect(grid.getTrail(2, 1)).toBeGreaterThan(0);
+      expect(grid.getTrail(1, 2)).toBeGreaterThan(0);
+      expect(grid.getTrail(2, 2)).toBeLessThan(200);
+    });
+
+    it('does not let a trail field explode past 255', () => {
+      const grid = new Grid(6, 6);
+      for (let i = 0; i < grid.trails.length; i++) grid.trails[i] = i % 2 === 0 ? 255 : 0;
+      for (let n = 0; n < 40; n++) step(grid);
+      let sum = 0;
+      for (let i = 0; i < grid.trails.length; i++) {
+        expect(grid.trails[i]).toBeLessThanOrEqual(255);
+        sum += grid.trails[i];
+      }
+      expect(sum).toBeLessThan(255 * 18);
+    });
+
+    it('sends an empty mite toward the weaker scent', () => {
+      const grid = new Grid(7, 5);
+      fillStone(grid);
+      grid.set(2, 3, Material.Air);
+      grid.set(3, 3, Material.Mite);
+      grid.set(4, 3, Material.Air);
+      let moved = false;
+      for (let i = 0; i < 24; i++) {
+        grid.trails.fill(0);
+        grid.trails[grid.index(4, 3)] = 220;
+        step(grid);
+        const [mite] = positions(grid, Material.Mite);
+        if (mite && mite.x !== 3) {
+          expect(mite.x).toBe(2);
+          moved = true;
+          break;
+        }
+      }
+      expect(moved).toBe(true);
+    });
+
+    it('sends a laden mite toward the stronger scent', () => {
+      const grid = new Grid(7, 5);
+      fillStone(grid);
+      grid.set(2, 3, Material.Air);
+      grid.set(3, 3, Material.Mite, 90);
+      grid.set(4, 3, Material.Air);
+      let moved = false;
+      for (let i = 0; i < 24; i++) {
+        grid.trails.fill(0);
+        grid.trails[grid.index(4, 3)] = 220;
+        step(grid);
+        const [mite] = positions(grid, Material.Mite);
+        if (mite && mite.x !== 3) {
+          expect(mite.x).toBe(4);
+          moved = true;
+          break;
+        }
+      }
+      expect(moved).toBe(true);
+    });
+  });
 });
