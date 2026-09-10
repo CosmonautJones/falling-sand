@@ -7,6 +7,7 @@ import { BRUSH_SIZES, HEIGHT, WIDTH, seedVessel } from './world';
 import { createRite, rainFromCeiling, type RiteName } from './secrets';
 import { blanks, stained, whisper } from './codex';
 import { createView, panBy, screenToCell, zoomAt } from './view';
+import { startVisibleLoop } from './visible-loop';
 
 function requireEl<T extends Element>(selector: string): T {
   const node = document.querySelector<T>(selector);
@@ -500,7 +501,22 @@ function frame(now: number): void {
     frames = 0;
     lastSample = now;
   }
-  requestAnimationFrame(frame);
 }
 
-requestAnimationFrame(frame);
+startVisibleLoop({
+  frame,
+  resume: () => {
+    lastTick = performance.now();
+    lastSample = lastTick;
+    frames = 0;
+    acc = 0;
+  },
+  suspend: () => {
+    painting = false;
+    gesture = 'none';
+    lastCell = null;
+    acc = 0;
+    probe.classList.remove('is-on');
+    reticle.classList.remove('is-on');
+  },
+});
