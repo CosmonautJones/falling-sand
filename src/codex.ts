@@ -29,7 +29,7 @@ const PAGES: Record<MaterialId, { whisper: string; leaf: string }> = {
   },
   [Material.Plant]: {
     whisper: 'Seed drinks. The garden answers.',
-    leaf: 'Grows while wet. Left long enough it takes the sand. A thicket drops seed, then opens bloom. Ash is bone-meal. Fire takes it. Mites graze it.',
+    leaf: 'Grows while wet. A steady local supply lets it root into sand; drying starts that wait again. A thicket drops seed, then opens bloom. Ash is bone-meal. Fire takes it. Mites graze it.',
   },
   [Material.Oil]: {
     whisper: 'A dark float.',
@@ -53,7 +53,7 @@ const PAGES: Record<MaterialId, { whisper: string; leaf: string }> = {
   },
   [Material.Moss]: {
     whisper: 'Wet stone grows a quiet pelt.',
-    leaf: 'Creeps along stone that drinks. Age it, and it takes sand, then brick. Mites will graze it. Acid and fire do not suffer it.',
+    leaf: 'Creeps along stone that drinks. Sustained moisture lets it take sand, but fired brick holds. Mites will graze it. Acid and fire do not suffer it.',
   },
   [Material.Ice]: {
     whisper: 'Water, stopped.',

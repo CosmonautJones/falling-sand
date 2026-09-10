@@ -63,7 +63,7 @@ Extend the existing codex with a small number of observations, emitted only when
 
 Material discovery and behavioral observations are different. A seeded material is not evidence that the player caused its reaction. Avoid toast floods, task lists, scores or a mandatory recipe checklist.
 
-Add one local vessel checkpoint with restore after the core cycle works. Restore must reproduce continued simulation, including material, shade, temperature, trails, RNG and scan state, with compatible discovery state. Validate saved versions and dimensions before replacing a running vessel; corrupt data must leave the current vessel intact. Report storage failure plainly. No account, server or cloud dependency.
+Add one local vessel checkpoint with restore after the core cycle works. Restore must reproduce continued simulation, including material, shade, temperature, trails, local growth maturity, RNG and scan state, with compatible discovery state. Validate saved versions and dimensions before replacing a running vessel; corrupt data must leave the current vessel intact. Report storage failure plainly. No account, server or cloud dependency.
 
 Broader vessel generation, galleries and multiple save slots follow evidence that players want to repeat the first experience. They are outside this milestone.
 

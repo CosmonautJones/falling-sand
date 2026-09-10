@@ -37,10 +37,12 @@ export function beats(): number {
   return beatCount;
 }
 
-/** Garden age: 0 at reset, +1 per 256 beats, cap 4. */
-function wildness(): number {
-  const w = beatCount >> 8;
-  return w > 4 ? 4 : w;
+/** New grains start young; a broken local supply resets their maturity. */
+function matureGarden(grid: Grid, x: number, y: number, nourished: boolean): number {
+  const i = grid.index(x, y);
+  const age = nourished ? Math.min(5400, grid.growth[i] + 1) : 0;
+  grid.growth[i] = age;
+  return age;
 }
 
 const N8: ReadonlyArray<readonly [number, number]> = [
@@ -197,21 +199,20 @@ function growPlant(grid: Grid, x: number, y: number, born: Uint8Array): void {
   let plants = 0;
   const air: Array<[number, number]> = [];
   const grow: Array<[number, number]> = [];
-  const wild = wildness();
-  let wet = plantDrinks(grid, x, y);
+  const wet = plantDrinks(grid, x, y);
+  const age = matureGarden(grid, x, y, wet);
   for (const [dx, dy] of N8) {
     const nx = x + dx;
     const ny = y + dy;
     const n = grid.get(nx, ny);
     if (n === Material.Plant) {
       plants++;
-      if (!wet && wild >= 2 && plantDrinks(grid, nx, ny)) wet = true;
     }
     if (n === Material.Air) {
       air.push([nx, ny]);
       grow.push([nx, ny]);
-    } else if (wild >= 2 && n === Material.Sand) grow.push([nx, ny]);
-    else if (wild >= 3 && n === Material.Water && !hasNeighbor(grid, nx, ny, Material.Mud)) {
+    } else if (age >= 3600 && n === Material.Sand) grow.push([nx, ny]);
+    else if (age >= 5400 && n === Material.Water && !hasNeighbor(grid, nx, ny, Material.Mud)) {
       grow.push([nx, ny]);
     }
   }
@@ -234,17 +235,16 @@ function growPlant(grid: Grid, x: number, y: number, born: Uint8Array): void {
 }
 
 function creepMoss(grid: Grid, x: number, y: number, born: Uint8Array): void {
-  if (!hasNeighbor(grid, x, y, Material.Water) && !hasNeighbor(grid, x, y, Material.Mud)) return;
-  const wild = wildness();
-  if (randInt(Math.max(1, 3 - (wild >> 1))) !== 0) return;
+  const wet = hasNeighbor(grid, x, y, Material.Water) || hasNeighbor(grid, x, y, Material.Mud);
+  const age = matureGarden(grid, x, y, wet);
+  if (!wet || randInt(3) !== 0) return;
   const hosts: Array<[number, number]> = [];
   for (const [dx, dy] of N8) {
     const nx = x + dx;
     const ny = y + dy;
     const n = grid.get(nx, ny);
     if (n === Material.Stone) hosts.push([nx, ny]);
-    else if (wild >= 1 && n === Material.Sand) hosts.push([nx, ny]);
-    else if (wild >= 2 && n === Material.Brick) hosts.push([nx, ny]);
+    else if (age >= 1800 && n === Material.Sand) hosts.push([nx, ny]);
   }
   if (hosts.length === 0) return;
   const [nx, ny] = hosts[randInt(hosts.length)];
@@ -320,7 +320,13 @@ function isKindling(n: MaterialId): boolean {
 function igniteCell(grid: Grid, nx: number, ny: number, n: MaterialId, born: Uint8Array): boolean {
   if (!grid.inBounds(nx, ny)) return false;
   const need = catchHeat(n);
-  if (need > 0 && grid.getHeat(nx, ny) < need) return false;
+  if (need > 0 && grid.getHeat(nx, ny) < need) {
+    // Flame contact reaches diagonal fuel too. N4 diffusion alone leaves it
+    // below catch heat forever while it keeps the adjacent fire alive.
+    const i = grid.index(nx, ny);
+    grid.heat[i] = Math.min(255, grid.heat[i] + 16);
+    return false;
+  }
   if (n === Material.Plant || n === Material.Oil || n === Material.Seed || n === Material.Bloom) {
     transmute(grid, nx, ny, Material.Fire, born);
     return true;

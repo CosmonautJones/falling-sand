@@ -42,7 +42,6 @@ let painting = false;
 let lastCell: { x: number; y: number } | null = null;
 let paused = false;
 let speed = 1;
-let lastStar = performance.now();
 let view = createView();
 let gesture: 'none' | 'paint' | 'probe' | 'pan' = 'none';
 let downAt = { x: 0, y: 0, t: 0, cellX: 0, cellY: 0 };
@@ -484,10 +483,6 @@ function frame(now: number): void {
     if (kick > 0) {
       renderer.kick(Math.min(1, kick / 6));
       boom(kick);
-    }
-    if (now - lastStar > 45000) {
-      lastStar = now;
-      rainFromCeiling(grid, Material.Ember, 1);
     }
   }
 
