@@ -1,9 +1,84 @@
 import { describe, expect, it } from 'vitest';
 import { Grid } from './grid';
 import { Material } from './materials';
+import { seedRng } from './rng';
+import { resetSim, step } from './sim';
 import { HEIGHT, WIDTH, seedVessel } from './world';
 
 describe('vessel', () => {
+  it('keeps the opening lava inside its glass cup instead of melting the floor', () => {
+    seedRng(7);
+    resetSim();
+    const grid = new Grid(WIDTH, HEIGHT);
+    seedVessel(grid);
+    const lava = grid.count(Material.Lava);
+
+    for (let tick = 1; tick <= 120; tick++) step(grid);
+
+    expect(grid.count(Material.Lava)).toBe(lava);
+    for (let i = 0; i < grid.cells.length; i++) {
+      if (grid.cells[i] !== Material.Lava) continue;
+      const x = i % WIDTH;
+      const y = Math.floor(i / WIDTH);
+      expect(x).toBeGreaterThan(410);
+      expect(x).toBeLessThan(434);
+      expect(y).toBeGreaterThanOrEqual(249);
+      expect(y).toBeLessThan(264);
+    }
+    for (let x = 410; x <= 434; x++) {
+      expect(grid.get(x, 264)).toBe(Material.Glass);
+      expect(grid.get(x, 265)).toBe(Material.Stone);
+    }
+  });
+
+  it.each([
+    { width: 480, height: 270, ground: 265, wall: 5 },
+    { width: 96, height: 54, ground: 51, wall: 3 },
+  ])(
+    'keeps terrain inside the $width by $height stone enclosure',
+    ({ width, height, ground, wall }) => {
+      seedRng(7);
+      const grid = new Grid(width, height);
+      seedVessel(grid);
+
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          if (y >= ground || x < wall || x >= width - wall) {
+            expect(grid.get(x, y), `enclosure at ${x},${y}`).toBe(Material.Stone);
+          }
+        }
+      }
+    },
+  );
+
+  it.each([1, 7, 42])(
+    'keeps nursery mud against forage through 1800 steps with seed %i',
+    (seed) => {
+      seedRng(seed);
+      resetSim();
+      const grid = new Grid(WIDTH, HEIGHT);
+      seedVessel(grid);
+
+      for (let tick = 1; tick <= 1800; tick++) {
+        step(grid);
+        if (tick !== 10 && tick % 60 !== 0) continue;
+        for (const x of [131, 132]) {
+          expect(grid.get(x, 264), `nursery mud at ${x},264 after step ${tick}`).toBe(Material.Mud);
+          let forage = false;
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              if (dx === 0 && dy === 0) continue;
+              const id = grid.get(x + dx, 264 + dy);
+              if (id === Material.Plant || id === Material.Bloom) forage = true;
+            }
+          }
+          expect(forage, `nursery forage near ${x},264 after step ${tick}`).toBe(true);
+        }
+      }
+    },
+    30_000,
+  );
+
   it('is a wide playfield, not a postage stamp', () => {
     expect(WIDTH).toBeGreaterThanOrEqual(420);
     expect(HEIGHT).toBeGreaterThanOrEqual(240);

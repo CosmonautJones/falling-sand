@@ -29,10 +29,6 @@ export function seedVessel(grid: Grid): void {
   const wallN = Math.max(3, Math.round(w * 0.01));
   const ground = h - floorN;
 
-  fill(grid, 0, ground, w - 1, h - 1, Material.Stone);
-  fill(grid, 0, 0, wallN - 1, h - 1, Material.Stone);
-  fill(grid, w - wallN, 0, w - 1, h - 1, Material.Stone);
-
   const sandX = Math.round(w * 0.22);
   const sandR = Math.max(8, Math.round(w * 0.048));
   grid.paint(sandX, ground - 1, sandR, Material.Sand);
@@ -89,10 +85,11 @@ export function seedVessel(grid: Grid): void {
   const lx = Math.round(w * 0.88);
   const cupW = Math.max(10, Math.round(w * 0.024));
   const cupH = Math.max(14, Math.round(h * 0.06));
-  const cupBottom = ground - cupH;
-  fill(grid, lx - cupW, cupBottom, lx + cupW, cupBottom, Material.Glass);
-  fill(grid, lx - cupW, cupBottom, lx - cupW, ground - 1, Material.Glass);
-  fill(grid, lx + cupW, cupBottom, lx + cupW, ground - 1, Material.Glass);
+  const cupTop = ground - cupH;
+  // Keep lava off the stone foundation while leaving the mouth open to pours.
+  fill(grid, lx - cupW, ground - 1, lx + cupW, ground - 1, Material.Glass);
+  fill(grid, lx - cupW, cupTop, lx - cupW, ground - 1, Material.Glass);
+  fill(grid, lx + cupW, cupTop, lx + cupW, ground - 1, Material.Glass);
   grid.paint(
     lx,
     ground - Math.max(5, Math.round(cupH * 0.45)),
@@ -108,4 +105,10 @@ export function seedVessel(grid: Grid): void {
     fill(grid, px, py, px, py + 4, Material.Obsidian);
     fill(grid, px + 3, py, px + 3, py + 4, Material.Obsidian);
   }
+
+  // Stamp the enclosure last: terrain circles must not replace the floor
+  // supporting the nursery or cut through the vessel's sidewalls.
+  fill(grid, 0, ground, w - 1, h - 1, Material.Stone);
+  fill(grid, 0, 0, wallN - 1, h - 1, Material.Stone);
+  fill(grid, w - wallN, 0, w - 1, h - 1, Material.Stone);
 }
