@@ -52,6 +52,8 @@ npm run dev
 
 Open the local URL Vite prints. For a production build, run `npm run build`, then `npm run preview`. Deploy the resulting `dist/` directory to a static host at its root. No application server is required.
 
+The [Netlify handoff](docs/deployment.md) includes the build configuration, proposed subdomain and portfolio card copy. Hosting is not yet verified.
+
 | Control                    | What happens                                 |
 | -------------------------- | -------------------------------------------- |
 | Left hold / drag           | Pour continuously.                           |
