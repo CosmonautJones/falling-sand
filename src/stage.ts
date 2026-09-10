@@ -39,13 +39,12 @@ void main() {
   vec3 c = texture(uMap, uv).rgb;
   c += vec3(0.45, 0.12, 0.03) * heat * 0.12 * uGlow;
 
-  float caustic = sin((uv.x * uGrid.x) * 0.37 + uTime * 0.11) *
-                  sin((uv.y * uGrid.y) * 0.51 - uTime * 0.09);
-  c += wet * caustic * uGlow * vec3(0.03, 0.06, 0.10);
+  float caustic = sin(uv.x * 5.0 + uTime * 0.02) * sin(uv.y * 3.5 - uTime * 0.015);
+  c += wet * caustic * uGlow * vec3(0.012, 0.024, 0.04);
 
-  float gold = max(c.r - 0.48, 0.0) * max(c.g - 0.32, 0.0) * (1.0 - c.b);
-  float spark = step(0.92, hash(floor(uv * uGrid) + floor(uTime * 0.25)));
-  c += gold * spark * 0.45 * uGlow * vec3(1.0, 0.85, 0.35);
+  float gold = max(c.r - 0.72, 0.0) * max(c.g - 0.52, 0.0) * max(0.28 - c.b, 0.0);
+  float spark = step(0.97, hash(floor(uv * uGrid) + floor(uTime * 0.08)));
+  c += gold * spark * 0.35 * uGlow * vec3(1.0, 0.85, 0.35);
 
   float aether = max(c.b - 0.55, 0.0) * max(c.g - 0.4, 0.0);
   c += aether * 0.12 * uGlow * vec3(0.2, 0.55, 1.0);
@@ -107,9 +106,8 @@ export class Stage {
       antialias: false,
       depth: false,
       stencil: false,
-      desynchronized: true,
       powerPreference: 'high-performance',
-      preserveDrawingBuffer: false,
+      preserveDrawingBuffer: true,
     });
     const renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,

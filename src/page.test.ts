@@ -48,7 +48,7 @@ describe('shipped page', () => {
     expect(stage).toMatch(/uShake/);
     expect(stage).toMatch(/NearestFilter/);
     expect(stage).toMatch(/setSize\(this\.grid\.width,\s*this\.grid\.height/);
-    expect(stage).toMatch(/desynchronized:\s*true/);
+    expect(stage).not.toMatch(/desynchronized:\s*true/);
     expect(html).toMatch(/rel="manifest"/);
     expect(html).toMatch(/theme-color/);
   });
