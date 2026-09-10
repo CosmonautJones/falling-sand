@@ -37,6 +37,12 @@ export function beats(): number {
   return beatCount;
 }
 
+/** Garden age: 0 at reset, +1 per 256 beats, cap 4. */
+function wildness(): number {
+  const w = beatCount >> 8;
+  return w > 4 ? 4 : w;
+}
+
 const N8: ReadonlyArray<readonly [number, number]> = [
   [-1, -1],
   [0, -1],
@@ -179,19 +185,35 @@ function wetNeighbor(grid: Grid, x: number, y: number): boolean {
   return hasNeighbor(grid, x, y, Material.Water) || hasNeighbor(grid, x, y, Material.Brine);
 }
 
+function plantDrinks(grid: Grid, x: number, y: number): boolean {
+  return (
+    hasNeighbor(grid, x, y, Material.Water) ||
+    hasNeighbor(grid, x, y, Material.Brine) ||
+    hasNeighbor(grid, x, y, Material.Ash)
+  );
+}
+
 function growPlant(grid: Grid, x: number, y: number, born: Uint8Array): void {
-  let wet = false;
   let plants = 0;
   const air: Array<[number, number]> = [];
   const grow: Array<[number, number]> = [];
+  const wild = wildness();
+  let wet = plantDrinks(grid, x, y);
   for (const [dx, dy] of N8) {
     const nx = x + dx;
     const ny = y + dy;
     const n = grid.get(nx, ny);
-    if (n === Material.Water || n === Material.Ash) wet = true;
-    if (n === Material.Plant) plants++;
-    if (n === Material.Air) air.push([nx, ny]);
-    if (n === Material.Air || n === Material.Water) grow.push([nx, ny]);
+    if (n === Material.Plant) {
+      plants++;
+      if (!wet && wild >= 2 && plantDrinks(grid, nx, ny)) wet = true;
+    }
+    if (n === Material.Air) {
+      air.push([nx, ny]);
+      grow.push([nx, ny]);
+    } else if (wild >= 2 && n === Material.Sand) grow.push([nx, ny]);
+    else if (wild >= 3 && n === Material.Water && !hasNeighbor(grid, nx, ny, Material.Mud)) {
+      grow.push([nx, ny]);
+    }
   }
   if (wet && plants >= 2 && air.length > 0) {
     const roll = randInt(6);
@@ -213,15 +235,19 @@ function growPlant(grid: Grid, x: number, y: number, born: Uint8Array): void {
 
 function creepMoss(grid: Grid, x: number, y: number, born: Uint8Array): void {
   if (!hasNeighbor(grid, x, y, Material.Water) && !hasNeighbor(grid, x, y, Material.Mud)) return;
-  if (randInt(3) !== 0) return;
-  const stones: Array<[number, number]> = [];
+  const wild = wildness();
+  if (randInt(Math.max(1, 3 - (wild >> 1))) !== 0) return;
+  const hosts: Array<[number, number]> = [];
   for (const [dx, dy] of N8) {
     const nx = x + dx;
     const ny = y + dy;
-    if (grid.get(nx, ny) === Material.Stone) stones.push([nx, ny]);
+    const n = grid.get(nx, ny);
+    if (n === Material.Stone) hosts.push([nx, ny]);
+    else if (wild >= 1 && n === Material.Sand) hosts.push([nx, ny]);
+    else if (wild >= 2 && n === Material.Brick) hosts.push([nx, ny]);
   }
-  if (stones.length === 0) return;
-  const [nx, ny] = stones[randInt(stones.length)];
+  if (hosts.length === 0) return;
+  const [nx, ny] = hosts[randInt(hosts.length)];
   transmute(grid, nx, ny, Material.Moss, born);
 }
 

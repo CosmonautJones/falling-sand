@@ -272,6 +272,42 @@ describe('step', () => {
     expect(grid.count(Material.Moss)).toBeGreaterThan(1);
   });
 
+  it('does not let a young garden eat neighboring sand', () => {
+    const grid = new Grid(8, 5);
+    for (let x = 0; x < 8; x++) grid.set(x, 4, Material.Stone);
+    grid.set(2, 3, Material.Plant);
+    grid.set(3, 3, Material.Plant);
+    grid.set(2, 2, Material.Water);
+    grid.set(4, 3, Material.Sand);
+    const sand = grid.count(Material.Sand);
+    for (let i = 0; i < 40; i++) step(grid);
+    expect(grid.count(Material.Sand)).toBe(sand);
+  });
+
+  it('lets a garden go overgrown onto sand after time passes', () => {
+    const grid = new Grid(8, 5);
+    for (let x = 0; x < 8; x++) grid.set(x, 4, Material.Stone);
+    grid.set(2, 3, Material.Plant);
+    grid.set(3, 3, Material.Plant);
+    grid.set(2, 2, Material.Water);
+    grid.set(4, 3, Material.Sand);
+    const sand = grid.count(Material.Sand);
+    for (let i = 0; i < 600; i++) step(grid);
+    expect(grid.count(Material.Plant)).toBeGreaterThan(2);
+    expect(grid.count(Material.Sand)).toBeLessThan(sand);
+  });
+
+  it('lets moss take neighboring sand once the vessel has aged', () => {
+    const grid = new Grid(6, 5);
+    for (let x = 0; x < 6; x++) grid.set(x, 4, Material.Stone);
+    grid.set(1, 4, Material.Moss);
+    grid.set(1, 3, Material.Water);
+    grid.set(2, 4, Material.Sand);
+    for (let i = 0; i < 400; i++) step(grid);
+    expect(grid.count(Material.Moss)).toBeGreaterThan(1);
+    expect(grid.count(Material.Sand)).toBe(0);
+  });
+
   it('lets a wet plant thicket drop a seed on its own', () => {
     const grid = new Grid(6, 6);
     for (let y = 2; y <= 4; y++) {
