@@ -11,6 +11,11 @@ score. The garden runs whether you touch it or not. New reagents are
 **transmuted**, not picked from a warehouse palette. A few doors only open if
 you build them.
 
+The next milestone is **[The Living Retort](docs/superpowers/specs/2026-09-10-living-retort-design.md)**:
+small experiments, living construction, and beautiful consequences worth keeping.
+The brief distinguishes the approved direction from implemented behavior; work starts
+with the [opening habitat foundation](docs/superpowers/plans/2026-09-10-opening-foundation.md).
+
 480×270 grains, stepped in TypeScript, drawn through a Three.js nearest-neighbour
 upscale — heat haze, water caustics, gold spark, blast shake, Magnum Opus aurora.
 
