@@ -40,6 +40,11 @@ export function seedVessel(grid: Grid): void {
   grid.set(sandX + 3, duneTop + 3, Material.Mite, grain(Material.Mite));
   grid.set(sandX - 2, ground - 3, Material.Mite, grain(Material.Mite));
   grid.set(sandX + 6, ground - 2, Material.Mite, grain(Material.Mite));
+  // Loose donor on the dune toe, not against plant, so mites can haul it.
+  for (let x = sandX - 4; x <= sandX - 2; x++) {
+    grid.set(x, ground - 1, Material.Mud, grain(Material.Mud));
+    grid.set(x, ground - 2, Material.Mud, grain(Material.Mud));
+  }
   const gx = Math.min(w - wallN - 6, sandX + sandR + 2);
   grid.set(gx, ground - 1, Material.Mud, grain(Material.Mud));
   grid.set(gx + 1, ground - 1, Material.Mud, grain(Material.Mud));
