@@ -19,6 +19,8 @@ export class Grid {
   readonly heat: Uint8Array;
   /** Eulerian scent, 0–255, stays on the cell when grains swap. */
   readonly trails: Uint8Array;
+  /** Consecutive locally nourished steps; moves with a plant or moss grain. */
+  readonly growth: Uint16Array;
 
   constructor(width: number, height: number) {
     if (!Number.isInteger(width) || width <= 0) {
@@ -34,6 +36,7 @@ export class Grid {
     this.heat = new Uint8Array(width * height);
     this.heat.fill(HEAT_AMBIENT[Material.Air]);
     this.trails = new Uint8Array(width * height);
+    this.growth = new Uint16Array(width * height);
   }
 
   index(x: number, y: number): number {
@@ -70,6 +73,7 @@ export class Grid {
     this.cells[i] = material;
     this.shades[i] = shade;
     this.heat[i] = seedHeat(material);
+    this.growth[i] = 0;
   }
 
   swap(ax: number, ay: number, bx: number, by: number): void {
@@ -85,6 +89,9 @@ export class Grid {
     const t = this.heat[a];
     this.heat[a] = this.heat[b];
     this.heat[b] = t;
+    const age = this.growth[a];
+    this.growth[a] = this.growth[b];
+    this.growth[b] = age;
   }
 
   /** Paint a filled circle of `material` centred on (cx, cy). */
@@ -136,6 +143,7 @@ export class Grid {
     this.shades.fill(0);
     this.heat.fill(HEAT_AMBIENT[Material.Air]);
     this.trails.fill(0);
+    this.growth.fill(0);
   }
 
   /** Count of cells holding `material`. Used by tests to assert conservation. */

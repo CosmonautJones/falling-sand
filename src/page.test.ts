@@ -2,15 +2,29 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 describe('shipped page', () => {
+  it('ships a consistent experimental-sandbox identity and share metadata', () => {
+    const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+    const manifest = JSON.parse(
+      readFileSync(new URL('../public/manifest.webmanifest', import.meta.url), 'utf8'),
+    );
+    expect(manifest.name).toBe('Alcubemy');
+    expect(manifest.short_name).toBe('Alcubemy');
+    expect(html).toContain('Experimental sandbox');
+    expect(html).toContain('property="og:image"');
+    expect(html).toContain('name="twitter:card"');
+    expect(html).toContain('/share.png');
+    expect(html).toContain('/icon.svg');
+  });
+
   it('is a window ES module with a wide canvas game loop and no Node require', () => {
     const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
     expect(html).toContain('type="module"');
     expect(html).toContain('id="stage"');
-    expect(html).toContain('Alembic');
+    expect(html).toContain('Alcubemy');
     expect(html).not.toMatch(/\brequire\s*\(/);
 
     const main = readFileSync(new URL('./main.ts', import.meta.url), 'utf8');
-    expect(main).toContain('requestAnimationFrame');
+    expect(main).toContain('startVisibleLoop');
     expect(main).toMatch(/WIDTH|HEIGHT/);
     expect(main).not.toMatch(/const WIDTH = 240/);
     expect(main).not.toMatch(/\brequire\s*\(/);
@@ -40,6 +54,8 @@ describe('shipped page', () => {
     expect(main).toMatch(/zoomAt|wheel|panBy/);
     expect(main).toMatch(/probe|#probe/);
     expect(main).toMatch(/consumeBlast/);
+    expect(main).toMatch(/beats\(/);
+    expect(main).toMatch(/resetSim/);
 
     const stage = readFileSync(new URL('./stage.ts', import.meta.url), 'utf8');
     expect(stage).toMatch(/from ['"]three['"]/);

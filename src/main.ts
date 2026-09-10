@@ -1,12 +1,13 @@
 import { Grid } from './grid';
 import { Renderer } from './render';
 import { Material, MATERIALS, STARTER, TRANSMUTED, type MaterialId } from './materials';
-import { consumeBlast, step } from './sim';
+import { beats, consumeBlast, resetSim, step } from './sim';
 import { boom, chime } from './feel';
 import { BRUSH_SIZES, HEIGHT, WIDTH, seedVessel } from './world';
 import { createRite, rainFromCeiling, type RiteName } from './secrets';
 import { blanks, stained, whisper } from './codex';
 import { createView, panBy, screenToCell, zoomAt } from './view';
+import { startVisibleLoop } from './visible-loop';
 
 function requireEl<T extends Element>(selector: string): T {
   const node = document.querySelector<T>(selector);
@@ -42,7 +43,6 @@ let painting = false;
 let lastCell: { x: number; y: number } | null = null;
 let paused = false;
 let speed = 1;
-let lastStar = performance.now();
 let view = createView();
 let gesture: 'none' | 'paint' | 'probe' | 'pan' = 'none';
 let downAt = { x: 0, y: 0, t: 0, cellX: 0, cellY: 0 };
@@ -142,6 +142,7 @@ const resetButton = document.createElement('button');
 resetButton.type = 'button';
 resetButton.textContent = 'reset';
 resetButton.addEventListener('click', () => {
+  resetSim();
   grid.clear();
   seedVessel(grid);
 });
@@ -484,10 +485,6 @@ function frame(now: number): void {
       renderer.kick(Math.min(1, kick / 6));
       boom(kick);
     }
-    if (now - lastStar > 45000) {
-      lastStar = now;
-      rainFromCeiling(grid, Material.Ember, 1);
-    }
   }
 
   unlockTransmuted();
@@ -500,11 +497,26 @@ function frame(now: number): void {
     const halt = paused ? ' · paused' : '';
     const rate = speed === 1 ? '' : ` · ${speed}×`;
     const z = view.zoom === 1 ? '' : ` · ${view.zoom.toFixed(1)}×`;
-    hud.textContent = `${WIDTH}×${HEIGHT} · ${fps.toFixed(0)} fps · ${MATERIALS[brush].name} · size ${brushRadius}${rate}${z}${halt}${find}`;
+    hud.textContent = `${WIDTH}×${HEIGHT} · ${fps.toFixed(0)} fps · ${beats()} beats · ${MATERIALS[brush].name} · size ${brushRadius}${rate}${z}${halt}${find}`;
     frames = 0;
     lastSample = now;
   }
-  requestAnimationFrame(frame);
 }
 
-requestAnimationFrame(frame);
+startVisibleLoop({
+  frame,
+  resume: () => {
+    lastTick = performance.now();
+    lastSample = lastTick;
+    frames = 0;
+    acc = 0;
+  },
+  suspend: () => {
+    painting = false;
+    gesture = 'none';
+    lastCell = null;
+    acc = 0;
+    probe.classList.remove('is-on');
+    reticle.classList.remove('is-on');
+  },
+});

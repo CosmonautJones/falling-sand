@@ -110,10 +110,9 @@ export function blitGrid(grid: Grid, data: Uint8ClampedArray, tick = 0): void {
     }
 
     if (mat === Material.Gold && tick !== 0) {
-      const spark = ((i * 29 + tick * 5) & 15) - 4;
-      r = clampByte(r + spark + 10);
-      g = clampByte(g + spark + 4);
-      b = clampByte(b - 4);
+      const glint = Math.pow(Math.max(0, Math.sin(tick * 0.025 + i * 0.31)), 24);
+      r = clampByte(r + Math.round(glint * 8));
+      g = clampByte(g + Math.round(glint * 5));
     }
 
     if (mat === Material.Tnt && ((x + y) & 2) === 0) {
