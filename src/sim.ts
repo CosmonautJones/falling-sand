@@ -148,13 +148,16 @@ function transmute(grid: Grid, x: number, y: number, into: MaterialId, born: Uin
   if (!grid.inBounds(x, y)) return;
   const i = grid.index(x, y);
   let dest = into;
-  if (grid.cells[i] === Material.Mite && grid.shades[i] >= 64 && dest !== Material.Gold) {
-    const air = gatherAir(grid, x, y);
-    if (air.length > 0) {
-      const [ax, ay] = air[randInt(air.length)];
-      transmute(grid, ax, ay, Material.Gold, born);
-    } else {
-      dest = Material.Gold;
+  if (grid.cells[i] === Material.Mite) {
+    const spilled = cargoMaterial(grid.shades[i]);
+    if (spilled !== null && dest !== spilled) {
+      const air = gatherAir(grid, x, y);
+      if (air.length > 0) {
+        const [ax, ay] = air[randInt(air.length)];
+        transmute(grid, ax, ay, spilled, born);
+      } else {
+        dest = spilled;
+      }
     }
   }
   const prev = grid.heat[i];
@@ -572,10 +575,24 @@ function freezeWater(grid: Grid, x: number, y: number, born: Uint8Array): void {
   }
 }
 
-const CARRY_SHADE = 90;
+const GOLD_CARRY_SHADE = 90;
+const MUD_CARRY_SHADE = -90;
+const GOLD_CARRY_MIN = 64;
+const MUD_CARRY_MAX = -40;
 
-function isCarrying(grid: Grid, x: number, y: number): boolean {
-  return grid.getShade(x, y) >= 64;
+type Cargo = 'gold' | 'mud';
+
+function cargoOf(shade: number): Cargo | null {
+  if (shade >= GOLD_CARRY_MIN) return 'gold';
+  if (shade <= MUD_CARRY_MAX) return 'mud';
+  return null;
+}
+
+function cargoMaterial(shade: number): MaterialId | null {
+  const cargo = cargoOf(shade);
+  if (cargo === 'gold') return Material.Gold;
+  if (cargo === 'mud') return Material.Mud;
+  return null;
 }
 
 function isHeat(n: MaterialId): boolean {
@@ -633,7 +650,7 @@ function miteDestScore(
   fromY: number,
   nx: number,
   ny: number,
-  carrying: boolean,
+  cargo: Cargo | null,
 ): number {
   const dest = grid.get(nx, ny);
   const wet = dest === Material.Water || dest === Material.Brine;
@@ -654,10 +671,14 @@ function miteDestScore(
     s += 4;
   }
   for (const [dx, dy] of N8) {
-    const n = grid.get(nx + dx, ny + dy);
+    const qx = nx + dx;
+    const qy = ny + dy;
+    if (qx === fromX && qy === fromY) continue;
+    const n = grid.get(qx, qy);
+    if (n === Material.Mite) s += 10;
     if (n === Material.Bloom) s += 12;
     else if (isForage(n)) s += 8;
-    if (n === Material.Gold && carrying) s += 6;
+    if (n === Material.Gold && cargo === 'gold') s += 6;
     if (isHeat(n)) s -= 14;
     if (n === Material.Minnow) s -= 10;
   }
@@ -673,7 +694,13 @@ function pickBest(scored: Array<[number, number, number]>): [number, number] | n
   return [nx, ny];
 }
 
-function miteWalk(grid: Grid, x: number, y: number, born: Uint8Array, carrying: boolean): boolean {
+function miteWalk(
+  grid: Grid,
+  x: number,
+  y: number,
+  born: Uint8Array,
+  cargo: Cargo | null,
+): boolean {
   const scored: Array<[number, number, number]> = [];
   for (const [dx, dy] of N8) {
     const nx = x + dx;
@@ -689,35 +716,51 @@ function miteWalk(grid: Grid, x: number, y: number, born: Uint8Array, carrying: 
     ) {
       continue;
     }
-    scored.push([nx, ny, miteDestScore(grid, x, y, nx, ny, carrying)]);
+    scored.push([nx, ny, miteDestScore(grid, x, y, nx, ny, cargo)]);
   }
   const dest = pickBest(scored);
   if (!dest) return false;
   return tryCritterStep(grid, x, y, dest[0], dest[1], born);
 }
 
-function dropHoard(grid: Grid, x: number, y: number, born: Uint8Array): boolean {
+function dropCargo(
+  grid: Grid,
+  x: number,
+  y: number,
+  born: Uint8Array,
+  into: MaterialId,
+  scoreOf: (nx: number, ny: number) => number,
+): boolean {
   const scored: Array<[number, number, number]> = [];
   for (const [dx, dy] of N8) {
     const nx = x + dx;
     const ny = y + dy;
     if (!grid.inBounds(nx, ny)) continue;
     if (grid.get(nx, ny) !== Material.Air) continue;
-    scored.push([nx, ny, hasNeighbor(grid, nx, ny, Material.Gold) ? 2 : 0]);
+    scored.push([nx, ny, scoreOf(nx, ny)]);
   }
   const dest = pickBest(scored);
   if (!dest) return false;
-  transmute(grid, dest[0], dest[1], Material.Gold, born);
+  transmute(grid, dest[0], dest[1], into, born);
   grid.set(x, y, Material.Mite, randShade(SHADE_RANGE[Material.Mite]));
   return true;
 }
 
-function miteAct(grid: Grid, x: number, y: number, born: Uint8Array): boolean {
+type MiteSense = {
+  heat: boolean;
+  food: [number, number] | null;
+  gold: [number, number] | null;
+  mud: [number, number] | null;
+  kin: number;
+};
+
+function senseMite(grid: Grid, x: number, y: number): MiteSense {
   let heat = false;
   let food: [number, number] | null = null;
   let foodRank = 0;
   let gold: [number, number] | null = null;
-  let kin = false;
+  let mud: [number, number] | null = null;
+  let kin = 0;
   for (const [dx, dy] of N8) {
     const nx = x + dx;
     const ny = y + dy;
@@ -730,30 +773,89 @@ function miteAct(grid: Grid, x: number, y: number, born: Uint8Array): boolean {
       food = [nx, ny];
     }
     if (n === Material.Gold && !gold) gold = [nx, ny];
-    if (n === Material.Mite) kin = true;
+    if (n === Material.Mud && !mud) mud = [nx, ny];
+    if (n === Material.Mite) kin++;
   }
+  return { heat, food, gold, mud, kin };
+}
 
-  if (heat) {
-    if (miteWalk(grid, x, y, born, isCarrying(grid, x, y))) return true;
+function pickUp(
+  grid: Grid,
+  x: number,
+  y: number,
+  cell: [number, number],
+  shade: number,
+  born: Uint8Array,
+): void {
+  transmute(grid, cell[0], cell[1], Material.Air, born);
+  grid.set(x, y, Material.Mite, shade);
+}
+
+function miteCling(grid: Grid, x: number, y: number): boolean {
+  for (const [dx, dy] of N8) {
+    const nx = x + dx;
+    const ny = y + dy;
+    if (!grid.inBounds(nx, ny)) continue;
+    const n = grid.get(nx, ny);
+    if (
+      n === Material.Sand ||
+      n === Material.Stone ||
+      n === Material.Wood ||
+      n === Material.Glass ||
+      n === Material.Mud ||
+      n === Material.Plant ||
+      n === Material.Bloom ||
+      n === Material.Gold ||
+      n === Material.Pearl ||
+      n === Material.Brick ||
+      n === Material.Obsidian ||
+      n === Material.Ice ||
+      n === Material.Moss
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function miteAct(grid: Grid, x: number, y: number, born: Uint8Array): boolean {
+  const sense = senseMite(grid, x, y);
+  const cargo = cargoOf(grid.getShade(x, y));
+
+  if (sense.heat) {
+    if (miteWalk(grid, x, y, born, cargo)) return true;
     transmute(grid, x, y, Material.Ash, born);
     return true;
   }
 
-  if (food) {
-    transmute(grid, food[0], food[1], Material.Air, born);
+  if (sense.food) {
+    transmute(grid, sense.food[0], sense.food[1], Material.Air, born);
     const air = gatherAir(grid, x, y);
-    if (kin && air.length > 0 && randInt(5) === 0) {
+    if (sense.kin > 0 && air.length > 0 && randInt(5) === 0) {
       const [nx, ny] = air[randInt(air.length)];
       transmute(grid, nx, ny, Material.Mite, born);
     }
     return true;
   }
 
-  const carrying = isCarrying(grid, x, y);
-  if (carrying && gold && dropHoard(grid, x, y, born)) return true;
-  if (!carrying && gold) {
-    transmute(grid, gold[0], gold[1], Material.Air, born);
-    grid.set(x, y, Material.Mite, CARRY_SHADE);
+  if (
+    cargo === 'gold' &&
+    sense.gold &&
+    dropCargo(grid, x, y, born, Material.Gold, (nx, ny) =>
+      hasNeighbor(grid, nx, ny, Material.Gold) ? 2 : 0,
+    )
+  ) {
+    return true;
+  }
+  if (cargo === null && sense.gold) {
+    pickUp(grid, x, y, sense.gold, GOLD_CARRY_SHADE, born);
+    return true;
+  }
+  if (cargo === 'mud' && sense.kin >= 2 && dropCargo(grid, x, y, born, Material.Mud, () => 0)) {
+    return true;
+  }
+  if (cargo === null && sense.mud && sense.kin < 2) {
+    pickUp(grid, x, y, sense.mud, MUD_CARRY_SHADE, born);
     return true;
   }
 
@@ -763,37 +865,11 @@ function miteAct(grid: Grid, x: number, y: number, born: Uint8Array): boolean {
     below === Material.Steam ||
     below === Material.Fire ||
     below === Material.Aether;
-  if (hanging) {
-    let cling = false;
-    for (const [dx, dy] of N8) {
-      const nx = x + dx;
-      const ny = y + dy;
-      if (!grid.inBounds(nx, ny)) continue;
-      const n = grid.get(nx, ny);
-      if (
-        n === Material.Sand ||
-        n === Material.Stone ||
-        n === Material.Wood ||
-        n === Material.Glass ||
-        n === Material.Mud ||
-        n === Material.Plant ||
-        n === Material.Bloom ||
-        n === Material.Gold ||
-        n === Material.Pearl ||
-        n === Material.Brick ||
-        n === Material.Obsidian ||
-        n === Material.Ice ||
-        n === Material.Moss
-      ) {
-        cling = true;
-        break;
-      }
-    }
-    if (!cling) return false;
-  }
+  if (hanging && !miteCling(grid, x, y)) return false;
 
+  if (sense.kin >= 2) return true;
   if (randInt(3) !== 0) return true;
-  miteWalk(grid, x, y, born, carrying);
+  miteWalk(grid, x, y, born, cargo);
   return true;
 }
 
