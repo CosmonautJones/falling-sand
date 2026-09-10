@@ -40,6 +40,8 @@ describe('shipped page', () => {
     expect(main).toMatch(/zoomAt|wheel|panBy/);
     expect(main).toMatch(/probe|#probe/);
     expect(main).toMatch(/consumeBlast/);
+    expect(main).toMatch(/beats\(/);
+    expect(main).toMatch(/resetSim/);
 
     const stage = readFileSync(new URL('./stage.ts', import.meta.url), 'utf8');
     expect(stage).toMatch(/from ['"]three['"]/);

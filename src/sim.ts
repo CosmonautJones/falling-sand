@@ -15,6 +15,7 @@ let bornBuf: Uint8Array | null = null;
 let heatBuf: Uint8Array | null = null;
 let trailBuf: Uint8Array | null = null;
 let blastKick = 0;
+let beatCount = 0;
 
 const CONDUCT = new Uint8Array(256);
 const AMBIENT = new Uint8Array(256);
@@ -31,6 +32,11 @@ export function consumeBlast(): number {
   return kick;
 }
 
+/** Elapsed simulation steps since the last reset. */
+export function beats(): number {
+  return beatCount;
+}
+
 const N8: ReadonlyArray<readonly [number, number]> = [
   [-1, -1],
   [0, -1],
@@ -45,6 +51,7 @@ const N8: ReadonlyArray<readonly [number, number]> = [
 export function resetSim(): void {
   scanDir = 1;
   blastKick = 0;
+  beatCount = 0;
 }
 
 function heavier(src: MaterialId, dst: MaterialId): boolean {
@@ -272,8 +279,22 @@ function detonate(
   for (const [x, y, r] of chain) detonate(grid, x, y, r, born, hit);
 }
 
+function catchHeat(n: MaterialId): number {
+  if (n === Material.Wood) return 80;
+  if (n === Material.Plant || n === Material.Oil || n === Material.Seed || n === Material.Bloom) {
+    return 72;
+  }
+  return 0;
+}
+
+function isKindling(n: MaterialId): boolean {
+  return catchHeat(n) > 0 || n === Material.Powder || n === Material.Tnt || n === Material.Nitro;
+}
+
 function igniteCell(grid: Grid, nx: number, ny: number, n: MaterialId, born: Uint8Array): boolean {
   if (!grid.inBounds(nx, ny)) return false;
+  const need = catchHeat(n);
+  if (need > 0 && grid.getHeat(nx, ny) < need) return false;
   if (n === Material.Plant || n === Material.Oil || n === Material.Seed || n === Material.Bloom) {
     transmute(grid, nx, ny, Material.Fire, born);
     return true;
@@ -326,6 +347,7 @@ function burn(grid: Grid, x: number, y: number, born: Uint8Array): void {
     const n = grid.get(nx, ny);
     if (n === Material.Water || n === Material.Brine) wet = true;
     if (igniteCell(grid, nx, ny, n, born)) fueled = true;
+    else if (isKindling(n)) fueled = true;
   }
   if (wet) {
     transmute(grid, x, y, Material.Steam, born);
@@ -339,7 +361,9 @@ function smolderEmber(grid: Grid, x: number, y: number, born: Uint8Array): boole
   for (const [dx, dy] of N8) {
     const nx = x + dx;
     const ny = y + dy;
-    if (igniteCell(grid, nx, ny, grid.get(nx, ny), born)) fueled = true;
+    const n = grid.get(nx, ny);
+    if (igniteCell(grid, nx, ny, n, born)) fueled = true;
+    else if (isKindling(n)) fueled = true;
   }
   return fueled;
 }
@@ -1329,6 +1353,7 @@ export function step(grid: Grid): void {
   const dir = scanDir;
   scanDir = scanDir === 1 ? -1 : 1;
   const born = bornBuffer(grid.cells.length);
+  beatCount += 1;
   thermals(grid, born);
 
   for (let y = grid.height - 1; y >= 0; y--) {

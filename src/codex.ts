@@ -25,7 +25,7 @@ const PAGES: Record<MaterialId, { whisper: string; leaf: string }> = {
   },
   [Material.Fire]: {
     whisper: 'A short life, hungry.',
-    leaf: 'Eats plant, oil, wood, powder, bloom. Without fuel it keeps ash. Water makes steam. Boxed in eight obsidian it becomes a black sun. An obsidian frame lit with it is a door.',
+    leaf: 'It has to warm what it eats. Plant and oil catch after a soak; wood longer. Powder and the red cask do not wait. Without fuel it keeps ash. Water makes steam. Boxed in eight obsidian it becomes a black sun. An obsidian frame lit with it is a door.',
   },
   [Material.Plant]: {
     whisper: 'Seed drinks. The garden answers.',

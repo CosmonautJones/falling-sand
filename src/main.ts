@@ -1,7 +1,7 @@
 import { Grid } from './grid';
 import { Renderer } from './render';
 import { Material, MATERIALS, STARTER, TRANSMUTED, type MaterialId } from './materials';
-import { consumeBlast, step } from './sim';
+import { beats, consumeBlast, resetSim, step } from './sim';
 import { boom, chime } from './feel';
 import { BRUSH_SIZES, HEIGHT, WIDTH, seedVessel } from './world';
 import { createRite, rainFromCeiling, type RiteName } from './secrets';
@@ -142,6 +142,7 @@ const resetButton = document.createElement('button');
 resetButton.type = 'button';
 resetButton.textContent = 'reset';
 resetButton.addEventListener('click', () => {
+  resetSim();
   grid.clear();
   seedVessel(grid);
 });
@@ -500,7 +501,7 @@ function frame(now: number): void {
     const halt = paused ? ' · paused' : '';
     const rate = speed === 1 ? '' : ` · ${speed}×`;
     const z = view.zoom === 1 ? '' : ` · ${view.zoom.toFixed(1)}×`;
-    hud.textContent = `${WIDTH}×${HEIGHT} · ${fps.toFixed(0)} fps · ${MATERIALS[brush].name} · size ${brushRadius}${rate}${z}${halt}${find}`;
+    hud.textContent = `${WIDTH}×${HEIGHT} · ${fps.toFixed(0)} fps · ${beats()} beats · ${MATERIALS[brush].name} · size ${brushRadius}${rate}${z}${halt}${find}`;
     frames = 0;
     lastSample = now;
   }

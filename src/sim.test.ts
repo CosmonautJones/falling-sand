@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { Grid } from './grid';
 import { Material } from './materials';
 import { seedRng } from './rng';
-import { consumeBlast, resetSim, step } from './sim';
+import { beats, consumeBlast, resetSim, step } from './sim';
 
 function positions(grid: Grid, material: number): Array<{ x: number; y: number }> {
   const out: Array<{ x: number; y: number }> = [];
@@ -157,13 +157,42 @@ describe('step', () => {
     expect(grid.count(Material.Plant)).toBeGreaterThan(before);
   });
 
+  it('counts a beat of time for every step', () => {
+    expect(beats()).toBe(0);
+    const grid = new Grid(3, 3);
+    step(grid);
+    step(grid);
+    expect(beats()).toBe(2);
+    resetSim();
+    expect(beats()).toBe(0);
+  });
+
+  it('does not catch neighboring plant on the first lick', () => {
+    const grid = new Grid(5, 5);
+    grid.set(2, 2, Material.Plant);
+    grid.set(2, 1, Material.Fire);
+    step(grid);
+    expect(grid.get(2, 2)).toBe(Material.Plant);
+    expect(grid.count(Material.Fire)).toBeGreaterThan(0);
+  });
+
   it('consumes plant when fire is adjacent so the plant cell does not stay plant', () => {
     const grid = new Grid(5, 5);
     grid.set(2, 2, Material.Plant);
     grid.set(2, 1, Material.Fire);
-    for (let i = 0; i < 16; i++) step(grid);
+    for (let i = 0; i < 48; i++) step(grid);
     expect(grid.get(2, 2)).not.toBe(Material.Plant);
     expect(grid.count(Material.Plant)).toBe(0);
+  });
+
+  it('walks fire along a wood beam instead of eating the far end in a few ticks', () => {
+    const grid = new Grid(10, 5);
+    for (let x = 0; x < 10; x++) grid.set(x, 4, Material.Stone);
+    for (let x = 1; x <= 6; x++) grid.set(x, 3, Material.Wood);
+    grid.set(1, 2, Material.Fire);
+    for (let i = 0; i < 4; i++) step(grid);
+    expect(grid.get(6, 3)).toBe(Material.Wood);
+    expect(grid.count(Material.Wood)).toBeGreaterThan(2);
   });
 
   it('consumes oil when fire is adjacent', () => {
@@ -386,8 +415,10 @@ describe('step', () => {
     const grid = new Grid(5, 8);
     grid.set(2, 2, Material.Wood);
     grid.set(2, 1, Material.Fire);
-    for (let i = 0; i < 20; i++) step(grid);
-    expect(grid.count(Material.Ember) + grid.count(Material.Ash) + grid.count(Material.Fire)).toBeGreaterThan(0);
+    for (let i = 0; i < 32; i++) step(grid);
+    expect(
+      grid.count(Material.Ember) + grid.count(Material.Ash) + grid.count(Material.Fire),
+    ).toBeGreaterThan(0);
     expect(grid.get(2, 2)).not.toBe(Material.Wood);
   });
 
@@ -643,7 +674,9 @@ describe('step', () => {
     }
     grid.set(3, 3, Material.Acid);
     for (let i = 0; i < 40; i++) step(grid);
-    expect(grid.count(Material.Lead) + grid.count(Material.Mercury) + grid.count(Material.Gold)).toBeGreaterThan(0);
+    expect(
+      grid.count(Material.Lead) + grid.count(Material.Mercury) + grid.count(Material.Gold),
+    ).toBeGreaterThan(0);
   });
 
   it('detonates tnt next to fire and carves a crater in sand', () => {
@@ -719,4 +752,3 @@ describe('step', () => {
     expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(2);
   });
 });
-
