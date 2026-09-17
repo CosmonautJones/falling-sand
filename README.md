@@ -16,6 +16,10 @@ upscale — heat haze, water caustics, gold spark, blast shake, Magnum Opus auro
 
 ## Play
 
+**[Play Alembic in your browser](https://cosmonautjones.github.io/falling-sand/)** — no account or installation needed.
+
+To run it locally:
+
 ```bash
 npm install
 npm run dev      # http://localhost:5173/
