@@ -1,7 +1,7 @@
 # Alcubemy release package QA
 
 Date: 2026-09-10. Branch: `codex/living-retort`, based on `2d08489`.
-Status: local implementation and checks complete, with the native/device gates below still open. Public deployment is not verified. This record describes package validation; Git and CI provide commit and remote status.
+Historical package record: local implementation and checks completed September 10, with native/device checks still open. The September 17 deployment update below supersedes the original hosting status. Git and CI provide commit and remote status.
 
 ## Automated checks
 
@@ -28,7 +28,7 @@ Chromium automation on Windows, checks run sequentially because system RAM was n
 - Visibility integration used an injected `document.hidden` value plus `visibilitychange` against the real application. While hidden for 1.2 seconds, beats stayed 1336 and draw calls stayed 1275. The first visible frame drew once without stepping; simulation then resumed. Manual pause preserved beat 1343 across hide/show while presentation resumed.
 - Native tab switching and a CDP minimize request in this automation setup kept `document.hidden === false`. They therefore did **not** verify native visibility delivery. Scheduler unit tests cover hidden startup, cancellation, stale callbacks, duplicate events and disposal.
 
-## Before public publication
+## Original publication checklist (September 10)
 
 - Verify a real desktop tab switch and OS minimize/restore suspend work, cancel held painting and preserve manual pause. Do not infer this from the injected-event check.
 - Run on a physical touch device, including rotation, material/tool scrolling and Codex close. Emulation does not certify mobile Safari or thermal/memory behavior.
@@ -38,3 +38,12 @@ Chromium automation on Windows, checks run sequentially because system RAM was n
 - Require exact-commit CI and deployment evidence before describing the package as released. This branch has not been merged or deployed by this packaging task.
 
 Local screenshots and automation logs are kept under ignored `qa-shots/`; the README artwork is tracked under `docs/assets/` and `public/`.
+
+## Experimental deployment update: September 17
+
+- The opening-scene revision `a18d5f2` passed exact-commit GitHub CI (run `34483460598`). Its production build passed locally, with the existing 557.10 kB / 145.92 kB gzip bundle warning.
+- A fresh 30-second, 480 × 270 opening observation advanced from beat 3 to 1804. Four mites remained four, mud remained seven, and nursery cells `(131,264)` and `(132,264)` remained mud. The HUD showed approximately 60 fps. Local screenshot: `qa-shots/release-2026-09-17-opening-30s.png`. This is one observed opening, not a guarantee of long-term morphology.
+- A clean tracked-source export was deployed to the separate Netlify project `alcubemy`. Deploy `6aabd41bb61a4e15defe3b9b` reached `ready`; its immutable HTTPS URL returned 200. The custom domain was attached and HTTPS enforcement enabled. See [deployment](deployment.md) for identifiers and update procedure.
+- Retrying the native visibility check with CDP focus emulation disabled still left `document.hidden` false. It did not establish OS/native tab suspension; the prior injected-event and scheduler tests remain the available evidence.
+- Physical-phone testing is still pending. Desktop and mobile emulation are described above. The public release remains explicitly experimental while these checks are open.
+- The live-origin metadata now has regression coverage for canonical, Open Graph URL and absolute share-image URLs. Final deployment and portfolio checks are recorded in the release commit's task report.

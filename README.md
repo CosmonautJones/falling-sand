@@ -4,7 +4,7 @@
 
 <p align="center"><strong>A little sand. A little alchemy. A lot of “what happens if?”</strong></p>
 <p align="center">Experimental browser sandbox · TypeScript + Three.js · 480 × 270 living pixels</p>
-<p align="center"><a href="#start-pouring">Run it locally</a> · <a href="#three-small-experiments">Try an experiment</a> · <a href="#inside-the-glass">See the engineering</a> · <a href="#where-this-goes-next">Follow the adventure</a></p>
+<p align="center"><a href="https://alcubemy.travisjohnjones.com/">Play Alcubemy</a> · <a href="#start-pouring">Run it locally</a> · <a href="#three-small-experiments">Try an experiment</a> · <a href="#inside-the-glass">See the engineering</a> · <a href="#where-this-goes-next">Follow the adventure</a></p>
 
 # Al**cube**my
 
@@ -14,7 +14,7 @@ Alcubemy is a falling-sand art toy inside an alchemist’s vessel. Sand piles up
 
 **Make a little beautiful trouble.** Pause to compose. Let go to see what the world does with it.
 
-> **First release: experimental sandbox.** The local game is playable. Living construction is on the roadmap. This repository does not yet advertise a public hosted release. Previously named Alembic; the repository URL and historical design notes retain that name.
+> **First release: experimental sandbox.** [Play in your browser](https://alcubemy.travisjohnjones.com/). Living construction is on the roadmap. See [release QA](docs/release-qa.md) for checked behavior and remaining device checks. Previously named Alembic; the repository URL and historical design notes retain that name.
 
 ## Three small experiments
 
@@ -52,7 +52,7 @@ npm run dev
 
 Open the local URL Vite prints. For a production build, run `npm run build`, then `npm run preview`. Deploy the resulting `dist/` directory to a static host at its root. No application server is required.
 
-The [Netlify handoff](docs/deployment.md) includes the build configuration, proposed subdomain and portfolio card copy. Hosting is not yet verified.
+The [deployment guide](docs/deployment.md) records the independent Netlify project, public subdomain and update procedure.
 
 | Control                    | What happens                                 |
 | -------------------------- | -------------------------------------------- |

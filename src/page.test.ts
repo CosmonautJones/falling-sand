@@ -2,6 +2,15 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 describe('shipped page', () => {
+  it('points share crawlers and canonical links at the public HTTPS origin', () => {
+    const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+    const origin = 'https://alcubemy.travisjohnjones.com';
+    expect(html).toContain(`rel="canonical" href="${origin}/"`);
+    expect(html).toContain(`property="og:url" content="${origin}/"`);
+    expect(html).toContain(`property="og:image" content="${origin}/share.png"`);
+    expect(html).toContain(`name="twitter:image" content="${origin}/share.png"`);
+  });
+
   it('ships a consistent experimental-sandbox identity and share metadata', () => {
     const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
     const manifest = JSON.parse(

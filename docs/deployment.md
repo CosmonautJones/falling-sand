@@ -1,32 +1,39 @@
-# Alcubemy deployment handoff
+# Alcubemy deployment
 
-Recommended destination: a separate Netlify project using `alcubemy.travisjohnjones.com`, linked from the existing portfolio. This is a proposed production address, not a verified live URL. The game builds independently of the portfolio and needs no application server.
+Alcubemy is an **experimental sandbox**, hosted independently from the portfolio at **https://alcubemy.travisjohnjones.com/**. It is a static Vite build with no application server or account requirement.
 
-## Repository import
+## Hosting
 
-1. Sign into the existing Netlify team. Import `CosmonautJones/falling-sand` from GitHub into a **new project**. Do not replace the portfolio project.
-2. The package currently lives on `codex/living-retort`. Use that branch for an experimental deployment; switch the production branch to `main` after the reviewed changes land there.
-3. `netlify.toml` specifies `npm run build`, publish directory `dist`, and Node 22, matching local validation. Netlify installs the locked npm dependencies before building.
-4. Check the assigned Netlify URL first. Verify that the intended public audience can access it; an account configured for private-by-default projects may require a visibility change.
-5. Add `alcubemy.travisjohnjones.com` in the new project's domain settings. Follow the DNS record Netlify supplies for that project. Keep the portfolio's root/www records intact. Verify HTTPS at the subdomain.
-6. Only after the domain works, set `og:image` and `twitter:image` to the absolute HTTPS share-image URL and add the canonical URL. Rebuild and verify metadata at the deployed origin.
+- Netlify project: `alcubemy`, in `cosmonautjones`.
+- Site ID: `626dc739-26ea-4657-94ed-09374ddab730`.
+- Dashboard: https://app.netlify.com/projects/alcubemy
+- Default address: https://alcubemy.netlify.app
+- Primary domain: https://alcubemy.travisjohnjones.com
+- HTTPS is enforced. The existing Netlify DNS zone supplies the subdomain; the portfolio's root/www records are unchanged.
+- `netlify.toml`: Node 22, `npm run build`, publish `dist`.
 
-The account connection, project creation, DNS change and production deployment have not been performed by this handoff. No Netlify CLI credential or linked site was found in the current environment. [Netlify repository import instructions](https://docs.netlify.com/start/quickstarts/deploy-from-repository/) and [domain setup guidance](https://docs.netlify.com/manage/domains/get-started-with-domains/) describe the account-side steps.
+The first deployment on September 17, 2026 was built from a clean `git archive` of `a18d5f203486a56620f4a198562b98adc6f146d4`. Netlify deploy `6aabd41bb61a4e15defe3b9b` reached `ready`. The upload excluded local council notes, dependencies and QA artifacts. Source uploads do not populate Netlify's `commit_ref`; record the Git SHA alongside the deploy ID.
 
-## Manual build upload
+## Updating the game
 
-Run `npm ci` and `npm run build`. Upload the contents of `dist` through the existing Netlify account. The local release ZIP, when generated, contains `index.html` at its root alongside `assets/`, icons, manifest and share image. It is a static-host package; opening the HTML directly from a filesystem is not the supported launch path.
+The experimental source currently lives on `codex/living-retort`. Use only a verified commit, and deploy a clean source export through the authenticated Netlify connector, or publish a local build with the official CLI:
 
-## Portfolio entry after the live smoke check
+```sh
+npm ci
+npm test -- --maxWorkers=1 --minWorkers=1
+npm run lint
+npm run build
+npx netlify-cli deploy --prod --dir=dist --site=626dc739-26ea-4657-94ed-09374ddab730
+```
 
-- Title: **Alcubemy**
-- Description: **An experimental falling-sand art game. Paint with sand, water, heat and alchemy, then watch the vessel change.**
-- Action: **Play Alcubemy**
-- Secondary action: source repository on GitHub.
-- Image: `public/share.png` from this repository, copied into the portfolio's public assets.
-- Tags: TypeScript, Three.js, cellular simulation.
-- Status: **Experimental sandbox**. Living construction remains on the roadmap.
+The CLI requires a separate Netlify login. Connector authentication does not imply a local CLI login. Never upload the workspace root as static content. `dist/` is the publish directory; opening its HTML directly from the filesystem is unsupported.
 
-Use the actual verified game URL for the card. Do not add a dead Play link while hosting is pending. The existing portfolio is a separate repository and has not been changed by this package.
+Continuous Git deployment is linked to `CosmonautJones/falling-sand`, production branch `codex/living-retort`, using the existing GitHub app permissions. Pushing that branch triggers a Netlify build with the settings above. Check both GitHub CI and the Netlify deploy before calling an update released; they run independently. Switch production to `main` only after the reviewed changes land. The manual command above is a fallback, not the normal update path.
 
-Before promoting the project, finish the native tab-switch and physical-device checks in [release QA](release-qa.md). Record the deployed commit, live URL and smoke-test result together.
+## Publication checks
+
+Verify the deployed origin, bundle, favicon, manifest and share card. Canonical, Open Graph and Twitter image URLs use the primary HTTPS origin. The portfolio entry belongs in the separate `CosmonautJones/Portfolio` repository and links directly to the game; its artwork comes from `public/share.png`.
+
+DNS can take time to reach every resolver. On initial setup Google's DNS-over-HTTPS resolver returned the Netlify addresses and an HTTPS request to those addresses with the correct host returned 200; the local resolver still cached a lookup failure. Do not disable TLS checks to work around propagation.
+
+See [release QA](release-qa.md) for browser evidence and remaining native/physical-device checks. Do not describe the experimental release as certified on mobile Safari, hardware RTX, or finished living construction.
