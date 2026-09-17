@@ -25,11 +25,11 @@ const PAGES: Record<MaterialId, { whisper: string; leaf: string }> = {
   },
   [Material.Fire]: {
     whisper: 'A short life, hungry.',
-    leaf: 'Eats plant, oil, wood, powder, bloom. Without fuel it keeps ash. Water makes steam. Boxed in eight obsidian it becomes a black sun. An obsidian frame lit with it is a door.',
+    leaf: 'It has to warm what it eats. Plant and oil catch after a soak; wood longer. Powder and the red cask do not wait. Without fuel it keeps ash. Water makes steam. Boxed in eight obsidian it becomes a black sun. An obsidian frame lit with it is a door.',
   },
   [Material.Plant]: {
     whisper: 'Seed drinks. The garden answers.',
-    leaf: 'Grows while wet. A thicket drops seed, then opens bloom. Ash is bone-meal. Fire takes it. Mites graze it.',
+    leaf: 'Grows while wet. A steady local supply lets it root into sand; drying starts that wait again. A thicket drops seed, then opens bloom. Ash is bone-meal. Fire takes it. Mites graze it.',
   },
   [Material.Oil]: {
     whisper: 'A dark float.',
@@ -53,7 +53,7 @@ const PAGES: Record<MaterialId, { whisper: string; leaf: string }> = {
   },
   [Material.Moss]: {
     whisper: 'Wet stone grows a quiet pelt.',
-    leaf: 'Creeps along stone that drinks. Mites will graze it. Acid and fire do not suffer it.',
+    leaf: 'Creeps along stone that drinks. Sustained moisture lets it take sand, but fired brick holds. Mites will graze it. Acid and fire do not suffer it.',
   },
   [Material.Ice]: {
     whisper: 'Water, stopped.',

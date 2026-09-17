@@ -1,5 +1,5 @@
 import { Grid } from './grid';
-import { SHADE_RANGE, type MaterialId } from './materials';
+import { Material, SHADE_RANGE, type MaterialId } from './materials';
 import { randShade } from './rng';
 
 export type RiteName = 'aether-rain' | 'gold-rain' | 'void-gift' | 'mercury-gift';
@@ -61,9 +61,13 @@ export function createRite(): {
 
 /** Sprinkle a reagent along the sky so it can fall as a gift. */
 export function rainFromCeiling(grid: Grid, material: MaterialId, count: number): void {
-  const span = Math.max(1, grid.width - 2);
-  for (let i = 0; i < count; i++) {
-    const x = 1 + (i % span);
+  const sky: number[] = [];
+  for (let x = 1; x < grid.width - 1; x++) {
+    if (grid.get(x, 1) === Material.Air) sky.push(x);
+  }
+  const drops = Math.min(Math.max(0, Math.floor(count)), sky.length);
+  for (let i = 0; i < drops; i++) {
+    const x = sky[Math.floor(((i + 0.5) * sky.length) / drops)];
     grid.set(x, 1, material, randShade(SHADE_RANGE[material]));
   }
 }

@@ -1,7 +1,7 @@
 {
-  "name": "Alembic",
-  "short_name": "Alembic",
-  "description": "A paint-and-watch falling-sand vessel.",
+  "name": "Alcubemy",
+  "short_name": "Alcubemy",
+  "description": "An experimental alchemy sandbox. Pour, play, discover.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#100c09",

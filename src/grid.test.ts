@@ -3,6 +3,20 @@ import { Grid } from './grid';
 import { Material } from './materials';
 
 describe('Grid', () => {
+  it('moves local growth maturity with a grain and clears it on replacement and reset', () => {
+    const grid = new Grid(4, 4);
+    grid.set(1, 1, Material.Moss);
+    grid.growth[grid.index(1, 1)] = 1700;
+    grid.swap(1, 1, 2, 2);
+    expect(grid.growth[grid.index(2, 2)]).toBe(1700);
+    expect(grid.growth[grid.index(1, 1)]).toBe(0);
+    grid.set(2, 2, Material.Plant);
+    expect(grid.growth[grid.index(2, 2)]).toBe(0);
+    grid.growth[grid.index(2, 2)] = 1200;
+    grid.clear();
+    expect(grid.growth.every((age) => age === 0)).toBe(true);
+  });
+
   it('rejects non-positive or non-integer dimensions', () => {
     expect(() => new Grid(0, 10)).toThrow(RangeError);
     expect(() => new Grid(10, -1)).toThrow(RangeError);

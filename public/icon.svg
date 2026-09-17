@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <title>Alcubemy</title>
+  <rect width="256" height="256" rx="54" fill="#100f16"/>
+  <path d="M128 40 207 84 207 172 128 216 49 172 49 84Z" fill="#1b2029" stroke="#b4dcd1" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M49 84 128 128 207 84M128 128V216" fill="none" stroke="#b4dcd1" stroke-width="5"/>
+  <path d="m58 123 19 11v22l19 11v-22l23 13v43l-61-34Z" fill="#edb852"/>
+  <path d="m138 171 19-11v-22l19-11v22l23-13v31l-61 34Z" fill="#5fcbd5"/>
+  <path d="m128 60 19 11-19 11-19-11Z" fill="#fff0b6"/>
+  <path d="m157 77 19 11-19 11-19-11Z" fill="#edb852"/>
+</svg>

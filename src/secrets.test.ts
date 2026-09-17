@@ -3,8 +3,33 @@ import { Grid } from './grid';
 import { Material } from './materials';
 import { seedRng } from './rng';
 import { createRite, rainFromCeiling } from './secrets';
+import { seedVessel } from './world';
 
 describe('rites', () => {
+  it('preserves the full opening enclosure and every occupied sky cell during rain', () => {
+    const grid = new Grid(480, 270);
+    seedVessel(grid);
+    grid.set(240, 1, Material.Brick);
+    const before = grid.cells.slice();
+    rainFromCeiling(grid, Material.Gold, 24);
+    expect(grid.count(Material.Gold)).toBe(24);
+    for (let i = 0; i < before.length; i++) {
+      if (before[i] !== Material.Air) expect(grid.cells[i]).toBe(before[i]);
+    }
+  });
+
+  it('caps rain at available sky cells instead of replacing earlier grains', () => {
+    const grid = new Grid(8, 4);
+    for (let x = 0; x < 8; x++) grid.set(x, 1, Material.Brick);
+    grid.set(3, 1, Material.Air);
+    rainFromCeiling(grid, Material.Gold, 20);
+    expect(grid.count(Material.Gold)).toBe(1);
+    expect(grid.count(Material.Brick)).toBe(7);
+    rainFromCeiling(grid, Material.Mercury, 20);
+    expect(grid.count(Material.Gold)).toBe(1);
+    expect(grid.count(Material.Mercury)).toBe(0);
+  });
+
   it('opens aether rain after seven strikes on the name', () => {
     const rite = createRite();
     for (let i = 0; i < 6; i++) expect(rite.titleClick()).toBeNull();

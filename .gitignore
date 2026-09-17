@@ -12,3 +12,6 @@ qa-shots/
 # Local agent / worktree metadata
 .claude/
 
+# Local Netlify link and build state
+.netlify/
+
