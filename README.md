@@ -26,6 +26,8 @@ Alcubemy is a falling-sand art toy inside an alchemist’s vessel. Sand piles up
 
 The opening vessel already contains a dune, a trough, mites, minnows and a glass cup of lava. You can start by watching. Or clear the glass and make your own miniature disaster.
 
+**Start here:** tap **Try water + lava** to select water and bring the glowing cup into view. Pour into it. The invitation preserves your world; use reset if you want a fresh opening.
+
 <p align="center">
   <img src="docs/assets/material-study.png" alt="An actual renderer capture: a blue pool with violet crystal peaks, a gold seam in stone and lava contained in glass." width="960" />
   <br /><em>A composed material study, captured from the game renderer. This is not the opening scene.</em>
@@ -54,19 +56,23 @@ Open the local URL Vite prints. For a production build, run `npm run build`, the
 
 The [deployment guide](docs/deployment.md) records the independent Netlify project, public subdomain and update procedure.
 
-| Control                    | What happens                                 |
-| -------------------------- | -------------------------------------------- |
-| Left hold / drag           | Pour continuously.                           |
-| Touch hold / drag          | Pour on a phone or tablet.                   |
-| Right-click                | Name the grain under the cursor.             |
-| Right-drag                 | Pan when zoomed.                             |
-| Mouse wheel / double-click | Zoom toward the cursor / reset the view.     |
-| Alt-click                  | Sample a grain onto the brush and unlock it. |
-| Space / pause button       | Hold the simulation. You can still paint.    |
-| `[` / `]`                  | Change brush size.                           |
-| `1`–`0`                    | Select the first ten starter materials.      |
-| ½× / 1× / 2×               | Change simulation speed.                     |
-| Codex                      | Read the materials you have found.           |
+| Control                      | What happens                                                                        |
+| ---------------------------- | ----------------------------------------------------------------------------------- |
+| Left hold / drag             | Pour continuously.                                                                  |
+| Touch hold / drag            | Pour on a phone or tablet.                                                          |
+| Move view                    | Toggle one-finger panning without pouring. Selecting a material returns to pouring. |
+| Zoom in / out / whole vessel | Inspect grains or fit the entire world.                                             |
+| Right-click                  | Name the grain under the cursor.                                                    |
+| Right-drag                   | Pan when zoomed.                                                                    |
+| Mouse wheel / double-click   | Zoom toward the cursor / reset the view.                                            |
+| Alt-click                    | Sample a grain onto the brush and unlock it.                                        |
+| Space / pause button         | Hold the simulation. You can still paint.                                           |
+| `[` / `]`                    | Change brush size.                                                                  |
+| `1`–`0`                      | Select the first ten starter materials.                                             |
+| ½× / 1× / 2×                 | Change simulation speed.                                                            |
+
+On phones, portrait keeps controls below the vessel; landscape puts them in a scrollable side panel. Rotate for a wider view. Rotation fits the camera without resetting any grains. Phone-sized Chromium and desktop WebKit checks pass; physical iPhone Safari testing is still pending.
+| Codex | Read the materials you have found. |
 
 **Clear** empties the vessel. **Reset** restores the opening scene. Discoveries survive those two buttons within the session. Reloading loses the world and discoveries; saves and undo are not implemented. Touch pouring is supported; mouse probing, zoom and pan are desktop controls.
 

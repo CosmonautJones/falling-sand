@@ -6,7 +6,7 @@ import { boom, chime } from './feel';
 import { BRUSH_SIZES, HEIGHT, WIDTH, seedVessel } from './world';
 import { createRite, rainFromCeiling, type RiteName } from './secrets';
 import { blanks, stained, whisper } from './codex';
-import { createView, panBy, screenToCell, zoomAt } from './view';
+import { createView, focusAt, panBy, screenToCell, zoomAt } from './view';
 import { startVisibleLoop } from './visible-loop';
 
 function requireEl<T extends Element>(selector: string): T {
@@ -44,6 +44,8 @@ let lastCell: { x: number; y: number } | null = null;
 let paused = false;
 let speed = 1;
 let view = createView();
+let movingView = false;
+let activePointer: number | null = null;
 let gesture: 'none' | 'paint' | 'probe' | 'pan' = 'none';
 let downAt = { x: 0, y: 0, t: 0, cellX: 0, cellY: 0 };
 let lastDrag = { x: 0, y: 0 };
@@ -84,8 +86,7 @@ for (const id of PALETTE) {
   button.hidden = !discovered.has(id);
   button.setAttribute('aria-pressed', String(id === brush));
   button.addEventListener('click', () => {
-    brush = id;
-    markPressed(palette, button);
+    selectBrush(id);
   });
   palette.append(button);
   paletteButtons.set(id, button);
@@ -99,8 +100,7 @@ for (const size of BRUSH_SIZES) {
   button.dataset.radius = String(size);
   button.setAttribute('aria-pressed', String(size === brushRadius));
   button.addEventListener('click', () => {
-    brushRadius = size;
-    markPressed(tools, button);
+    selectRadius(size);
   });
   tools.append(button);
   sizeButtons.push(button);
@@ -156,6 +156,62 @@ folioButton.setAttribute('aria-controls', 'folio');
 folioButton.addEventListener('click', () => setFolioOpen(!folio.classList.contains('is-open')));
 tools.append(folioButton);
 
+const moveButton = document.createElement('button');
+moveButton.type = 'button';
+moveButton.textContent = 'move view';
+moveButton.setAttribute('aria-pressed', 'false');
+moveButton.addEventListener('click', () => setMovingView(!movingView));
+
+function cameraButton(label: string, action: () => void): HTMLButtonElement {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.textContent = label;
+  button.addEventListener('click', action);
+  return button;
+}
+
+function zoomCenter(factor: number): void {
+  const { vw, vh } = viewportBox();
+  view = zoomAt(view, vw / 2, vh / 2, factor, vw, vh);
+  applyView();
+}
+
+function fitVessel(): void {
+  painting = false;
+  gesture = 'none';
+  activePointer = null;
+  lastCell = null;
+  view = createView();
+  applyView();
+}
+
+tools.prepend(
+  pauseButton,
+  moveButton,
+  cameraButton('zoom in', () => zoomCenter(1.5)),
+  cameraButton('zoom out', () => zoomCenter(1 / 1.5)),
+  cameraButton('whole vessel', fitVessel),
+);
+
+function setMovingView(next: boolean): void {
+  movingView = next;
+  painting = false;
+  gesture = 'none';
+  activePointer = null;
+  lastCell = null;
+  moveButton.setAttribute('aria-pressed', String(next));
+  viewport.classList.toggle('is-moving', next);
+}
+
+requireEl<HTMLButtonElement>('#first-experiment').addEventListener('click', () => {
+  selectBrush(Material.Water);
+  const { vw, vh } = viewportBox();
+  view = focusAt(Math.round(WIDTH * 0.88), HEIGHT - 20, 3, vw, vh, WIDTH, HEIGHT);
+  applyView();
+});
+// Rotation changes the camera's pixel coordinates; fit without resetting the world.
+window.addEventListener('resize', fitVessel);
+
 function paintFolio(): void {
   const pages = stained(discovered);
   folioCount.textContent = `${pages.length} stained · ${blanks(discovered)} blank`;
@@ -201,12 +257,15 @@ function selectBrush(id: MaterialId): void {
   if (!button || button.hidden) return;
   brush = id;
   markPressed(palette, button);
+  setMovingView(false);
 }
 
 function selectRadius(size: number): void {
   brushRadius = size;
   const button = sizeButtons.find((b) => Number(b.dataset.radius) === size);
-  if (button) markPressed(tools, button);
+  if (button) {
+    for (const other of sizeButtons) other.setAttribute('aria-pressed', String(other === button));
+  }
 }
 
 function reveal(id: MaterialId, note?: string): void {
@@ -282,6 +341,7 @@ function eyedrop(x: number, y: number): void {
 }
 
 function capturePointer(event: PointerEvent): void {
+  activePointer = event.pointerId;
   const node = event.currentTarget;
   if (!(node instanceof HTMLElement)) return;
   try {
@@ -320,6 +380,7 @@ viewport.addEventListener('dblclick', (event) => {
 });
 
 viewport.addEventListener('pointerdown', (event) => {
+  if (activePointer !== null) return;
   const { x, y } = cellFromPointer(event);
   if (event.button === 1 || (event.button === 0 && event.altKey)) {
     eyedrop(x, y);
@@ -334,6 +395,13 @@ viewport.addEventListener('pointerdown', (event) => {
     return;
   }
   if (event.button !== 0) return;
+  if (movingView) {
+    gesture = 'pan';
+    lastDrag = { x: event.clientX, y: event.clientY };
+    probe.classList.remove('is-on');
+    capturePointer(event);
+    return;
+  }
   gesture = 'paint';
   painting = true;
   lastCell = null;
@@ -344,6 +412,7 @@ viewport.addEventListener('pointerdown', (event) => {
 viewport.addEventListener(
   'pointermove',
   (event) => {
+    if (event.pointerId !== activePointer) return;
     if (gesture === 'pan' || gesture === 'probe') {
       if (gesture === 'probe') {
         const dist = Math.hypot(event.clientX - downAt.x, event.clientY - downAt.y);
@@ -355,7 +424,7 @@ viewport.addEventListener(
       lastDrag = { x: event.clientX, y: event.clientY };
       applyView();
       const { x, y } = cellFromPointer(event);
-      showProbe(x, y, event.clientX, event.clientY);
+      if (!movingView) showProbe(x, y, event.clientX, event.clientY);
       return;
     }
     if (gesture === 'paint' || painting) {
@@ -366,6 +435,8 @@ viewport.addEventListener(
   { capture: true },
 );
 function endPaint(event: PointerEvent): void {
+  if (event.pointerId !== activePointer) return;
+  activePointer = null;
   gesture = 'none';
   painting = false;
   lastCell = null;
@@ -373,6 +444,7 @@ function endPaint(event: PointerEvent): void {
 }
 viewport.addEventListener('pointerup', endPaint);
 viewport.addEventListener('pointercancel', endPaint);
+viewport.addEventListener('lostpointercapture', endPaint);
 viewport.addEventListener('pointerleave', () => {
   if (gesture === 'none') probe.classList.remove('is-on');
 });
@@ -514,6 +586,7 @@ startVisibleLoop({
   suspend: () => {
     painting = false;
     gesture = 'none';
+    activePointer = null;
     lastCell = null;
     acc = 0;
     probe.classList.remove('is-on');

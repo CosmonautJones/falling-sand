@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#100c09" />
     <meta name="mobile-web-app-capable" content="yes" />
     <title>Alcubemy | Experimental alchemy sandbox</title>
@@ -69,7 +69,8 @@
         height: 100dvh;
         max-height: 100dvh;
         overflow: hidden;
-        padding: 8px 12px 10px;
+        padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+          max(10px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
         box-sizing: border-box;
       }
       header {
@@ -128,10 +129,13 @@
         display: none;
         position: fixed;
         z-index: 20;
-        top: 8px;
-        right: 8px;
-        bottom: 8px;
-        width: min(26rem, 94vw);
+        top: max(8px, env(safe-area-inset-top));
+        right: max(8px, env(safe-area-inset-right));
+        bottom: max(8px, env(safe-area-inset-bottom));
+        width: min(
+          26rem,
+          calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right))
+        );
         flex-direction: column;
         background: #14100c;
         border: 1px solid var(--brass);
@@ -230,6 +234,7 @@
         justify-content: center;
       }
       button {
+        touch-action: manipulation;
         background: var(--soot);
         color: var(--ink);
         border: 1px solid var(--lead);
@@ -464,6 +469,48 @@
       .touch-help {
         display: none;
       }
+      .experiment {
+        margin: 4px 0 0;
+        color: var(--paper);
+        font-size: 13px;
+      }
+      #first-experiment,
+      #folio-shut {
+        min-height: 44px;
+        min-width: 44px;
+      }
+      #first-experiment {
+        margin-right: 6px;
+      }
+      #viewport.is-moving,
+      #viewport.is-moving canvas {
+        cursor: grab;
+      }
+      @media (max-width: 640px) {
+        header {
+          order: 1;
+        }
+        .vessel {
+          order: 2;
+          width: 100%;
+          flex: 0 0 auto;
+          aspect-ratio: 480 / 270;
+        }
+        #toolbar {
+          order: 3;
+          width: 100%;
+          min-height: 0;
+          overflow-y: auto;
+          flex: 1 1 0;
+        }
+        .experiment span {
+          display: block;
+        }
+        #lore,
+        #codex {
+          font-size: 12px;
+        }
+      }
       @media (pointer: coarse) {
         .desktop-help {
           display: none;
@@ -484,6 +531,7 @@
         #toolbar button {
           flex: 0 0 auto;
           min-height: 44px;
+          min-width: 44px;
         }
         #hud {
           max-width: 100%;
@@ -499,6 +547,60 @@
         }
         h1 {
           font-size: 22px;
+        }
+      }
+      @media (max-width: 640px) {
+        #palette,
+        #tools {
+          flex-wrap: wrap;
+          overflow-x: visible;
+          flex-shrink: 0;
+        }
+      }
+      @media (max-height: 500px) and (min-width: 641px) {
+        body {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) 176px;
+          grid-template-rows: auto minmax(0, 1fr);
+          align-items: stretch;
+        }
+        header {
+          grid-column: 1;
+          grid-row: 1;
+        }
+        header h1 {
+          font-size: 18px;
+        }
+        .experiment {
+          margin: 0;
+        }
+        .experiment span {
+          font-size: 11px;
+        }
+        #toolbar {
+          grid-column: 2;
+          grid-row: 1 / span 2;
+          width: 100%;
+          min-height: 0;
+          overflow-y: auto;
+          justify-content: flex-start;
+        }
+        #palette,
+        #tools {
+          flex-wrap: wrap;
+          overflow-x: visible;
+          flex-shrink: 0;
+          gap: 4px;
+        }
+        #toolbar button {
+          font-size: 12px;
+        }
+        .vessel {
+          grid-column: 1;
+          grid-row: 2;
+          width: 100%;
+          height: 100%;
+          margin: 0;
         }
       }
       @media (prefers-reduced-motion: reduce) {
@@ -518,10 +620,14 @@
           zooms. Casks remember fire. Space pauses; <kbd>[</kbd> <kbd>]</kbd> the brush.</span
         >
         <span class="touch-help"
-          >Hold or drag to pour. Swipe the material and tool rows for more. Pause to compose.</span
+          >Hold to pour. Zoom in, then Move view to pan. Rotate for a wider view.</span
         >
       </p>
       <p id="codex"></p>
+      <p class="experiment">
+        <button type="button" id="first-experiment">Try water + lava</button>
+        <span>Pour into the glowing cup. Watch steam rise and obsidian form.</span>
+      </p>
     </header>
     <div id="toolbar"></div>
     <figure class="vessel">

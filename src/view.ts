@@ -48,6 +48,24 @@ export function panBy(view: View, dx: number, dy: number, vw: number, vh: number
   return clampPan({ zoom: view.zoom, panX: view.panX + dx, panY: view.panY + dy }, vw, vh);
 }
 
+/** Bring a world cell into view, keeping the camera inside the vessel. */
+export function focusAt(
+  x: number,
+  y: number,
+  requestedZoom: number,
+  vw: number,
+  vh: number,
+  gw: number,
+  gh: number,
+): View {
+  const zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, requestedZoom));
+  return clampPan(
+    { zoom, panX: vw / 2 - (x / gw) * vw * zoom, panY: vh / 2 - (y / gh) * vh * zoom },
+    vw,
+    vh,
+  );
+}
+
 export function screenToCell(
   view: View,
   sx: number,

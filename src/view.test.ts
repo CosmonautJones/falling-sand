@@ -1,7 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { clampPan, createView, panBy, screenToCell, zoomAt } from './view';
+import { clampPan, createView, focusAt, panBy, screenToCell, zoomAt } from './view';
 
 describe('viewport', () => {
+  it('brings the lava cup into a phone viewport without exposing empty margins', () => {
+    const vw = 350;
+    const vh = (vw * 270) / 480;
+    const view = focusAt(422, 250, 3, vw, vh, 480, 270);
+    const sx = (422 / 480) * vw * view.zoom + view.panX;
+    const sy = (250 / 270) * vh * view.zoom + view.panY;
+    expect(sx).toBeGreaterThan(0);
+    expect(sx).toBeLessThan(vw);
+    expect(sy).toBeGreaterThan(0);
+    expect(sy).toBeLessThan(vh);
+    expect(screenToCell(view, sx, sy, vw, vh, 480, 270)).toEqual({ x: 422, y: 250 });
+    expect(clampPan(view, vw, vh)).toEqual(view);
+    expect(view.zoom).toBe(3);
+  });
   it('starts at 1× with no pan', () => {
     expect(createView()).toEqual({ zoom: 1, panX: 0, panY: 0 });
   });
