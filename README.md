@@ -60,6 +60,7 @@ The [deployment guide](docs/deployment.md) records the independent Netlify proje
 | ---------------------------- | ----------------------------------------------------------------------------------- |
 | Left hold / drag             | Pour continuously.                                                                  |
 | Touch hold / drag            | Pour on a phone or tablet.                                                          |
+| Two-finger drag / pinch      | Pan and zoom. Pouring stays stopped until all fingers lift.                         |
 | Move view                    | Toggle one-finger panning without pouring. Selecting a material returns to pouring. |
 | Zoom in / out / whole vessel | Inspect grains or fit the entire world.                                             |
 | Right-click                  | Name the grain under the cursor.                                                    |
@@ -70,11 +71,11 @@ The [deployment guide](docs/deployment.md) records the independent Netlify proje
 | `[` / `]`                    | Change brush size.                                                                  |
 | `1`–`0`                      | Select the first ten starter materials.                                             |
 | ½× / 1× / 2×                 | Change simulation speed.                                                            |
+| Codex                        | Read the materials you have found.                                                  |
 
-On phones, portrait keeps controls below the vessel; landscape puts them in a scrollable side panel. Rotate for a wider view. Rotation fits the camera without resetting any grains. Phone-sized Chromium and desktop WebKit checks pass; physical iPhone Safari testing is still pending.
-| Codex | Read the materials you have found. |
+On phones, the world fills the play area above a compact bottom bar. Tap the current material to open materials and brush sizes; choosing a material closes the drawer. **More** holds camera controls, speed, Codex, the first experiment, and clear/reset. Opening a drawer does not move the camera or paint. Portrait starts zoomed into the same 480 × 270 world, without stretching grains; use two fingers to explore or **Whole vessel** to see everything. Rotation preserves the world and keeps the camera near your current focus.
 
-**Clear** empties the vessel. **Reset** restores the opening scene. Discoveries survive those two buttons within the session. Reloading loses the world and discoveries; saves and undo are not implemented. Touch pouring is supported; mouse probing, zoom and pan are desktop controls.
+**Clear** empties the vessel. **Reset** restores the opening scene. Both ask before replacing your creation. Discoveries survive those two buttons within the session. Reloading loses the world and discoveries; saves and undo are not implemented. Grain naming and sampling currently use mouse controls. Phone-sized Chromium and desktop WebKit checks pass; physical iPhone Safari testing of the drawer and gestures is still pending.
 
 The manifest includes app icons for browsers that offer installation. Offline caching is not implemented.
 

@@ -127,6 +127,9 @@
       }
       #folio {
         display: none;
+        margin: 0;
+        padding: 0;
+        left: auto;
         position: fixed;
         z-index: 20;
         top: max(8px, env(safe-area-inset-top));
@@ -144,7 +147,7 @@
           0 24px 48px rgba(0, 0, 0, 0.55);
         color: var(--ink);
       }
-      #folio.is-open {
+      #folio[open] {
         display: flex;
       }
       #folio-head {
@@ -317,6 +320,9 @@
         flex: 0 0 auto;
       }
       canvas {
+        position: absolute;
+        left: 0;
+        top: 0;
         display: block;
         image-rendering: pixelated;
         width: 100%;
@@ -443,30 +449,8 @@
         font-style: italic;
         letter-spacing: 0.04em;
       }
-      @media (max-width: 640px) {
-        h1 {
-          font-size: 24px;
-          letter-spacing: 0.1em;
-        }
-        #lore {
-          font-size: 14px;
-        }
-        #palette button {
-          min-width: 3.8em;
-          padding: 6px 8px;
-        }
-        canvas,
-        #viewport {
-          cursor: crosshair;
-        }
-        #reticle {
-          display: none;
-        }
-        #curtain strong {
-          font-size: 28px;
-        }
-      }
-      .touch-help {
+      .touch-help,
+      #mobile-dock {
         display: none;
       }
       .experiment {
@@ -486,30 +470,157 @@
       #viewport.is-moving canvas {
         cursor: grab;
       }
-      @media (max-width: 640px) {
-        header {
-          order: 1;
-        }
-        .vessel {
-          order: 2;
-          width: 100%;
-          flex: 0 0 auto;
-          aspect-ratio: 480 / 270;
-        }
-        #toolbar {
-          order: 3;
-          width: 100%;
-          min-height: 0;
-          overflow-y: auto;
-          flex: 1 1 0;
-        }
-        .experiment span {
-          display: block;
-        }
-        #lore,
-        #codex {
-          font-size: 12px;
-        }
+      #brush-sizes {
+        display: flex;
+        gap: 5px;
+        justify-content: center;
+      }
+      .brush-preview {
+        display: none;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      dialog {
+        color: var(--ink);
+        background: #17130f;
+        border: 1px solid var(--lead);
+        padding: 20px;
+        box-sizing: border-box;
+        max-width: calc(100vw - 24px);
+      }
+      dialog::backdrop {
+        background: rgb(5 4 3 / 48%);
+      }
+      dialog button {
+        min-height: 44px;
+        min-width: 44px;
+      }
+      dialog h2 {
+        font-size: 20px;
+        font-weight: 500;
+        margin: 0;
+        color: var(--paper);
+      }
+      dialog p {
+        color: var(--paper);
+        font-size: 14px;
+      }
+      .dialog-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 24px;
+      }
+      #reset-confirm {
+        border-color: var(--brass);
+      }
+      #control-drawer {
+        inset: auto 0 0;
+        margin: 0 auto;
+        width: min(100%, 560px);
+        max-width: 100%;
+        max-height: min(78dvh, 640px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        border: 0;
+        border-top: 1px solid var(--brass);
+        border-radius: 16px 16px 0 0;
+        padding: 12px max(16px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom))
+          max(16px, env(safe-area-inset-left));
+        box-shadow: 0 -12px 40px rgb(0 0 0 / 28%);
+      }
+      .drawer-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+      #drawer-close {
+        border: 0;
+        background: transparent;
+      }
+      #drawer-materials h3 {
+        color: var(--paper);
+        font-size: 12px;
+        font-weight: normal;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin: 18px 0 10px;
+      }
+      #control-drawer #palette {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 7px;
+      }
+      #control-drawer #palette button {
+        background: #211c16 !important;
+        color: var(--ink) !important;
+        box-shadow: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-align: left;
+        padding: 10px;
+        min-width: 0;
+        min-height: 48px;
+        font:
+          13px/1.2 system-ui,
+          sans-serif;
+        letter-spacing: 0;
+      }
+      #control-drawer #palette button::before {
+        content: '';
+        width: 15px;
+        height: 20px;
+        flex: 0 0 auto;
+        border: 1px solid rgb(255 255 255 / 15%);
+        background: var(--material-color);
+      }
+      #control-drawer button[aria-pressed='true'] {
+        border-color: var(--brass);
+        box-shadow: inset 0 0 0 1px var(--brass);
+      }
+      #control-drawer #brush-sizes {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 6px;
+      }
+      #control-drawer #brush-sizes button {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 8px;
+        height: 84px;
+        padding: 8px 2px;
+        font-size: 12px;
+      }
+      #control-drawer .brush-preview {
+        display: block;
+        background: var(--paper);
+        border-radius: 50%;
+        flex: 0 0 auto;
+        margin: auto;
+      }
+      #control-drawer #tools {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+      #control-drawer #tools button {
+        padding: 10px 5px;
+        font:
+          13px/1.2 system-ui,
+          sans-serif;
+      }
+      #drawer-experiment {
+        margin-top: 18px;
+        border-top: 1px solid var(--lead);
+        padding-top: 16px;
+      }
+      #drawer-experiment p {
+        margin: 10px 0 0;
       }
       @media (pointer: coarse) {
         .desktop-help {
@@ -519,88 +630,108 @@
           display: inline;
         }
       }
-      @media (max-width: 640px), (max-height: 500px) {
-        #palette,
-        #tools {
-          flex-wrap: nowrap;
-          justify-content: flex-start;
-          overflow-x: auto;
-          width: 100%;
-          padding-bottom: 3px;
-        }
-        #toolbar button {
-          flex: 0 0 auto;
-          min-height: 44px;
-          min-width: 44px;
-        }
-        #hud {
-          max-width: 100%;
-          overflow: hidden;
-          white-space: nowrap;
-        }
-      }
-      @media (max-height: 500px) {
-        header #lore,
-        header #codex,
-        .release-label {
-          display: none;
-        }
-        h1 {
-          font-size: 22px;
-        }
-      }
-      @media (max-width: 640px) {
-        #palette,
-        #tools {
-          flex-wrap: wrap;
-          overflow-x: visible;
-          flex-shrink: 0;
-        }
-      }
-      @media (max-height: 500px) and (min-width: 641px) {
+      @media (max-width: 700px), (max-width: 1000px) and (max-height: 500px) {
         body {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) 176px;
-          grid-template-rows: auto minmax(0, 1fr);
-          align-items: stretch;
+          gap: 0;
+          padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
         }
         header {
-          grid-column: 1;
-          grid-row: 1;
-        }
-        header h1 {
-          font-size: 18px;
-        }
-        .experiment {
-          margin: 0;
-        }
-        .experiment span {
-          font-size: 11px;
-        }
-        #toolbar {
-          grid-column: 2;
-          grid-row: 1 / span 2;
+          order: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           width: 100%;
-          min-height: 0;
-          overflow-y: auto;
-          justify-content: flex-start;
+          min-height: 38px;
+          box-sizing: border-box;
         }
-        #palette,
-        #tools {
-          flex-wrap: wrap;
-          overflow-x: visible;
-          flex-shrink: 0;
-          gap: 4px;
+        h1 {
+          font-size: 19px;
+          letter-spacing: 0.12em;
         }
-        #toolbar button {
-          font-size: 12px;
+        header #lore,
+        header #codex,
+        header .experiment,
+        .release-label,
+        #toolbar,
+        #hud,
+        #reticle {
+          display: none;
         }
         .vessel {
-          grid-column: 1;
-          grid-row: 2;
+          order: 2;
+          width: 100%;
+          flex: 1 1 0;
+          padding: 0;
+          border: 0;
+          background: #0b090e;
+          box-shadow: none;
+        }
+        .vessel::before,
+        .vessel::after {
+          display: none;
+        }
+        #viewport {
           width: 100%;
           height: 100%;
-          margin: 0;
+          max-height: none;
+          aspect-ratio: auto;
+        }
+        #mobile-dock {
+          order: 3;
+          display: flex;
+          align-items: stretch;
+          gap: 8px;
+          flex: 0 0 auto;
+          width: 100%;
+          box-sizing: border-box;
+          padding: 10px 12px max(10px, env(safe-area-inset-bottom));
+          background: #17130f;
+          border-top: 1px solid var(--lead);
+        }
+        #mobile-dock button {
+          min-height: 52px;
+          min-width: 58px;
+          font:
+            14px/1.2 system-ui,
+            sans-serif;
+        }
+        #brush-menu {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          text-align: left;
+        }
+        #brush-swatch {
+          width: 20px;
+          height: 28px;
+          border: 1px solid rgb(255 255 255 / 20%);
+          flex: 0 0 auto;
+        }
+        #brush-current {
+          display: block;
+          text-transform: capitalize;
+        }
+        #brush-radius {
+          display: block;
+          color: var(--paper);
+          font-size: 11px;
+          margin-top: 3px;
+        }
+        #brush-menu .chevron {
+          margin-left: auto;
+          color: var(--paper);
+        }
+        #curtain strong {
+          font-size: 28px;
+        }
+        canvas,
+        #viewport {
+          cursor: crosshair;
+        }
+        #still {
+          font-size: 11px;
+          letter-spacing: 0.15em;
         }
       }
       @media (prefers-reduced-motion: reduce) {
@@ -644,14 +775,64 @@
         <div id="reticle"></div>
       </div>
     </figure>
-    <aside id="folio" role="dialog" aria-labelledby="folio-title" aria-hidden="true">
+    <nav id="mobile-dock" aria-label="Vessel controls">
+      <button
+        type="button"
+        id="brush-menu"
+        aria-label="Materials and brush"
+        aria-describedby="brush-current brush-radius"
+        aria-haspopup="dialog"
+        aria-controls="control-drawer"
+        aria-expanded="false"
+      >
+        <span id="brush-swatch" aria-hidden="true"></span>
+        <span><span id="brush-current">Sand</span><span id="brush-radius">Size 6</span></span>
+        <span class="chevron" aria-hidden="true">⌄</span>
+      </button>
+      <button
+        type="button"
+        id="more-menu"
+        aria-haspopup="dialog"
+        aria-controls="control-drawer"
+        aria-expanded="false"
+      >
+        More
+      </button>
+    </nav>
+    <dialog id="control-drawer" aria-labelledby="drawer-title">
+      <div class="drawer-heading">
+        <h2 id="drawer-title">Materials &amp; brush</h2>
+        <button type="button" id="drawer-close">Done</button>
+      </div>
+      <section id="drawer-materials">
+        <div id="drawer-palette"></div>
+        <h3>Brush size</h3>
+        <div id="drawer-sizes"></div>
+      </section>
+      <section id="drawer-more" hidden>
+        <div id="drawer-tools"></div>
+        <div id="drawer-experiment">
+          <p>Pour into the glowing cup. Watch steam rise and obsidian form.</p>
+        </div>
+        <p>One finger pours. Two fingers move and zoom. Choose a material to leave Move view.</p>
+      </section>
+    </dialog>
+    <dialog id="confirm-reset" aria-labelledby="reset-title" aria-describedby="reset-description">
+      <h2 id="reset-title">Start a fresh vessel?</h2>
+      <p id="reset-description">Your current creation will be replaced.</p>
+      <div class="dialog-actions">
+        <button type="button" id="reset-cancel" autofocus>Keep playing</button
+        ><button type="button" id="reset-confirm">Reset vessel</button>
+      </div>
+    </dialog>
+    <dialog id="folio" aria-labelledby="folio-title" aria-hidden="true">
       <div id="folio-head">
         <strong id="folio-title">Codex</strong>
         <span id="folio-count"></span>
         <button type="button" id="folio-shut">close</button>
       </div>
       <ol id="folio-leaves"></ol>
-    </aside>
+    </dialog>
     <div id="curtain">
       <strong>ALCUBEMY</strong>
       <span>pour. play. discover.</span>

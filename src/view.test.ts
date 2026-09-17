@@ -1,7 +1,27 @@
 import { describe, expect, it } from 'vitest';
-import { clampPan, createView, focusAt, panBy, screenToCell, zoomAt } from './view';
+import { clampPan, createView, focusAt, panBy, pinchBetween, screenToCell, zoomAt } from './view';
 
 describe('viewport', () => {
+  it('centers a fitted world in a tall phone viewport and allows it to fill the height', () => {
+    const fitted = clampPan(createView(), 360, 600, 360, 202.5);
+    expect(fitted.panY).toBe(198.75);
+    const filled = focusAt(240, 135, 600 / 202.5, 360, 600, 480, 270, 360, 202.5);
+    expect(filled.panY).toBeCloseTo(0);
+    expect(screenToCell(filled, 180, 300, 360, 202.5, 480, 270)).toEqual({ x: 240, y: 135 });
+    expect(clampPan(filled, 360, 600, 360, 202.5)).toEqual(filled);
+  });
+
+  it('keeps the grain between two fingers anchored while they spread and move', () => {
+    const view = focusAt(240, 135, 3, 360, 600, 480, 270, 360, 202.5);
+    const from = { x: 180, y: 300, distance: 100 };
+    const to = { x: 200, y: 320, distance: 150 };
+    const next = pinchBetween(view, from, to, 360, 600, 360, 202.5);
+    expect(next.zoom).toBe(4.5);
+    expect(screenToCell(next, to.x, to.y, 360, 202.5, 480, 270)).toEqual(
+      screenToCell(view, from.x, from.y, 360, 202.5, 480, 270),
+    );
+  });
+
   it('brings the lava cup into a phone viewport without exposing empty margins', () => {
     const vw = 350;
     const vh = (vw * 270) / 480;
