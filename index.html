@@ -64,6 +64,21 @@
         cursor: pointer;
         user-select: none;
       }
+      .v2link {
+        display: inline-block;
+        margin-top: 2px;
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        color: var(--paper);
+        opacity: 0.75;
+        text-decoration: none;
+        border-bottom: 1px dotted var(--lead);
+      }
+      .v2link:hover,
+      .v2link:focus-visible {
+        opacity: 1;
+        color: var(--brass);
+      }
       h1.opus {
         letter-spacing: 0.22em;
         color: #e8b86a;
@@ -434,6 +449,7 @@
   <body>
     <header>
       <h1>Alembic</h1>
+      <a class="v2link" href="./v2/">Alembic v2 &rarr;</a>
       <p id="lore">
         Hold to pour. Right-click names a grain; hold right-click to pan when zoomed. Scroll zooms.
         Casks remember fire. Space pauses; <kbd>[</kbd> <kbd>]</kbd> the brush.
