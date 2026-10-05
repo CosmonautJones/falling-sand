@@ -18,6 +18,13 @@ upscale — heat haze, water caustics, gold spark, blast shake, Magnum Opus auro
 
 **[Play Alembic in your browser](https://cosmonautjones.github.io/falling-sand/)** — no account or installation needed.
 
+**[Try Alembic v2](https://cosmonautjones.github.io/falling-sand/v2/)** — the next iteration, shipped alongside the original:
+
+- Velocity-based grain physics, so pours, flings and splashes carry momentum.
+- Per-material feel: powders, liquids and gases each move and settle differently.
+- Storms and visitors that stir the vessel on their own.
+- Simulation runs in a worker, and the UI is built for phones (touch pour, pinch-zoom).
+
 To run it locally:
 
 ```bash

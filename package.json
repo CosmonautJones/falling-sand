@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:v2": "node --test tests-v2/*.test.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --max-warnings 0",
     "format": "prettier --write src",
