@@ -41,6 +41,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
       <button onClick="{{ openFlasks }}" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:6px 12px; font-size:13px; letter-spacing:.06em; cursor:pointer;" style-hover="border-color:#c49a4a;" class="hb">flasks</button>
     </div>
   </header>
+  <div role="status" aria-live="polite" aria-atomic="true" style="color:#d4b56a; font-size:13px; max-width:100%;">{{ flaskStatus }}</div>
 
   <figure class="col fig" style="margin:0; position:relative; width:min(96vw,1440px); flex:1 1 0; min-height:0; padding:10px; border-radius:4px; background:radial-gradient(120% 80% at 50% 0%, rgba(176,137,72,.26), transparent 48%), linear-gradient(180deg, #43382c, #2b231b); box-shadow:inset 0 1px 0 rgba(232,201,122,.7), inset 0 -1px 0 rgba(0,0,0,.6), inset 0 0 0 1px #2a2118, 0 0 0 1px #5a4630, 0 30px 60px rgba(0,0,0,.65); container-type:size; display:flex; align-items:center; justify-content:center;">
     <div style="position:absolute; top:4px; left:4px; width:5px; height:5px; border-radius:50%; background:radial-gradient(circle at 35% 35%, #f0d38a, #6b5130);"></div>
@@ -202,6 +203,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
         </sc-if>
         <sc-if value="{{ tabFlasks }}" hint-placeholder-val="{{ false }}">
           <div style="display:flex; flex-direction:column; gap:12px; padding-top:8px;">
+            <div aria-hidden="true" style="font-size:13px;color:#d4b56a;">{{ flaskStatus }}</div>
             <sc-for list="{{ flasks }}" as="f" hint-placeholder-count="3">
               <div style="display:flex; gap:12px; align-items:center; border:1px solid #2a2218; padding:8px; background:#18130f;">
                 <div style="width:128px; height:72px; flex:0 0 auto; background:#0b090e; border:1px solid #3a3128; overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:12px; font-style:italic; color:#5d5040;">
@@ -215,16 +217,25 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
                 <div style="display:flex; flex-direction:column; gap:6px; flex:1; min-width:0;">
                   <div style="font-size:14px; color:#f0e2c4;">{{ f.title }}</div>
                   <div style="display:flex; gap:5px; flex-wrap:wrap;">
-                    <button onClick="{{ f.onSave }}" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:4px 10px; font-size:13px; cursor:pointer;" style-hover="border-color:#c49a4a;">stopper</button>
+                    <button onClick="{{ f.onSave }}" disabled="{{ flaskBusy }}" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:4px 10px; font-size:13px; cursor:pointer;" style-hover="border-color:#c49a4a;">stopper</button>
                     <sc-if value="{{ f.has }}" hint-placeholder-val="{{ false }}">
-                      <button onClick="{{ f.onLoad }}" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:4px 10px; font-size:13px; cursor:pointer;" style-hover="border-color:#c49a4a;">pour out</button>
+                      <button onClick="{{ f.onLoad }}" disabled="{{ flaskBusy }}" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:4px 10px; font-size:13px; cursor:pointer;" style-hover="border-color:#c49a4a;">pour out</button>
                     </sc-if>
                   </div>
                 </div>
               </div>
             </sc-for>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button onClick="{{ onExportCheckpoint }}" disabled="{{ flaskBusy }}" style="background:#1c1612;color:#f0e2c4;border:1px solid #3a3128;padding:6px 12px;">export checkpoint</button>
+              <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;">import checkpoint
+                <input type="file" accept=".json,application/json" onChange="{{ onImportCheckpoint }}" disabled="{{ flaskBusy }}" style="max-width:100%;color:#f0e2c4;" />
+              </label>
+              <sc-if value="{{ hasCheckpointDownload }}">
+                <button onClick="{{ onDownloadCheckpoint }}" style="background:#1c1612;color:#f0e2c4;border:1px solid #c49a4a;padding:6px 12px;">download unsaved checkpoint</button>
+              </sc-if>
+            </div>
             <div style="display:flex; flex-direction:column; gap:6px; border-top:1px solid #2a2218; padding-top:12px;">
-              <div style="font-size:14px; font-style:italic; color:#a8977c;">Share the vessel as a link. Whoever opens it pours out what you made.</div>
+              <div style="font-size:14px; font-style:italic; color:#a8977c;">Share a scene stamp: materials only. Use a checkpoint file to preserve motion and the complete world.</div>
               <div>
                 <button onClick="{{ onShare }}" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:6px 12px; font-size:13px; cursor:pointer;" style-hover="border-color:#c49a4a;">{{ shareLabel }}</button>
               </div>
@@ -417,19 +428,20 @@ class Component extends DCLogic {
     ['rootRef', 'cvRef', 'vpRef', 'retRef', 'hudRef', 'boxRef', 'lineRef'].forEach(k => this[k] = React.createRef());
     this.view = { zoom: 1, panX: 0, panY: 0 };
     this.ops = []; this.h = {}; this.shake = 0; this.wonder = 0; this.flash = 0; this.wipe = -1; this.ship = null; this.pendingDt = 0; this.simMs = 0;
-    this.last = performance.now(); this.lastStar = performance.now(); this.frames = 0; this.lastSample = performance.now(); this.fps = 0;
+    this.last = performance.now(); this.frames = 0; this.lastSample = performance.now(); this.fps = 0;
     this.gesture = 'none'; this.painting = false; this.lastCell = null; this.curCell = null; this.dragStart = null;
     this.still = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.rite = { title: 0, konami: 0, typed: '' };
     this.known = new Set(); this.lastFind = ''; this.counts = null; this.windE = 0; this.storming = false;
     this.kills = 0; this.toastQ = []; this.pending = [];
+    this.checkpointJobs = new Map(); this.checkpointRequests = []; this.checkpointId = 0;
     let rites = [], flasks = [null, null, null], sound = true, tempest = false;
-    try { rites = JSON.parse(localStorage.getItem(RKEY) || '[]'); flasks = JSON.parse(localStorage.getItem(FKEY) || 'null') || flasks; sound = localStorage.getItem(SKEY) !== '0'; tempest = localStorage.getItem(TKEY) === '1'; } catch (e) {}
+    try { rites = JSON.parse(localStorage.getItem(RKEY) || '[]'); sound = localStorage.getItem(SKEY) !== '0'; tempest = localStorage.getItem(TKEY) === '1'; } catch (e) {}
     this.unlocked = new Set(rites);
     this.P = new Float32Array(PMAX * 10); this.PD = new Float32Array(PMAX * 7); this.pn = 0;
     this.state = { ready: false, discovered: [], brush: 1, radius: 6, tool: 'pour', paused: false, speed: 1, folio: false, tab: 'codex',
       curtainMounted: !this.still, curtainOpacity: 1, whisper: '', toast: null, toastOn: false, probe: { on: false }, opus: false,
-      rites: [...this.unlocked], flasks, sound, tempest, recording: false, shareLabel: 'copy share link' };
+      rites: [...this.unlocked], flasks, sound, tempest, recording: false, shareLabel: 'copy scene stamp link', flaskBusy: false, flaskStatus: '', checkpointDownload: '' };
     this.frame = this.frame.bind(this);
   }
 
@@ -438,6 +450,10 @@ class Component extends DCLogic {
     this.url = new URL('./alembic-engine-v2.js', document.baseURI).href;
     try { this.M = await import(this.url); } catch (e) { console.error('engine load failed', e); return; }
     if (!this.alive) return;
+    this.flaskStorage = await import(new URL('./engine/flask-storage.js', document.baseURI).href);
+    if (!this.alive) return;
+    try { this.setState({ flasks: this.flaskStorage.readFlasks(localStorage, FKEY) }); }
+    catch (e) { this.setState({ flaskStatus: 'Could not read saved flasks. Checkpoint files can still be imported.' }); }
     const M = this.M;
     let saved = null; try { saved = JSON.parse(localStorage.getItem(DKEY) || 'null'); } catch (e) {}
     this.known = new Set([...M.STARTER, ...(Array.isArray(saved) ? saved.filter(id => id >= 0 && id < M.COUNT) : [])]);
@@ -461,6 +477,8 @@ class Component extends DCLogic {
     if (this.worker) this.worker.terminate();
     if (this.ro) this.ro.disconnect();
     (this.unbind || []).forEach(f => f());
+    for (const job of this.checkpointJobs.values()) clearTimeout(job.timer);
+    this.checkpointJobs.clear();
     clearTimeout(this.curtainT); clearTimeout(this.toastT); clearTimeout(this.watch);
     if (this.ac) try { this.ac.close(); } catch (e) {}
   }
@@ -472,7 +490,7 @@ class Component extends DCLogic {
   initEngine() {
     try {
       const w = new Worker(this.url, { type: 'module' });
-      w.onmessage = e => { const d = e.data; if (d.type !== 'frame') return; this.workerOk = true; this.bufs = [d.color, d.emis, d.fx]; this.onFrame(d); };
+      w.onmessage = e => { const d = e.data; if (d.t === 'checkpoint' || d.t === 'restore') { this.onCheckpointReply(d); return; } if (d.type !== 'frame') return; this.workerOk = true; this.bufs = [d.color, d.emis, d.fx]; this.onFrame(d); };
       w.onerror = e => { if (e && e.preventDefault) e.preventDefault(); this.toLocal(); };
       this.worker = w; this.mode = 'worker';
       this.watch = setTimeout(() => { if (!this.workerOk) this.toLocal(); }, 2500);
@@ -481,22 +499,31 @@ class Component extends DCLogic {
   toLocal() {
     if (this.mode === 'local') return;
     if (this.worker) { this.worker.terminate(); this.worker = null; }
+    for (const [requestId, job] of this.checkpointJobs) this.onCheckpointReply({ t: job.operation, requestId, ok: false, error: 'Worker unavailable; please retry.' });
+    this.checkpointRequests = [];
     this.eng = this.M.createEngine(); this.mode = 'local';
     const n = this.M.N * 4; this.bufs = [new ArrayBuffer(n), new ArrayBuffer(n), new ArrayBuffer(n)]; this.have = true;
   }
   send() {
     const msg = { type: 'tick', dt: this.pendingDt, speed: this.state.speed, paused: this.state.paused, still: this.still, ops: this.ops };
     this.ops = []; this.pendingDt = 0; this.have = false;
+    const requests = this.checkpointRequests; this.checkpointRequests = [];
     if (this.mode === 'worker') {
       msg.color = this.bufs[0]; msg.emis = this.bufs[1]; msg.fx = this.bufs[2];
       this.worker.postMessage(msg, this.bufs);
+      for (const request of requests) {
+        try { this.worker.postMessage(request); }
+        catch (e) { this.onCheckpointReply({ t: request.t, requestId: request.requestId, ok: false, error: e.message }); }
+      }
     } else {
       const r = this.eng.tick(msg, new Uint8Array(this.bufs[0]), new Uint8Array(this.bufs[1]), new Uint8Array(this.bufs[2]));
       this.onFrame(r);
+      for (const request of requests) this.onCheckpointReply(this.M.handleEngineRequest(this.eng, request));
     }
   }
   onFrame(r) {
     const c = new Uint8Array(this.bufs[0]), e = new Uint8Array(this.bufs[1]), fx = new Uint8Array(this.bufs[2]);
+    this.lastColor.set(c);
     this.upload(c, e, fx);
     const ids = this.ids; for (let i = 0, j = 3; i < ids.length; i++, j += 4) ids[i] = c[j];
     if (r.kick > 0) { if (typeof navigator !== 'undefined' && navigator.vibrate && !this.still && performance.now() - (this.lastBuzz || 0) > 250) { this.lastBuzz = performance.now(); navigator.vibrate(Math.round(10 + 30 * Math.min(1, r.kick / 6))); } }
@@ -719,7 +746,6 @@ class Component extends DCLogic {
     this.raf = requestAnimationFrame(this.frame);
     const dt = Math.min(48, now - this.last); this.last = now; this.pendingDt += dt;
     this.toolTick();
-    if (!this.state.paused && now - this.lastStar > 45000) { this.lastStar = now; this.ops.push({ t: 'rain', m: this.M.EMBER, n: 1 }); }
     if (this.pending.length) { this.ops.push(...this.pending); this.pending = []; }
     if (this.have) this.send();
     this.stepParticles(dt / 1000);
@@ -1016,13 +1042,7 @@ class Component extends DCLogic {
   async onSnap(snap, c) {
     const job = this.snapJob; this.snapJob = null; if (!job) return;
     const rle = this.M.rleEncode(snap.cells);
-    if (job.kind === 'save') {
-      const flasks = [...this.state.flasks];
-      flasks[job.slot] = { t: Date.now(), thumb: this.thumbFrom(c), data: this.b64(rle) };
-      try { localStorage.setItem(FKEY, JSON.stringify(flasks)); } catch (e) { console.warn('flask save failed', e); }
-      this.setState({ flasks });
-      this.chime(660);
-    } else if (job.kind === 'share') {
+    if (job.kind === 'share') {
       try {
         let bytes = rle;
         if (typeof CompressionStream !== 'undefined') bytes = new Uint8Array(await new Response(new Blob([rle]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer());
@@ -1031,7 +1051,7 @@ class Component extends DCLogic {
         await navigator.clipboard.writeText(url);
         this.setState({ shareLabel: 'link copied' });
       } catch (e) { this.setState({ shareLabel: 'could not copy' }); }
-      setTimeout(() => this.alive && this.setState({ shareLabel: 'copy share link' }), 2000);
+      setTimeout(() => this.alive && this.setState({ shareLabel: 'copy scene stamp link' }), 2000);
     }
   }
   async loadFromHash() {
@@ -1040,13 +1060,74 @@ class Component extends DCLogic {
       let bytes = this.unb64(m[2].replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((m[2].length + 3) % 4));
       if (m[1] === 'z') bytes = new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
       this.pending.push({ t: 'wipe', mode: 'load', cells: this.M.rleDecode(bytes) });
-      this.setState({ whisper: 'A shared flask, poured out.' });
-    } catch (e) { console.warn('bad flask link', e); }
+      this.setState({ whisper: 'A shared scene stamp, poured out.', flaskStatus: 'Scene stamp loaded (materials only).' });
+    } catch (e) { this.setState({ flaskStatus: 'Scene stamp link failed to load.' }); }
+  }
+  requestCheckpoint(operation, payload, job) {
+    if (this.checkpointJobs.size) return null;
+    const requestId = ++this.checkpointId;
+    const timer = setTimeout(() => {
+      this.checkpointRequests = this.checkpointRequests.filter(r => r.requestId !== requestId);
+      this.onCheckpointReply({ t: operation, requestId, ok: false, error: 'Engine response timed out; please retry.' });
+    }, 10000);
+    this.checkpointJobs.set(requestId, { ...job, operation, timer });
+    this.checkpointRequests.push({ t: operation, ...payload, requestId });
+    this.setState({ flaskBusy: true, flaskStatus: operation === 'restore' ? 'Restoring checkpoint…' : 'Capturing checkpoint…', checkpointDownload: '' });
+    return requestId;
+  }
+  onCheckpointReply(reply) {
+    const job = this.checkpointJobs.get(reply.requestId);
+    if (!job || reply.t !== job.operation) return;
+    clearTimeout(job.timer); this.checkpointJobs.delete(reply.requestId);
+    this.checkpointRequests = this.checkpointRequests.filter(r => r.requestId !== reply.requestId);
+    this.setState({ flaskBusy: this.checkpointJobs.size > 0 });
+    if (!reply.ok) { this.setState({ flaskStatus: 'Checkpoint ' + (job.kind === 'restore' ? 'restore' : 'save') + ' failed: ' + (reply.error || 'Unknown error') }); return; }
+    if (job.kind === 'restore') {
+      this.pendingDt = 0; this.ops = []; this.pending = [];
+      this.setState({ folio: false, flaskStatus: 'Checkpoint restored.' });
+      return;
+    }
+    let text;
+    try {
+      text = this.flaskStorage.checkpointText(reply.checkpoint);
+      if (job.kind === 'export') {
+        this.download(new Blob([text], { type: 'application/json' }), 'alembic-checkpoint.json');
+        this.setState({ flaskStatus: 'Checkpoint exported.' }); return;
+      }
+      const thumb = reply.color ? this.thumbFrom(reply.color) : '';
+      const flasks = this.flaskStorage.saveFlask(localStorage, FKEY, job.slot, { kind: 'checkpoint-v1', checkpoint: reply.checkpoint, t: Date.now(), thumb });
+      this.setState({ flasks, flaskStatus: 'Flask ' + (job.slot + 1) + ' saved with complete world state.' }); this.chime(660);
+    } catch (e) {
+      this.setState({ flaskStatus: text ? 'Could not save flask. Download the complete checkpoint below.' : 'Checkpoint save failed: ' + e.message, checkpointDownload: text || '' });
+    }
+  }
+  saveFlask(slot) {
+    if (this.state.flaskBusy) return;
+    try { this.requestCheckpoint('checkpoint', { thumbnail: true }, { kind: 'save', slot }); }
+    catch (e) { this.setState({ flaskStatus: 'Checkpoint save failed: ' + e.message }); }
   }
   loadFlask(slot) {
+    if (this.state.flaskBusy) return;
     const f = this.state.flasks[slot]; if (!f) return;
-    this.pending.push({ t: 'wipe', mode: 'load', cells: this.M.rleDecode(this.unb64(f.data)) });
-    this.setState({ folio: false });
+    try {
+      const decoded = this.flaskStorage.decodeFlask(f);
+      if (decoded.kind === 'checkpoint-v1') this.requestCheckpoint('restore', { checkpoint: decoded.checkpoint }, { kind: 'restore' });
+      else {
+        this.pending.push({ t: 'wipe', mode: 'load', cells: decoded.cells });
+        this.setState({ folio: false, flaskStatus: 'Legacy scene stamp loaded (materials only).' });
+      }
+    } catch (e) { this.setState({ flaskStatus: 'Flask restore failed: ' + e.message }); }
+  }
+  async importCheckpoint(event) {
+    const input = event.target, file = input.files && input.files[0]; if (!file || this.state.flaskBusy) return;
+    this.setState({ flaskBusy: true, flaskStatus: 'Reading checkpoint…' });
+    try {
+      if (file.size > this.M.MAX_CHECKPOINT_BYTES) throw new Error('Checkpoint exceeds 16 MiB limit');
+      const checkpoint = this.flaskStorage.parseCheckpointText(await file.text());
+      if (!this.alive) return;
+      this.requestCheckpoint('restore', { checkpoint }, { kind: 'restore' });
+    } catch (e) { this.setState({ flaskBusy: false, flaskStatus: 'Checkpoint import failed: ' + e.message }); }
+    finally { input.value = ''; }
   }
   download(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
   clip() {
@@ -1158,9 +1239,13 @@ class Component extends DCLogic {
       toastLabel: t ? t.label : '', toastText: t ? t.text : '', toastSwatch: t ? t.swatch : 'transparent', toastBorder: t && t.rite ? '#e8c97a' : '#c49a4a', toastRot: t && t.rite ? 45 : 0,
       rites: RITES.map(([k, name, desc]) => { const on = this.unlocked.has(k); return { name: on ? name : name, desc, color: on ? '#f0e2c4' : '#6f6150', mark: on ? '#e8c97a' : '#4a3e30', fill: on ? '#c49a4a' : 'transparent', glow: on ? '0 0 10px rgba(232,201,122,.5)' : 'none' }; }),
       riteTally: `${this.unlocked.size} / ${RITES.length} rites`,
-      flasks: s.flasks.map((f, i) => ({ has: !!f, empty: !f, bgImg: f ? `url(${f.thumb})` : 'none', title: f ? `Flask ${i + 1} · ${fmt(f.t)}` : `Flask ${i + 1}`, onSave: this.hnd('fs' + i, () => { this.snapJob = { kind: 'save', slot: i }; this.ops.push({ t: 'snap' }); }), onLoad: this.hnd('fl' + i, () => this.loadFlask(i)) })),
+      flasks: s.flasks.map((f, i) => ({ has: !!f, empty: !f, bgImg: f ? `url(${f.thumb})` : 'none', title: f ? `Flask ${i + 1} · ${fmt(f.t)}` : `Flask ${i + 1}`, onSave: this.hnd('fs' + i, () => this.saveFlask(i)), onLoad: this.hnd('fl' + i, () => this.loadFlask(i)) })),
       onShare: () => { this.snapJob = { kind: 'share' }; this.ops.push({ t: 'snap' }); },
-      shareLabel: s.shareLabel,
+      shareLabel: s.shareLabel, flaskBusy: s.flaskBusy, flaskStatus: s.flaskStatus,
+      hasCheckpointDownload: !!s.checkpointDownload,
+      onExportCheckpoint: () => this.requestCheckpoint('checkpoint', {}, { kind: 'export' }),
+      onImportCheckpoint: event => this.importCheckpoint(event),
+      onDownloadCheckpoint: () => this.download(new Blob([s.checkpointDownload], { type: 'application/json' }), 'alembic-checkpoint.json'),
       chips: [], sizes: [], pages: [], tally: '', folioCount: '',
     };
     if (!M) return base;

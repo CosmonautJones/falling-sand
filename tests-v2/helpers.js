@@ -1,11 +1,17 @@
 import * as E from '../public/v2/alembic-engine-v2.js';
 
-export const { _sim } = E;
-export const { W, H } = _sim;
+export let _sim = E.createTestWorld({ seed: 1 });
+export const { W, H } = E;
 
 export function reset() {
-  _sim.clear();
-  _sim.seed(1);
+  _sim = E.createTestWorld({ seed: 1 });
+}
+
+// Bind the assertions in the existing behavior suite to this engine's own world.
+export function createEngine() {
+  const engine = E.createEngine({ seed: 1, scene: 'empty' });
+  _sim = engine.inspect();
+  return engine;
 }
 
 export function run(n) {
