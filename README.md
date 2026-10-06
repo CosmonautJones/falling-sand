@@ -23,7 +23,12 @@ upscale — heat haze, water caustics, gold spark, blast shake, Magnum Opus auro
 - Velocity-based grain physics, so pours, flings and splashes carry momentum.
 - Per-material feel: powders, liquids and gases each move and settle differently.
 - Storms and visitors that stir the vessel on their own.
-- Simulation runs in a worker, and the UI is built for phones (touch pour, pinch-zoom).
+- Simulation runs in a worker, with touch pour and two-finger pinch/pan.
+- Phone controls stay compact: swipe materials, pause, cycle brush size, or open
+  **More** for tools, speed, saves, sound, and reset.
+- Rotate for a wider vessel. **Fullscreen** expands the canvas with an overlay
+  toolbar; browsers without native fullscreen use the same immersive layout.
+  Tap **exit screen** to return. The world and discoveries survive rotation.
 
 To run it locally:
 
