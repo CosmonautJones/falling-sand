@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import * as E from '../public/v2/alembic-engine-v2.js';
 
 const load = async path => {
@@ -89,8 +90,8 @@ test('authoritative_hash_covers_nonvisual_state_and_attached_arrays', () => {
 // Catches wrong warmup/tick totals, malformed JSON reporting, or a visual-only final hash.
 test('benchmark_cli_reports_exact_tick_counts_percentiles_and_final_state', () => {
   need(fixtures, 'createFixture'); need(benchmark, 'hashState');
-  const path = new URL('../scripts/bench-v2.mjs', import.meta.url);
-  const output = execFileSync(process.execPath, [path.pathname, '--scene', 'settled', '--seed', '73'], { encoding: 'utf8' });
+  const path = fileURLToPath(new URL('../scripts/bench-v2.mjs', import.meta.url));
+  const output = execFileSync(process.execPath, [path, '--scene', 'settled', '--seed', '73'], { encoding: 'utf8' });
   const report = JSON.parse(output).results[0];
   assert.equal(report.scene, 'settled'); assert.equal(report.seed, 73);
   assert.equal(report.warmupTicks, 120); assert.equal(report.measuredTicks, 600);
@@ -102,6 +103,6 @@ test('benchmark_cli_reports_exact_tick_counts_percentiles_and_final_state', () =
   const reference = fixtures.createFixture({ scene: 'settled', seed: 73 });
   reference.advanceTicks(720);
   assert.deepEqual(report.stateHash, { algorithm: 'sha256', value: benchmark.hashState(reference.captureState()) });
-  assert.throws(() => execFileSync(process.execPath, [path.pathname, '--scene', 'unknown'], { stdio: 'pipe' }));
-  assert.throws(() => execFileSync(process.execPath, [path.pathname, '--seed', '-1'], { stdio: 'pipe' }));
+  assert.throws(() => execFileSync(process.execPath, [path, '--scene', 'unknown'], { stdio: 'pipe' }));
+  assert.throws(() => execFileSync(process.execPath, [path, '--seed', '-1'], { stdio: 'pipe' }));
 });
