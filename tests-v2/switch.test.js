@@ -31,6 +31,10 @@ test('the opening is a bigger moment: a cask cluster goes off in a chain', () =>
   assert.ok(blasts >= 6, `opening blasts: ${blasts}`);
 });
 
+test('phones get touch instructions under the title, not mouse ones', () => {
+  assert.match(html, /this\.coarse \? 'Drag to pour\. Hold still to name a grain\. Pinch to zoom\.' : 'Hold to pour\. Right-click/);
+});
+
 test('the camera leans toward a blast rather than the centre (and not in reduced motion)', () => {
   assert.match(html, /this\.punchAt = \{ x: e\.x \/ M\.W, y: e\.y \/ M\.H \}/);
   assert.match(html, /const ax = this\.punchAt \? this\.punchAt\.x : 0\.5/);

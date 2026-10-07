@@ -1518,7 +1518,7 @@ class Component extends DCLogic {
       paused: s.paused, folio: s.folio, probe: s.probe, recording: s.recording,
       curtainMounted: s.curtainMounted, curtainOpacity: s.curtainOpacity, liftCurtain: () => this.liftCurtain(),
       titleColor: s.opus ? '#e8b86a' : '#c49a4a', titleGlow: s.opus ? 22 : 0,
-      line: s.opus ? 'The Magnum Opus is in the glass. Lead kneels.' : (s.whisper || 'Hold to pour. Right-click names a grain; hold right-click to pan when zoomed. Scroll zooms. Casks remember fire. Space pauses; [ ] the brush.'),
+      line: s.opus ? 'The Magnum Opus is in the glass. Lead kneels.' : (s.whisper || (this.coarse ? 'Drag to pour. Hold still to name a grain. Pinch to zoom.' : 'Hold to pour. Right-click names a grain; hold right-click to pan when zoomed. Scroll zooms. Casks remember fire. Space pauses; [ ] the brush.')),
       lineColor: s.opus || s.whisper ? '#d4b56a' : '#cbb89a',
       onTitle: () => { this.rite.title++; if (this.rite.title >= 7) { this.rite.title = 0; this.enact('aether-rain'); } },
       openCodex: () => this.setState({ folio: true, tab: 'codex', sheet: '' }), openRites: () => this.setState({ folio: true, tab: 'rites', sheet: '' }), openFlasks: () => this.setState({ folio: true, tab: 'flasks', sheet: '' }),
