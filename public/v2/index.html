@@ -19,6 +19,7 @@
 .root[data-immersive]{position:relative;padding: max(4px,env(safe-area-inset-top)) max(4px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left))!important;gap:4px!important}.root[data-immersive] .hd{display:none!important}.root[data-immersive] .fig{flex:1 1 0!important;height:auto!important;padding:0!important}.root[data-immersive] .zoom-controls{top:10px;bottom:auto!important}.root[data-immersive] [data-mobile-hud]{display:none}.root[data-immersive] .ctl{position:absolute;bottom:max(4px,env(safe-area-inset-bottom));left:max(4px,env(safe-area-inset-left));right:max(4px,env(safe-area-inset-right));width:auto!important;padding:6px;background:rgba(20,16,12,.92);z-index:10;overflow:visible!important}
 button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-offset:2px}
 .phone-bar,.sheet{display:none}.zoom-mini{width:128px}
+@media(max-width:520px){.ftab{letter-spacing:.06em!important;padding:6px 5px 8px!important;font-size:12px!important}}
 .phone-bar{flex:0 0 auto;flex-direction:column;gap:6px;width:100%;padding:0 10px}.phone-row{display:flex;gap:8px;align-items:stretch}.phone-hud{font-size:11px;letter-spacing:.06em;color:rgba(203,184,154,.7);font-variant-numeric:tabular-nums;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:1.3em}
 .pb{display:flex;align-items:center;justify-content:center;gap:8px;min-width:52px;height:52px;padding:0 12px;background:#1c1612;color:#f0e2c4;border:1px solid #3a3128;border-radius:14px;font-size:18px;cursor:pointer}.pb:active{background:#2a2119}.pb[aria-expanded="true"]{border-color:#c49a4a}
 .pb-el{flex:1;justify-content:flex-start;min-width:0;text-align:left}.pb-el .sw{width:26px;height:26px;border-radius:8px}.pb-txt{display:flex;flex-direction:column;min-width:0;line-height:1.15}.pb-name{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pb-sub{font-size:11px;color:#a8977c;letter-spacing:.04em}.caret{margin-left:auto;color:#c49a4a;font-size:14px}
@@ -59,6 +60,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
     <div class="hd-btns" style="display:flex; justify-content:flex-end; gap:6px;">
       <button onClick="{{ openCodex }}" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:6px 12px; font-size:13px; letter-spacing:.06em; cursor:pointer;" style-hover="border-color:#c49a4a;" class="hb">codex</button>
       <button onClick="{{ openRites }}" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:6px 12px; font-size:13px; letter-spacing:.06em; cursor:pointer;" style-hover="border-color:#c49a4a;" class="hb">rites</button>
+      <button onClick="{{ openAmbitions }}" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:6px 12px; font-size:13px; letter-spacing:.06em; cursor:pointer;" style-hover="border-color:#c49a4a;" class="hb">ambitions</button>
       <button onClick="{{ openFlasks }}" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:6px 12px; font-size:13px; letter-spacing:.06em; cursor:pointer;" style-hover="border-color:#c49a4a;" class="hb">flasks</button>
     </div>
   </header>
@@ -166,6 +168,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
       <div style="display:flex; gap:5px;">
         <button onClick="{{ onClear }}" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:6px 11px; font-size:13px; cursor:pointer;" style-hover="border-color:#c49a4a;">clear</button>
         <button onClick="{{ onReset }}" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:6px 11px; font-size:13px; cursor:pointer;" style-hover="border-color:#c49a4a;">reset</button>
+        <button onClick="{{ onDaily }}" title="Today's vessel: the same glass for everyone today" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:6px 11px; font-size:13px; cursor:pointer;" style-hover="border-color:#c49a4a;">today</button>
       </div>
       <div style="display:flex; gap:5px;">
         <sc-if value="{{ tempestOn }}" hint-placeholder-val="{{ false }}">
@@ -250,6 +253,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
         <div class="seg">
           <button onClick="{{ onClear }}">clear</button>
           <button onClick="{{ onReset }}">reset</button>
+          <button onClick="{{ onDaily }}">today's vessel</button>
           <sc-if value="{{ tempestOn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ onTempest }}">tempest</button></sc-if>
           <button onClick="{{ zoomFit }}">fit view</button>
         </div>
@@ -264,6 +268,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
         <div class="seg">
           <button onClick="{{ openCodex }}">codex</button>
           <button onClick="{{ openRites }}">rites</button>
+          <button onClick="{{ openAmbitions }}">ambitions</button>
           <button onClick="{{ openFlasks }}">flasks</button>
         </div>
         <p class="touch-help">Drag to pour · Hold still to name a grain · Pinch to zoom and pan</p>
@@ -275,7 +280,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
     <aside style="position:fixed; z-index:20; top:max(10px, env(safe-area-inset-top)); right:max(10px, env(safe-area-inset-right)); bottom:max(10px, env(safe-area-inset-bottom)); width:min(27rem,94vw); display:flex; flex-direction:column; background:#14100c; border:1px solid #c49a4a; box-shadow:inset 0 1px 0 rgba(232,201,122,.35), 0 24px 48px rgba(0,0,0,.6);">
       <div style="display:flex; align-items:center; gap:4px; padding:10px 12px 0; border-bottom:1px solid #3a3128;">
         <sc-for list="{{ tabs }}" as="tb" hint-placeholder-count="3">
-          <button onClick="{{ tb.onClick }}" style="background:transparent; border:none; border-bottom:2px solid {{ tb.line }}; color:{{ tb.color }}; padding:6px 10px 8px; font-size:13px; letter-spacing:.2em; cursor:pointer;">{{ tb.label }}</button>
+          <button class="ftab" onClick="{{ tb.onClick }}" style="background:transparent; border:none; border-bottom:2px solid {{ tb.line }}; color:{{ tb.color }}; padding:6px 10px 8px; font-size:13px; letter-spacing:.2em; cursor:pointer;">{{ tb.label }}</button>
         </sc-for>
         <div style="flex:1;"></div>
         <button onClick="{{ closeFolio }}" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:3px 10px; margin-bottom:6px; font-size:13px; cursor:pointer;" style-hover="border-color:#c49a4a;">close</button>
@@ -306,6 +311,20 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
                 </div>
               </div>
             </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ tabAmbitions }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <sc-for list="{{ ambitionsList }}" as="r" hint-placeholder-count="8">
+              <div style="display:flex; align-items:flex-start; gap:12px; border-top:1px solid #2a2218; padding:11px 0;">
+                <div style="width:14px; height:14px; margin-top:4px; flex:0 0 auto; border-radius:50%; border:1px solid {{ r.mark }}; background:{{ r.fill }}; box-shadow:{{ r.glow }};"></div>
+                <div style="display:flex; flex-direction:column; gap:1px;">
+                  <div style="font-size:15px; font-weight:600; letter-spacing:.04em; color:{{ r.color }};">{{ r.name }}</div>
+                  <div style="font-size:14px; font-style:italic; color:#a8977c;">{{ r.desc }}</div>
+                </div>
+              </div>
+            </sc-for>
+            <p style="color:#8f7d62; font-size:13px; font-style:italic; margin-top:14px;">No score. Each is met, or not yet. The daily vessel offers a fresh glass every day.</p>
           </div>
         </sc-if>
         <sc-if value="{{ tabFlasks }}" hint-placeholder-val="{{ false }}">
@@ -347,6 +366,22 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
                 <button onClick="{{ onShare }}" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:6px 12px; font-size:13px; cursor:pointer;" style-hover="border-color:#c49a4a;">{{ shareLabel }}</button>
               </div>
             </div>
+            <div style="display:flex; flex-direction:column; gap:8px; border-top:1px solid #2a2218; padding-top:12px;">
+              <div style="font-size:12px; letter-spacing:.2em; color:#c49a4a;">GALLERY</div>
+              <div style="font-size:13px; font-style:italic; color:#8f7d62;">{{ galleryNote }}</div>
+              <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px;">
+                <sc-for list="{{ gallery }}" as="g" hint-placeholder-count="2">
+                  <div style="display:flex; flex-direction:column; gap:5px; border:1px solid #2a2218; padding:6px; background:#18130f;">
+                    <div style="height:72px; background:#0b090e; background-image:{{ g.bgImg }}; background-size:cover; image-rendering:pixelated; border:1px solid #3a3128;"></div>
+                    <div style="font-size:12px; color:#a8977c;">{{ g.when }}</div>
+                    <div style="display:flex; gap:5px;">
+                      <button onClick="{{ g.onOpen }}" style="flex:1; background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:6px; font-size:13px;">pour out</button>
+                      <button onClick="{{ g.onCopy }}" style="flex:1; background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:6px; font-size:13px;">copy</button>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
           </div>
         </sc-if>
       </div>
@@ -362,7 +397,9 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;quality&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;full&quot;,&quot;grain&quot;],&quot;default&quot;:&quot;full&quot;,&quot;tsType&quot;:&quot;'full' | 'grain'&quot;,&quot;section&quot;:&quot;Render&quot;},&quot;lighting&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:0,&quot;max&quot;:2,&quot;step&quot;:0.05,&quot;default&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Render&quot;},&quot;bloom&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:0,&quot;max&quot;:2,&quot;step&quot;:0.05,&quot;default&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Render&quot;},&quot;particles&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Render&quot;},&quot;hud&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Render&quot;}}">
-const DKEY = 'alembic-discovered-v2', RKEY = 'alembic-rites-v2', FKEY = 'alembic-flasks-v2', SKEY = 'alembic-sound-v2', TKEY = 'alembic-tempest-v2', PKEY = 'alembic-poured-v2';
+const DKEY = 'alembic-discovered-v2', RKEY = 'alembic-rites-v2', FKEY = 'alembic-flasks-v2', SKEY = 'alembic-sound-v2', TKEY = 'alembic-tempest-v2', PKEY = 'alembic-poured-v2', AKEY = 'alembic-ambitions-v2', GKEY = 'alembic-gallery-v2';
+const today = () => { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
+const safeThumb = t => typeof t === 'string' && t.startsWith('data:image/png;base64,') ? `url(${t})` : 'none';
 const VERT = `#version 300 es
 out vec2 vUv;
 void main(){ vec2 p = vec2(float((gl_VertexID << 1) & 2), float(gl_VertexID & 2)); vUv = p; gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0); }`;
@@ -542,12 +579,14 @@ class Component extends DCLogic {
     this.known = new Set(); this.lastFind = ''; this.counts = null; this.windE = 0; this.storming = false;
     this.kills = 0; this.toastQ = []; this.pending = [];
     this.checkpointJobs = new Map(); this.checkpointRequests = []; this.checkpointId = 0;
-    let rites = [], flasks = [null, null, null], sound = true, tempest = false, poured = false;
+    let rites = [], flasks = [null, null, null], sound = true, tempest = false, poured = false, ambitions = [], gallery = [];
     try { rites = JSON.parse(localStorage.getItem(RKEY) || '[]'); sound = localStorage.getItem(SKEY) !== '0'; tempest = localStorage.getItem(TKEY) === '1'; poured = localStorage.getItem(PKEY) === '1'; } catch (e) {}
+    try { ambitions = JSON.parse(localStorage.getItem(AKEY) || '[]'); gallery = JSON.parse(localStorage.getItem(GKEY) || '[]'); } catch (e) {}
+    this.ambDone = new Set(Array.isArray(ambitions) ? ambitions : []);
     this.coarse = typeof matchMedia === 'function' && matchMedia('(pointer:coarse)').matches;
     this.unlocked = new Set(rites);
     this.P = new Float32Array(PMAX * 10); this.PD = new Float32Array(PMAX * 7); this.pn = 0;
-    this.state = { ready: false, discovered: [], brush: 1, radius: 6, tool: 'pour', paused: false, speed: 1, folio: false, tab: 'codex', sheet: '', suggest: -1, pourHint: !poured,
+    this.state = { ready: false, discovered: [], brush: 1, radius: 6, tool: 'pour', paused: false, speed: 1, folio: false, tab: 'codex', sheet: '', suggest: -1, pourHint: !poured, ambitions: [...this.ambDone], gallery: Array.isArray(gallery) ? gallery : [],
       curtainMounted: !this.still, curtainOpacity: 1, whisper: '', toast: null, toastOn: false, probe: { on: false }, opus: false,
       rites: [...this.unlocked], flasks, sound, tempest, recording: false, shareLabel: 'copy scene stamp link', flaskBusy: false, flaskStatus: '', checkpointDownload: '' };
     this.frame = this.frame.bind(this);
@@ -572,6 +611,8 @@ class Component extends DCLogic {
     this.screen = await import(new URL('./mobile-screen.js', document.baseURI).href);
     this.touchMod = await import(new URL('./touch-gesture.js', document.baseURI).href);
     this.opening = await import(new URL('./opening.js', document.baseURI).href);
+    this.goals = await import(new URL('./ambitions.js', document.baseURI).href);
+    this.galleryMod = await import(new URL('./gallery.js', document.baseURI).href);
     if (!this.alive) return;
     this.nudgeT = setTimeout(() => this.nudge(), 25000);
     this.bindInput();
@@ -648,7 +689,7 @@ class Component extends DCLogic {
     this.windE = r.wind || 0;
     if (r.storm !== this.storming) this.storming = r.storm;
     if (r.events && r.events.length) this.onEvents(r.events);
-    if (r.counts) { this.counts = r.counts; this.updateAmbient(); }
+    if (r.counts) { this.counts = r.counts; this.updateAmbient(); this.checkGoals(r.counts); }
     if (r.seen) this.onSeen(r.seen);
     if (r.snap) this.onSnap(r.snap, c);
     this.simMs = this.simMs * 0.9 + (r.ms || 0) * 0.1;
@@ -693,6 +734,30 @@ class Component extends DCLogic {
     const r = RITES.find(x => x[0] === key);
     this.setState({ rites: [...this.unlocked] });
     if (r) { this.toast({ label: 'RITE · ' + r[1].toUpperCase(), text: r[2], swatch: '#e8c97a', rite: true }); this.chime(784); }
+  }
+  checkGoals(counts) {
+    if (!this.goals) return;
+    const met = this.goals.checkAmbitions(counts, this.M, this.ambDone);
+    if (!met.length) return;
+    for (const key of met) {
+      this.ambDone.add(key);
+      const a = this.goals.AMBITIONS.find(x => x.key === key);
+      this.toast({ label: 'AMBITION · ' + a.name.toUpperCase(), text: a.desc, swatch: '#9fd0ff', rite: true });
+    }
+    try { localStorage.setItem(AKEY, JSON.stringify([...this.ambDone])); } catch (e) {}
+    this.setState({ ambitions: [...this.ambDone] }); this.fanfare();
+  }
+  remember(url, thumb) {
+    if (!this.galleryMod) return;
+    const gallery = this.galleryMod.addToGallery(this.state.gallery, { url, thumb, t: Date.now() });
+    if (gallery === this.state.gallery) return;
+    try { localStorage.setItem(GKEY, JSON.stringify(gallery)); } catch (e) {}
+    this.setState({ gallery });
+  }
+  dailyVessel() {
+    this.pending.push({ t: 'wipe', mode: 'daily', day: today() });
+    this.setState({ sheet: '', whisper: "Today's vessel. Everyone pours into the same glass today." });
+    this.chime(523);
   }
   // One suggestion per session, after the opening blast settles (or 25 s of calm).
   queueNudge(ms) { if (this.nudged) return; clearTimeout(this.nudgeT); this.nudgeT = setTimeout(() => this.nudge(), ms); }
@@ -1210,6 +1275,7 @@ class Component extends DCLogic {
         const url = location.href.split('#')[0] + '#flask=' + code;
         await navigator.clipboard.writeText(url);
         this.setState({ shareLabel: 'link copied' });
+        this.remember(url, this.thumbFrom(c));
       } catch (e) { this.setState({ shareLabel: 'could not copy' }); }
       setTimeout(() => this.alive && this.setState({ shareLabel: 'copy scene stamp link' }), 2000);
     }
@@ -1221,6 +1287,8 @@ class Component extends DCLogic {
       if (m[1] === 'z') bytes = new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
       this.pending.push({ t: 'wipe', mode: 'load', cells: this.M.rleDecode(bytes) });
       this.setState({ whisper: 'A shared scene stamp, poured out.', flaskStatus: 'Scene stamp loaded (materials only).' });
+      const url = location.href;
+      setTimeout(() => this.alive && this.remember(url, this.thumbFrom(this.lastColor)), 1500);
     } catch (e) { this.setState({ flaskStatus: 'Scene stamp link failed to load.' }); }
   }
   requestCheckpoint(operation, payload, job) {
@@ -1413,7 +1481,14 @@ class Component extends DCLogic {
       onTitle: () => { this.rite.title++; if (this.rite.title >= 7) { this.rite.title = 0; this.enact('aether-rain'); } },
       openCodex: () => this.setState({ folio: true, tab: 'codex', sheet: '' }), openRites: () => this.setState({ folio: true, tab: 'rites', sheet: '' }), openFlasks: () => this.setState({ folio: true, tab: 'flasks', sheet: '' }),
       closeFolio: () => this.setState({ folio: false }),
-      tabs: [['codex', 'CODEX'], ['rites', 'RITES'], ['flasks', 'FLASKS']].map(([k, label]) => ({ label, color: s.tab === k ? '#e8c97a' : '#8f7d62', line: s.tab === k ? '#c49a4a' : 'transparent', onClick: this.hnd('tab' + k, () => this.setState({ tab: k })) })),
+      openAmbitions: () => this.setState({ folio: true, tab: 'ambitions', sheet: '' }), onDaily: () => this.dailyVessel(),
+      tabAmbitions: s.tab === 'ambitions',
+      ambitionsList: (this.goals ? this.goals.AMBITIONS : []).map(a => { const on = this.ambDone.has(a.key); return { name: a.name, desc: a.desc, color: on ? '#f0e2c4' : '#6f6150', mark: on ? '#9fd0ff' : '#4a3e30', fill: on ? '#5f8fbf' : 'transparent', glow: on ? '0 0 10px rgba(159,208,255,.5)' : 'none' }; }),
+      gallery: s.gallery.map((g, i) => ({ bgImg: safeThumb(g.thumb), when: new Date(g.t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+        onOpen: this.hnd('go' + g.url, () => { location.hash = g.url.slice(g.url.indexOf('#')); this.setState({ folio: false }); this.loadFromHash(); }),
+        onCopy: this.hnd('gc' + g.url, () => { navigator.clipboard && navigator.clipboard.writeText(g.url).catch(e => this.setState({ flaskStatus: 'Could not copy: ' + e.message })); }) })),
+      galleryNote: s.gallery.length ? 'Scene stamps you have shared or opened on this device.' : 'Share a scene stamp, or open someone\'s link, and it will wait here.',
+      tabs: [['codex', 'CODEX'], ['rites', 'RITES'], ['ambitions', 'AMBITIONS'], ['flasks', 'FLASKS']].map(([k, label]) => ({ label, color: s.tab === k ? '#e8c97a' : '#8f7d62', line: s.tab === k ? '#c49a4a' : 'transparent', onClick: this.hnd('tab' + k, () => this.setState({ tab: k })) })),
       tabCodex: s.tab === 'codex', tabRites: s.tab === 'rites', tabFlasks: s.tab === 'flasks',
       togglePause: () => this.setState({ paused: !s.paused }),
       pauseLabel: s.paused ? 'play' : 'pause', pauseBorder: s.paused ? '#cbb89a' : '#3a3128',
@@ -1471,7 +1546,7 @@ class Component extends DCLogic {
     }));
     const n = this.known.size;
     base.tally = `${n} stained · ${M.COUNT - n} blank`;
-    base.folioCount = s.tab === 'codex' ? base.tally : s.tab === 'rites' ? base.riteTally : 'Three flasks. Stopper the vessel to keep it.';
+    base.folioCount = s.tab === 'codex' ? base.tally : s.tab === 'rites' ? base.riteTally : s.tab === 'ambitions' ? `${this.ambDone.size} / ${base.ambitionsList.length} ambitions` : 'Three flasks. Stopper the vessel to keep it.';
     base.pages = order.map(id => {
       const k = this.known.has(id);
       return k
