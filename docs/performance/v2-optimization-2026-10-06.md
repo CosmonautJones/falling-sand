@@ -26,6 +26,29 @@ are available through `inspect().activity`. Checkpoint version 1, material IDs,
 commands, flask storage and share-link formats do not change. There are no new
 runtime dependencies or public-v2 build steps.
 
+Implementation: [world.js](../../public/v2/engine/world.js) and
+[random.js](../../public/v2/engine/random.js). Regression coverage:
+[idle.test.js](../../tests-v2/idle.test.js). Baseline comparisons:
+[verify-ab-v2.mjs](../../scripts/verify-ab-v2.mjs).
+
+## Five-round interleaved A/B timing
+
+Windows x64, Node 22.19.0; 120 warmup and 600 measured ticks per run. Each round
+alternated baseline/candidate order. This final run began after this chat's full
+tests and equivalence check finished. Baseline is `a163fde`; candidate engine
+code is in `55047e1`. The subsequent commit records documentation and evidence.
+
+| Scene | Baseline p50 ms | Optimized p50 ms | Lower step time |
+| --- | ---: | ---: | ---: |
+| Settled | 6.519 | 3.010 | 53.8% |
+| Falling | 6.310 | 3.772 | 40.2% |
+| Wet | 10.980 | 7.926 | 27.8% |
+| Storm | 12.845 | 12.030 | 6.3% |
+
+All four scenes pass the per-scene 10% regression limit. Host timing noise is
+approximately 4%; the smaller storm gain should be treated cautiously.
+[Raw A/B JSON](evidence/v2-ab-2026-10-06.json) records the measured values.
+
 ## Verification
 
 - `npm run test:v2`: 124/124 passed, including 7 added idle/wake/restore tests.
