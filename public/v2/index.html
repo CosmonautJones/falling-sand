@@ -33,7 +33,9 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
 .sheet-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 6px;font-size:13px;letter-spacing:.24em;color:#c49a4a;text-transform:uppercase}.sheet-x{width:44px;height:44px;background:transparent;border:none;color:#cbb89a;font-size:18px;cursor:pointer}
 .sheet-body{overflow:auto;padding:0 16px 16px;display:flex;flex-direction:column;gap:8px}.sheet-label{margin-top:8px;font-size:12px;letter-spacing:.14em;color:#8f7d62;text-transform:uppercase}
 .tile-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}.tile{display:flex;align-items:center;gap:9px;height:48px;padding:0 10px;background:#1c1612;color:#f0e2c4;border:1px solid #3a3128;border-radius:12px;font-size:15px;cursor:pointer;text-align:left}.tile .sw{width:20px;height:20px;border-radius:6px}
-.seg{display:flex;flex-wrap:wrap;gap:8px}.seg > button,.seg-b{flex:1 1 0;min-width:72px;height:46px;display:flex;align-items:center;justify-content:center;background:#1c1612;color:#f0e2c4;border:1px solid #3a3128;border-radius:12px;font-size:15px;cursor:pointer}.seg-3 > button{flex:1 1 calc(33% - 8px)}.seg-5 > button{min-width:0}.rotate-hint{display:none}
+.seg{display:flex;flex-wrap:wrap;gap:8px}.seg > button,.seg-b{flex:1 1 0;min-width:72px;height:46px;display:flex;align-items:center;justify-content:center;background:#1c1612;color:#f0e2c4;border:1px solid #3a3128;border-radius:12px;font-size:15px;cursor:pointer}.seg-3 > button{flex:1 1 calc(33% - 8px)}
+.seg > a,.seg > span{flex:1 1 0;min-width:72px;height:46px;display:flex;align-items:center;justify-content:center;background:#1c1612;color:#f0e2c4;border:1px solid #3a3128;border-radius:12px;font-size:15px;text-decoration:none}.seg > span[aria-current]{border-color:#c49a4a;color:#e8c97a;background:#2a2119}
+.seg > button.danger{color:#e8a090;border-color:#5a3128}.seg-5 > button{min-width:0}.rotate-hint{display:none}
 @media(orientation:portrait) and (max-width:700px){.toast-text{display:none}}
 @media(orientation:portrait) and (max-width:700px){.rotate-hint{display:block;position:absolute;left:0;right:0;bottom:8px;text-align:center;font-size:12px;font-style:italic;color:#6f6150;pointer-events:none}}
 .blank-note{margin-top:6px;padding:12px;background:transparent;border:1px dashed #4a3e30;border-radius:12px;color:#a8977c;font-style:italic;font-size:14px;cursor:pointer;text-align:left}.touch-help{margin:4px 0 0;color:#8f7d62;font-size:13px}
@@ -60,7 +62,8 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
       <div class="hd-title" onClick="{{ onTitle }}" tabIndex="0" style="font-size:30px; font-weight:600; letter-spacing:.24em; line-height:1.05; padding-left:.24em; color:{{ titleColor }}; text-shadow:0 1px 0 #3a2a10, 0 -1px 0 rgba(232,201,122,.55), 0 0 {{ titleGlow }}px rgba(232,184,106,.55); cursor:pointer; user-select:none; transition:color .6s, text-shadow .6s;">ALEMBIC</div>
       <div class="hd-line" style="min-height:1.4em; max-width:42rem; width:100%; font-size:14px; font-style:italic; line-height:1.35; color:{{ lineColor }}; text-wrap:pretty;">{{ line }}</div>
     </div>
-    <div class="hd-btns" style="display:flex; justify-content:flex-end; gap:6px;">
+    <div class="hd-btns" style="display:flex; justify-content:flex-end; align-items:center; gap:6px;">
+      <a href="../" title="Back to Alembic v1" style="color:#8f7d62; font-size:13px; letter-spacing:.06em; margin-right:6px; text-decoration:none;">v1</a>
       <button onClick="{{ openCodex }}" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:6px 12px; font-size:13px; letter-spacing:.06em; cursor:pointer;" style-hover="border-color:#c49a4a;" class="hb">codex</button>
       <button onClick="{{ openRites }}" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:6px 12px; font-size:13px; letter-spacing:.06em; cursor:pointer;" style-hover="border-color:#c49a4a;" class="hb">rites</button>
       <button onClick="{{ openAmbitions }}" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:6px 12px; font-size:13px; letter-spacing:.06em; cursor:pointer;" style-hover="border-color:#c49a4a;" class="hb">ambitions</button>
@@ -171,6 +174,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
       <div style="display:flex; gap:5px;">
         <button onClick="{{ onClear }}" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:6px 11px; font-size:13px; cursor:pointer;" style-hover="border-color:#c49a4a;">clear</button>
         <button onClick="{{ onReset }}" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:6px 11px; font-size:13px; cursor:pointer;" style-hover="border-color:#c49a4a;">reset</button>
+        <button onClick="{{ onStartOver }}" title="Erase all Alembic v2 progress on this device" style="background:#1c1612; color:#e8a090; border:1px solid #5a3128; padding:6px 11px; font-size:13px; cursor:pointer;">{{ startOverLabel }}</button>
         <button onClick="{{ onDaily }}" title="Today's vessel: the same glass for everyone today" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:6px 11px; font-size:13px; cursor:pointer;" style-hover="border-color:#c49a4a;">today</button>
       </div>
       <div style="display:flex; gap:5px;">
@@ -273,6 +277,15 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
           <button onClick="{{ openRites }}">rites</button>
           <button onClick="{{ openAmbitions }}">ambitions</button>
           <button onClick="{{ openFlasks }}">flasks</button>
+        </div>
+        <div class="sheet-label">Version</div>
+        <div class="seg">
+          <a href="../">v1</a>
+          <span aria-current="page">v2</span>
+        </div>
+        <div class="sheet-label">Progress</div>
+        <div class="seg">
+          <button class="danger" onClick="{{ onStartOver }}">{{ startOverLabel }}</button>
         </div>
         <p class="touch-help">Drag to pour · Hold still to name a grain · Pinch to zoom and pan</p>
       </div>
@@ -401,6 +414,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;quality&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;full&quot;,&quot;grain&quot;],&quot;default&quot;:&quot;full&quot;,&quot;tsType&quot;:&quot;'full' | 'grain'&quot;,&quot;section&quot;:&quot;Render&quot;},&quot;lighting&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:0,&quot;max&quot;:2,&quot;step&quot;:0.05,&quot;default&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Render&quot;},&quot;bloom&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:0,&quot;max&quot;:2,&quot;step&quot;:0.05,&quot;default&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Render&quot;},&quot;particles&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Render&quot;},&quot;hud&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Render&quot;}}">
 const DKEY = 'alembic-discovered-v2', RKEY = 'alembic-rites-v2', FKEY = 'alembic-flasks-v2', SKEY = 'alembic-sound-v2', TKEY = 'alembic-tempest-v2', PKEY = 'alembic-poured-v2', AKEY = 'alembic-ambitions-v2', GKEY = 'alembic-gallery-v2';
+const SAVE_KEYS = [DKEY, RKEY, FKEY, SKEY, TKEY, PKEY, AKEY, GKEY];
 const today = () => { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
 const safeThumb = t => typeof t === 'string' && t.startsWith('data:image/png;base64,') ? `url(${t})` : 'none';
 const VERT = `#version 300 es
@@ -638,7 +652,7 @@ class Component extends DCLogic {
     (this.unbind || []).forEach(f => f());
     for (const job of this.checkpointJobs.values()) clearTimeout(job.timer);
     this.checkpointJobs.clear();
-    clearTimeout(this.curtainT); clearTimeout(this.toastT); clearTimeout(this.watch); clearTimeout(this.miniHideT); clearTimeout(this.nudgeT);
+    clearTimeout(this.curtainT); clearTimeout(this.toastT); clearTimeout(this.watch); clearTimeout(this.miniHideT); clearTimeout(this.nudgeT); clearTimeout(this.wipeArmT);
     if (this.ac) try { this.ac.close(); } catch (e) {}
   }
   componentDidUpdate(prev) {
@@ -760,6 +774,13 @@ class Component extends DCLogic {
     try { localStorage.setItem(GKEY, JSON.stringify(gallery)); } catch (e) {}
     this.setState({ gallery });
   }
+  // Two taps: the first arms it for four seconds, the second erases every Alembic v2 save and starts fresh.
+  startOver() {
+    if (!this.state.wipeArmed) { this.setState({ wipeArmed: true }); clearTimeout(this.wipeArmT); this.wipeArmT = setTimeout(() => this.alive && this.setState({ wipeArmed: false }), 4000); return; }
+    try { for (const k of SAVE_KEYS) localStorage.removeItem(k); }
+    catch (e) { this.setState({ wipeArmed: false, flaskStatus: 'Could not erase saved progress: ' + e.message }); return; }
+    location.replace(location.pathname);
+  }
   dailyVessel() {
     this.armOpening(); this.pending.push({ t: 'wipe', mode: 'daily', day: today() });
     this.setState({ sheet: '', whisper: "Today's vessel. Everyone pours into the same glass today." });
@@ -799,7 +820,7 @@ class Component extends DCLogic {
     for (const e of evs) {
       if (e.t === 'tx') this.riteFor(e.m);
       switch (e.t) {
-        case 'blast': { this.queueNudge(2600);
+        case 'blast': { this.queueNudge(2600); this.punchAt = { x: e.x / M.W, y: e.y / M.H };
           blasts++;
           if (this.openingPending && performance.now() < this.openingUntil) opening = true;
           else { this.unlock('sneeze'); if (e.r >= 6) this.unlock('chain'); }
@@ -936,9 +957,12 @@ class Component extends DCLogic {
   draw(now) {
     const gl = this.gl; if (!gl) return;
     const v = this.view, u = this.u, cv = this.cvRef.current;
-    // A big blast punches the camera in a few percent about the vessel's centre.
-    const k = 1 + (this.punch || 0) * 0.035, zoom = v.zoom * k;
-    const panX = 0.5 - (0.5 - (this.vw ? v.panX / this.vw : 0)) * k, panY = 0.5 - (0.5 - (this.vh ? v.panY / this.vh : 0)) * k;
+    // A big blast punches the camera in a few percent, leaning toward where it went off.
+    const k = 1 + (this.punch || 0) * 0.05, zoom = v.zoom * k;
+    const px0 = this.vw ? v.panX / this.vw : 0, py0 = this.vh ? v.panY / this.vh : 0;
+    const ax = this.punchAt ? this.punchAt.x : 0.5, ay = this.punchAt ? this.punchAt.y : 0.5;
+    const sx = ax * v.zoom + px0, sy = ay * v.zoom + py0;
+    const panX = sx - (sx - px0) * k, panY = sy - (sy - py0) * k;
     gl.disable(gl.BLEND);
     gl.useProgram(this.prog); gl.bindVertexArray(this.vaoQ);
     gl.uniform1f(u.time, this.still ? 0 : now / 1000);
@@ -1500,6 +1524,7 @@ class Component extends DCLogic {
       openCodex: () => this.setState({ folio: true, tab: 'codex', sheet: '' }), openRites: () => this.setState({ folio: true, tab: 'rites', sheet: '' }), openFlasks: () => this.setState({ folio: true, tab: 'flasks', sheet: '' }),
       closeFolio: () => this.setState({ folio: false }),
       openAmbitions: () => this.setState({ folio: true, tab: 'ambitions', sheet: '' }), onDaily: () => this.dailyVessel(),
+      onStartOver: () => this.startOver(), startOverLabel: s.wipeArmed ? 'tap again to erase everything' : 'start over',
       tabAmbitions: s.tab === 'ambitions',
       ambitionsList: (this.goals ? this.goals.AMBITIONS : []).map(a => { const on = this.ambDone.has(a.key); return { name: a.name, desc: a.desc, color: on ? '#f0e2c4' : '#6f6150', mark: on ? '#9fd0ff' : '#4a3e30', fill: on ? '#5f8fbf' : 'transparent', glow: on ? '0 0 10px rgba(159,208,255,.5)' : 'none' }; }),
       gallery: s.gallery.map((g, i) => ({ bgImg: safeThumb(g.thumb), when: new Date(g.t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
