@@ -1050,7 +1050,8 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
   }
 
   // ---------- world ----------
-  function seedVessel() {
+  // The legacy 'reset' opcode reseeds only the scene; it never touches the command queue.
+  function seedVessel(spark = true) {
     const w = W, h = H;
     const floorN = Math.max(3, Math.round(h * 0.018)), wallN = Math.max(3, Math.round(w * 0.01)), ground = h - floorN;
     fill(0, ground, w - 1, h - 1, STONE); fill(0, 0, wallN - 1, h - 1, STONE); fill(w - wallN, 0, w - 1, h - 1, STONE);
@@ -1085,6 +1086,17 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
     paint(lx, ground - Math.max(5, Math.round(cupH * 0.45)), Math.max(3, cupW - 7), LAVA);
     const px = wallN + 6, py = Math.max(8, Math.round(h * 0.22));
     fill(px, py, px + 3, py, OBSIDIAN); fill(px, py + 4, px + 3, py + 4, OBSIDIAN); fill(px, py, px, py + 4, OBSIDIAN); fill(px + 3, py, px + 3, py + 4, OBSIDIAN);
+    // The vessel is charged: a fuse joins the wood pile to the casks, and a spark finds the wood eight seconds in.
+    setc(woodX - 6, ground - 1, POWDER, grain(POWDER));
+    if (spark) scheduleSpark(woodX, Math.max(1, ground - 40));
+  }
+  const SPARK_DELAY = 480;
+  let opTick = 0;
+  function dropSparks() { commands = commands.filter(command => command.op.t !== 'spark'); }
+  function scheduleSpark(x, y) {
+    const tick = opTick + SPARK_DELAY;
+    const sequence = commands.reduce((next, c) => c.tick === tick ? Math.max(next, c.sequence + 1) : next, 0);
+    commands = [...commands, { tick, sequence, op: { t: 'spark', x, y } }].sort((a, b) => a.tick - b.tick || a.sequence - b.sequence);
   }
   function rainFromCeiling(m, count) {
     const span = Math.max(1, W - 2);
@@ -1220,17 +1232,18 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
       case 'cool': heatWand(op.x, op.y, op.r, false); break;
       case 'rain': rainFromCeiling(op.m, op.n); break;
       case 'tempest': startStorm(); break;
-      case 'clear': clearGrid(); break;
-      case 'reset': clearGrid(); seedVessel(); break;
+      case 'spark': setc(op.x, op.y, EMBER, grain(EMBER)); break;
+      case 'clear': dropSparks(); clearGrid(); break;
+      case 'reset': clearGrid(); seedVessel(false); break;
       case 'wipe': {
         const sc = cells.slice(), ss = shades.slice(), sh = heat.slice();
-        clearGrid(); if (op.mode === 'reset') seedVessel(); else if (op.cells) { cells.set(op.cells); for (let i = 0; i < N; i++) shades[i] = grain(cells[i]); }
+        dropSparks(); clearGrid(); if (op.mode === 'reset') seedVessel(); else if (op.cells) { cells.set(op.cells); for (let i = 0; i < N; i++) shades[i] = grain(cells[i]); }
         wipeC = cells.slice(); wipeS = shades.slice();
         cells.set(sc); shades.set(ss); heat.set(sh); wipe = 0;
         if (op.mode !== 'clear' && ship.active) { ship.active = false; shipCd = 600; }
         break;
       }
-      case 'load': { clearGrid(); cells.set(op.cells); for (let i = 0; i < N; i++) { shades[i] = grain(cells[i]); heat[i] = SEEDHEAT[cells[i]]; } break; }
+      case 'load': { dropSparks(); clearGrid(); cells.set(op.cells); for (let i = 0; i < N; i++) { shades[i] = grain(cells[i]); heat[i] = SEEDHEAT[cells[i]]; } break; }
       case 'snap': return { cells: cells.slice() };
     }
   }
@@ -1264,6 +1277,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
     for (let i = 0; i < count; i++) {
       EV.length = 0; blastKick = 0;
       const nextTick = tickIndex + 1;
+      opTick = nextTick;
       while (commands.length && commands[0].tick === nextTick) {
         const command = commands.shift();
         const result = applyOperation(command.op);
@@ -1293,7 +1307,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
     // Empty polls leave scheduled work alone, and no simulation/environment clock advances here.
     const ready = reconcileNextTick ? commands.filter(command => command.tick === tickIndex + 1) : [];
     if (ready.length) commands = commands.filter(command => command.tick !== tickIndex + 1);
-    EV.length = 0; blastKick = 0;
+    EV.length = 0; blastKick = 0; opTick = tickIndex + 1;
     for (const op of [...ready.map(command => command.op), ...detached]) {
       const result = applyOperation(op);
       onOperation?.(op, result);
@@ -1326,7 +1340,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
     clearGrid();
     for (const a of [born, heatOut, trailOut, meltList, PRE, WU, WV, WU0, WV0, WP, WP2, WD, HS, SOL, WS, AX, AY, BX, BY, SX, SY, SS, COUNTS]) a.fill(0);
     scanDir = 1; blastKick = 0; windEnergy = 0; tickIndex = 0; EV.length = 0;
-    commands = [];
+    commands = []; opTick = 0;
     Object.assign(ship, { active: false, x: 0, y: 24, t: 0, leaving: false, spawnCd: 0, stolen: 0, crash: false, beam: false });
     shipCd = 0; storm = 0; stormT = 0; stormCd = 0; boltCd = 60; flash = 0;
     goldCount = 0; goldCX = W / 2; goldCY = H / 2; visitorCount = 0;

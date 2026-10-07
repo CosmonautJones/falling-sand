@@ -140,6 +140,7 @@ const OPS = {
   spray: ['x', 'y', 'r', 'm', 'n'], box: ['x0', 'y0', 'x1', 'y1', 'm'],
   heat: ['x', 'y', 'r'], cool: ['x', 'y', 'r'], rain: ['m', 'n'],
   tempest: [], clear: [], reset: [], snap: [], wipe: ['mode'], load: ['cells'],
+  spark: ['x', 'y'],
 };
 function operation(op, mode) {
   // Check the discriminator descriptor before accessing it, then whitelist the variant.
