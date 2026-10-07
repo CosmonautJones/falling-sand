@@ -16,6 +16,15 @@ test('the untouched charged vessel sets off a visible chain reaction inside 30 s
   assert.ok(blasts[0] > SPARK_TICK && blasts[0] < 1800, `first blast at tick ${blasts[0]}`);
 });
 
+test('the opening chain does not melt the vessel: floor and trough survive 30 s', () => {
+  const world = E.createWorld({ seed: 0xa341316c, scene: 'vessel' });
+  const n = m => world.inspect().cells.reduce((a, c) => a + (c === m), 0);
+  const lava0 = n(E.LAVA), water0 = n(E.WATER);
+  world.advanceTicks(1800);
+  assert.ok(n(E.LAVA) < lava0 * 3, `lava ${lava0} -> ${n(E.LAVA)}`);
+  assert.ok(n(E.WATER) > water0 * 0.7, `water ${water0} -> ${n(E.WATER)}`);
+});
+
 test('the chain starts from a fire, not from nothing: wood burns before the casks blow', () => {
   const world = E.createWorld({ seed: 5, scene: 'vessel' });
   const sim = world.inspect();

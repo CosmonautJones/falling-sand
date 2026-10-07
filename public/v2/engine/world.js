@@ -108,7 +108,7 @@ const CS = 8, CW = 60, CH = 34, CNN = CW * CH;
 const G = 0.16, MAXV = 7;
 const GOLD_CARRY = 90, MUD_CARRY = -40;
 const FLAMMABLE = new Uint8Array(64); for (const m of [PLANT, WOOD, OIL, SEED, BLOOM, POWDER]) FLAMMABLE[m] = 1;
-const BOIL = 100, IGNITE = 62;
+const BOIL = 90, IGNITE = 62;
 // Restless materials keep their 8x8 chunk awake even when nothing moved: they act on their own
 // (fire, critters, growth, decay, random drips) or ride the draft (gases, light powders).
 const ALIVE = new Uint8Array(64);
@@ -491,7 +491,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
       case WOOD: transmute(nx, ny, ri(2) === 0 ? FIRE : EMBER); return true;
       case SAND: transmute(nx, ny, GLASS); return true;
       case ICE: transmute(nx, ny, WATER); return true;
-      case STONE: if (ri(6) === 0) transmute(nx, ny, LAVA); return true;
+      case STONE: if (ri(40) === 0) transmute(nx, ny, LAVA); return true;
       case BRINE: transmute(nx, ny, CRYSTAL); return true;
       case MUD: transmute(nx, ny, BRICK); return true;
       case TNT: detonate(nx, ny, 4); return true;
@@ -520,7 +520,8 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
       const nx = x + DX[k], ny = y + DY[k]; if (!inb(nx, ny)) continue;
       const n = cells[ny * W + nx];
       if (n === WATER || n === BRINE || n === ICE) { transmute(nx, ny, STEAM); transmute(x, y, OBSIDIAN); return true; }
-      if (n === STONE && ri(12) === 0) transmute(nx, ny, LAVA);
+      // Lava melts stone, slowly: a floor should survive an afternoon.
+      if (n === STONE && ri(4000) === 0) transmute(nx, ny, LAVA);
       if (n === SAND) transmute(nx, ny, GLASS);
       if (n === PLANT || n === WOOD || n === SEED || n === OIL || n === BLOOM) transmute(nx, ny, FIRE);
     }
