@@ -40,7 +40,9 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
 .root{gap:6px!important;padding:max(8px,env(safe-area-inset-top)) env(safe-area-inset-right) max(8px,env(safe-area-inset-bottom)) env(safe-area-inset-left)!important}
 .hd{width:100%!important;display:flex!important;flex-direction:column;align-items:center;gap:0!important;padding:0 14px}.hd-title{font-size:17px!important;letter-spacing:.32em!important}.hd-line{font-size:13px!important;min-height:2.7em!important}
 .fig{width:100%!important;flex:1 1 0!important;padding:0!important;background:none!important;box-shadow:none!important;border-radius:0!important}.rivet{display:none}
-.flask-status{position:absolute;top:max(6px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:6;pointer-events:none;text-align:center}.toast{top:6px!important;padding:5px 10px 5px 6px!important;max-width:94%!important}}
+.flask-status{position:absolute;top:max(6px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:6;pointer-events:none;text-align:center}.toast{top:6px!important;padding:4px 12px 4px 6px!important;gap:8px!important;max-width:92%!important;border-radius:999px!important;background:rgba(20,16,12,.72)!important;box-shadow:none!important}
+.toast > div:first-child{width:14px!important;height:14px!important}.toast > div:last-child{flex-direction:row!important;align-items:baseline;gap:8px;min-width:0}.toast-label{font-size:10px!important;letter-spacing:.14em!important}
+.toast-text{font-size:12px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:62vw}}
 @media(orientation:landscape) and (max-height:520px){.root{flex-direction:row!important;align-items:stretch!important;padding:max(4px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))!important}.hd,.ctl,.zoom-buttons,[data-mobile-hud]{display:none!important}.sheet{display:flex}.fig{flex:1 1 0!important;padding:0!important;background:none!important;box-shadow:none!important}.rivet{display:none}
 .phone-bar{display:flex;flex-direction:column-reverse;justify-content:flex-end;width:76px;padding:0}.phone-row{flex-direction:column}.pb-el{flex:0 0 auto;flex-direction:column;justify-content:center;gap:2px;height:76px;padding:4px}.pb-el .pb-txt{align-items:center}.pb-el .caret,.pb-sub{display:none}.pb-name{font-size:12px;max-width:68px}.phone-hud{white-space:normal;font-size:10px;margin-top:auto}
 .sheet{left:auto;top:0;width:min(380px,58vw);max-height:none;border-radius:18px 0 0 18px;border-top:none;border-left:1px solid rgba(196,154,74,.55);padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) 0}}
@@ -87,8 +89,8 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
       <div class="toast" style="position:absolute; top:14px; left:50%; transform:translateX(-50%) translateY({{ toastY }}px); opacity:{{ toastOpacity }}; transition:opacity .45s ease, transform .45s ease; pointer-events:none; display:flex; align-items:center; gap:12px; padding:9px 16px 9px 10px; background:rgba(20,16,12,.9); border:1px solid {{ toastBorder }}; box-shadow:inset 0 1px 0 rgba(232,201,122,.3), 0 12px 30px rgba(0,0,0,.5); backdrop-filter:blur(4px); max-width:90%; z-index:5;">
         <div style="width:22px; height:22px; flex:0 0 auto; background:{{ toastSwatch }}; border:1px solid #5a4630; transform:rotate({{ toastRot }}deg); box-shadow:0 0 14px {{ toastSwatch }}, inset 0 -6px 8px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.3);"></div>
         <div style="display:flex; flex-direction:column; line-height:1.25;">
-          <div style="font-size:11px; letter-spacing:.24em; color:#c49a4a;">{{ toastLabel }}</div>
-          <div style="font-size:14px; font-style:italic; color:#f0e2c4;">{{ toastText }}</div>
+          <div class="toast-label" style="font-size:11px; letter-spacing:.24em; color:#c49a4a;">{{ toastLabel }}</div>
+          <div class="toast-text" style="font-size:14px; font-style:italic; color:#f0e2c4;">{{ toastText }}</div>
         </div>
       </div>
 
@@ -584,6 +586,8 @@ class Component extends DCLogic {
     try { ambitions = JSON.parse(localStorage.getItem(AKEY) || '[]'); gallery = JSON.parse(localStorage.getItem(GKEY) || '[]'); } catch (e) {}
     this.ambDone = new Set(Array.isArray(ambitions) ? ambitions : []);
     this.coarse = typeof matchMedia === 'function' && matchMedia('(pointer:coarse)').matches;
+    this.phone = typeof matchMedia === 'function' && matchMedia('(max-width:700px),(pointer:coarse)').matches;
+    this.armOpening();
     this.unlocked = new Set(rites);
     this.P = new Float32Array(PMAX * 10); this.PD = new Float32Array(PMAX * 7); this.pn = 0;
     this.state = { ready: false, discovered: [], brush: 1, radius: 6, tool: 'pour', paused: false, speed: 1, folio: false, tab: 'codex', sheet: '', suggest: -1, pourHint: !poured, ambitions: [...this.ambDone], gallery: Array.isArray(gallery) ? gallery : [],
@@ -611,6 +615,7 @@ class Component extends DCLogic {
     this.screen = await import(new URL('./mobile-screen.js', document.baseURI).href);
     this.touchMod = await import(new URL('./touch-gesture.js', document.baseURI).href);
     this.opening = await import(new URL('./opening.js', document.baseURI).href);
+    this.toastsMod = await import(new URL('./toasts.js', document.baseURI).href);
     this.goals = await import(new URL('./ambitions.js', document.baseURI).href);
     this.galleryMod = await import(new URL('./gallery.js', document.baseURI).href);
     if (!this.alive) return;
@@ -719,12 +724,12 @@ class Component extends DCLogic {
     this.lastFind = M.NAMES[lastId];
     const w = note || M.PAGES[lastId].w;
     this.setState({ discovered: [...this.known], whisper: w });
-    this.toast({ label: 'TRANSMUTED · ' + M.NAMES[lastId].toUpperCase(), text: w, swatch: rgb(M.COLORS[lastId]), rite: false });
+    this.toast({ kind: 'find', names: [M.NAMES[lastId]], label: 'TRANSMUTED · ' + M.NAMES[lastId].toUpperCase(), text: w, swatch: rgb(M.COLORS[lastId]), rite: false });
     this.fanfare();
     if (this.nudgeGoal !== undefined && list.includes(this.nudgeGoal)) this.setState({ suggest: -1 });
     const map = { [M.GLASS]: 'first-light', [M.BLOOM]: 'garden', [M.VOID]: 'nigredo', [M.RIFT]: 'door', [M.GOLD]: 'king', [M.AZOTH]: 'opus', [M.PEARL]: 'pearl' };
     for (const id of list) if (map[id]) this.unlock(map[id]);
-    if (this.known.size >= 20) this.unlock('alchemist');
+    if (M.TRANSMUTED.filter(id => this.known.has(id)).length >= 20) this.unlock('alchemist');
     if (this.known.size >= M.COUNT) this.unlock('complete');
   }
   unlock(key) {
@@ -733,7 +738,7 @@ class Component extends DCLogic {
     try { localStorage.setItem(RKEY, JSON.stringify([...this.unlocked])); } catch (e) {}
     const r = RITES.find(x => x[0] === key);
     this.setState({ rites: [...this.unlocked] });
-    if (r) { this.toast({ label: 'RITE · ' + r[1].toUpperCase(), text: r[2], swatch: '#e8c97a', rite: true }); this.chime(784); }
+    if (r) { this.toast({ kind: 'rite', label: 'RITE · ' + r[1].toUpperCase(), text: r[2], swatch: '#e8c97a', rite: true }); this.chime(784); }
   }
   checkGoals(counts) {
     if (!this.goals) return;
@@ -755,7 +760,7 @@ class Component extends DCLogic {
     this.setState({ gallery });
   }
   dailyVessel() {
-    this.pending.push({ t: 'wipe', mode: 'daily', day: today() });
+    this.armOpening(); this.pending.push({ t: 'wipe', mode: 'daily', day: today() });
     this.setState({ sheet: '', whisper: "Today's vessel. Everyone pours into the same glass today." });
     this.chime(523);
   }
@@ -769,8 +774,15 @@ class Component extends DCLogic {
     this.setState({ suggest: n.brush, whisper: n.text });
     this.toast({ label: 'TRY', text: n.text, swatch: rgb(this.M.COLORS[n.brush]), rite: false });
   }
+  // The opening spark's blast is the vessel's, not the player's: it does not earn the cask rites.
+  armOpening() { this.openingPending = true; this.openingUntil = performance.now() + 60000; }
+  riteFor(m) {
+    const M = this.M; if (!M) return;
+    const key = { [M.GLASS]: 'first-light', [M.BLOOM]: 'garden', [M.VOID]: 'nigredo', [M.RIFT]: 'door', [M.GOLD]: 'king', [M.AZOTH]: 'opus', [M.PEARL]: 'pearl' }[m];
+    if (key) this.unlock(key);
+  }
   toast(t) {
-    this.toastQ.push(t);
+    this.toastQ = this.toastsMod ? this.toastsMod.queueToast(this.toastQ, t) : [...this.toastQ, t];
     if (!this.toastBusy) this.nextToast();
   }
   nextToast() {
@@ -779,14 +791,17 @@ class Component extends DCLogic {
     this.toastBusy = true;
     this.setState({ toast: t, toastOn: true });
     clearTimeout(this.toastT);
-    this.toastT = setTimeout(() => { this.setState({ toastOn: false }); this.toastT = setTimeout(() => this.nextToast(), 450); }, this.toastQ.length ? 2200 : 3800);
+    this.toastT = setTimeout(() => { this.setState({ toastOn: false }); this.toastT = setTimeout(() => this.nextToast(), 450); }, this.toastQ.length ? (this.phone ? 1600 : 2200) : (this.phone ? 2600 : 3800));
   }
   onEvents(evs) {
-    const M = this.M; let blasts = 0;
+    const M = this.M; let blasts = 0, opening = false;
     for (const e of evs) {
+      if (e.t === 'tx') this.riteFor(e.m);
       switch (e.t) {
         case 'blast': { this.queueNudge(2600);
-          blasts++; this.unlock('sneeze'); if (e.r >= 6) this.unlock('chain');
+          blasts++;
+          if (this.openingPending && performance.now() < this.openingUntil) opening = true;
+          else { this.unlock('sneeze'); if (e.r >= 6) this.unlock('chain'); }
           const n = Math.min(260, e.r * 34);
           for (let k = 0; k < n; k++) { const a = Math.random() * Math.PI * 2, s = 0.6 + Math.random() * e.r * 0.9; const hot = Math.random(); this.spawn(e.x, e.y, Math.cos(a) * s, Math.sin(a) * s - 1, 1, 0.55 + hot * 0.4, 0.15 + hot * 0.3, 0.5 + Math.random() * 1.1, 1 + Math.random() * 2.2); }
           break;
@@ -820,7 +835,8 @@ class Component extends DCLogic {
         case 'portal': case 'void': break;
       }
     }
-    if (blasts >= 3) this.unlock('chain');
+    if (blasts >= 3 && !opening) this.unlock('chain');
+    if (opening) this.openingPending = false;
   }
 
   // ---------- particles ----------
@@ -1286,6 +1302,7 @@ class Component extends DCLogic {
       let bytes = this.unb64(m[2].replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((m[2].length + 3) % 4));
       if (m[1] === 'z') bytes = new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
       this.pending.push({ t: 'wipe', mode: 'load', cells: this.M.rleDecode(bytes) });
+      this.openingPending = false;
       this.setState({ whisper: 'A shared scene stamp, poured out.', flaskStatus: 'Scene stamp loaded (materials only).' });
       const url = location.href;
       setTimeout(() => this.alive && this.remember(url, this.thumbFrom(this.lastColor)), 1500);
@@ -1311,7 +1328,7 @@ class Component extends DCLogic {
     this.setState({ flaskBusy: this.checkpointJobs.size > 0 });
     if (!reply.ok) { this.setState({ flaskStatus: 'Checkpoint ' + (job.kind === 'restore' ? 'restore' : 'save') + ' failed: ' + (reply.error || 'Unknown error') }); return; }
     if (job.kind === 'restore') {
-      this.pendingDt = 0; this.ops = []; this.pending = [];
+      this.pendingDt = 0; this.ops = []; this.pending = []; this.openingPending = false;
       this.setState({ folio: false, flaskStatus: 'Checkpoint restored.' });
       return;
     }
@@ -1492,8 +1509,8 @@ class Component extends DCLogic {
       tabCodex: s.tab === 'codex', tabRites: s.tab === 'rites', tabFlasks: s.tab === 'flasks',
       togglePause: () => this.setState({ paused: !s.paused }),
       pauseLabel: s.paused ? 'play' : 'pause', pauseBorder: s.paused ? '#cbb89a' : '#3a3128',
-      onClear: () => { this.pending.push({ t: 'wipe', mode: 'clear' }); this.chime(220); this.setState({ sheet: '' }); },
-      onReset: () => { this.pending.push({ t: 'wipe', mode: 'reset' }); this.chime(330); this.setState({ sheet: '' }); },
+      onClear: () => { this.openingPending = false; this.pending.push({ t: 'wipe', mode: 'clear' }); this.chime(220); this.setState({ sheet: '' }); },
+      onReset: () => { this.armOpening(); this.pending.push({ t: 'wipe', mode: 'reset' }); this.chime(330); this.setState({ sheet: '' }); },
       onTempest: () => { this.ops.push({ t: 'tempest' }); this.setState({ sheet: '' }); },
       tempestOn: s.tempest,
       onShot: () => { this.wantShot = true; this.setState({ sheet: '' }); },
