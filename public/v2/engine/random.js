@@ -12,6 +12,8 @@ export function createRandom(seed) {
     int: n => n <= 0 ? 0 : next() % n,
     float: () => next() / 4294967296,
     captureState: () => state,
+    // Advance known unused draws without calculating their output (Mulberry32's state is additive).
+    skip(n) { state = (state + Math.imul(n, 0x6d2b79f5)) >>> 0; },
     reset(n) { state = n >>> 0; },
   };
 }

@@ -63,6 +63,11 @@ npm run bench:v2 -- --scene storm --seed 73
 
 The benchmark emits one JSON report with four fresh fixtures by default:
 
+The [v2 optimization report](docs/performance/v2-optimization-2026-10-06.md)
+describes idle chunk updates, unchanged-save verification and interleaved A/B
+measurements. Use `node scripts/verify-ab-v2.mjs <baselineRoot> .` to compare
+exact simulation state before interpreting performance gains.
+
 | Scene | Workload |
 | --- | --- |
 | `settled` | Supported, flat sand bed |

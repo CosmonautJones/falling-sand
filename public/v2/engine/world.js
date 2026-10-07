@@ -110,6 +110,12 @@ const GOLD_CARRY = 90, MUD_CARRY = -40;
 const FLAMMABLE = new Uint8Array(64); for (const m of [PLANT, WOOD, OIL, SEED, BLOOM, POWDER]) FLAMMABLE[m] = 1;
 const CC = new Uint16Array(CNN);
 for (let cy = 0; cy < CH; cy++) for (let cx = 0; cx < CW; cx++) CC[cy * CW + cx] = 8 * Math.max(1, Math.min(8, H - cy * 8));
+const BASE_HEAT = Float32Array.from(CC, n => n * 18);
+// These materials have no autonomous reaction. Dense, fully supported powders consume
+// one unused slide draw per tick; preserving those draws keeps existing worlds identical.
+const IDLE_SOLID = new Uint8Array(COUNT), IDLE_POWDER = new Uint8Array(COUNT);
+for (const m of [AIR, STONE, GLASS, WOOD, OBSIDIAN, BRICK, TNT, PEARL]) IDLE_SOLID[m] = 1;
+for (const m of [SAND, GOLD, POWDER, RELIC]) IDLE_POWDER[m] = 1;
 
 export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
   let initialSeed = seed >>> 0, initialScene = scene, tickIndex = 0;
@@ -120,6 +126,9 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
   const VX = new Float32Array(N), VY = new Float32Array(N);
   const born = new Uint8Array(N), heatOut = new Uint8Array(N), trailOut = new Uint8Array(N);
   const meltList = new Int32Array(N);
+  const awake = new Uint8Array(CNN), thermal = new Uint8Array(CNN), sleepDraws = new Uint8Array(H * CW);
+  const activity = { cellVisits: 0, thermalCells: 0 };
+  let simulating = false, fullSweep = false, denseTicks = 0;
   let scanDir = 1, blastKick = 0, trailsLive = false;
   const EV = [];
   const ev = e => { if (EV.length < 48) EV.push(e); };
@@ -131,7 +140,18 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
   function grain(m) { return m === PLASMA ? 3 + ri(3) : rshade(SHADE[m]); }
   function inb(x, y) { return x >= 0 && y >= 0 && x < W && y < H; }
   function get(x, y) { return (x >= 0 && y >= 0 && x < W && y < H) ? cells[y * W + x] : STONE; }
-  function setc(x, y, m, s) { if (!inb(x, y)) return; const i = y * W + x; cells[i] = m; shades[i] = s; heat[i] = SEEDHEAT[m]; VX[i] = 0; VY[i] = 0; }
+  function markChunk(mask, cx, cy) {
+    const c = cy * CW + cx;
+    if (mask[c] === 2) return;
+    mask[c] = 2;
+    for (let y = Math.max(0, cy - 1); y <= Math.min(CH - 1, cy + 1); y++) {
+      for (let x = Math.max(0, cx - 1); x <= Math.min(CW - 1, cx + 1); x++) {
+        const j = y * CW + x; if (!mask[j]) mask[j] = 1;
+      }
+    }
+  }
+  function wake(x, y) { if (simulating && !fullSweep) markChunk(awake, x >> 3, y >> 3); }
+  function setc(x, y, m, s) { if (!inb(x, y)) return; const i = y * W + x; cells[i] = m; shades[i] = s; heat[i] = SEEDHEAT[m]; VX[i] = 0; VY[i] = 0; wake(x, y); }
   function swap(ax, ay, bx, by) {
     if (!inb(ax, ay) || !inb(bx, by)) return;
     const a = ay * W + ax, b = by * W + bx;
@@ -140,6 +160,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
     t = heat[a]; heat[a] = heat[b]; heat[b] = t;
     t = VX[a]; VX[a] = VX[b]; VX[b] = t;
     t = VY[a]; VY[a] = VY[b]; VY[b] = t;
+    wake(ax, ay); wake(bx, by);
   }
   function paint(cx, cy, r, m) {
     const r2 = r * r;
@@ -174,7 +195,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
     }
   }
   function fill(x0, y0, x1, y1, m) { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) setc(x, y, m, grain(m)); }
-  function clearGrid() { cells.fill(AIR); shades.fill(0); heat.fill(AMBIENT[AIR]); trails.fill(0); VX.fill(0); VY.fill(0); trailsLive = false; }
+  function clearGrid() { cells.fill(AIR); shades.fill(0); heat.fill(AMBIENT[AIR]); trails.fill(0); VX.fill(0); VY.fill(0); trailsLive = false; denseTicks = 0; }
 
   // ---------- convection field (coarse stable-fluids lite) ----------
   const WU = new Float32Array(CNN), WV = new Float32Array(CNN), WU0 = new Float32Array(CNN), WV0 = new Float32Array(CNN);
@@ -965,7 +986,46 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
   }
 
   // ---------- fields ----------
-  function thermals() {
+  // Derived dirty/sleep masks are rebuilt from authoritative arrays each tick, including
+  // after legacy loads, wipes and checkpoint restores. No new save state is required.
+  function rebuildActivity() {
+    // Dense storms benefit from the original straight loops. Staying on that path for
+    // at most one second avoids paying for masks that cannot skip useful work. This
+    // only performs extra work; it never changes the world or its random sequence.
+    fullSweep = denseTicks > 0;
+    if (fullSweep) { denseTicks--; activity.cellVisits = N; activity.thermalCells = N; return; }
+    awake.fill(0); thermal.fill(0); sleepDraws.fill(0);
+    SOL.fill(0); HS.set(BASE_HEAT);
+    activity.cellVisits = 0; activity.thermalCells = 0;
+    for (let cy = 0; cy < CH; cy++) for (let cx = 0; cx < CW; cx++) {
+      const c = cy * CW + cx, x0 = cx * CS, y0 = cy * CS;
+      let hot = false, active = false;
+      for (let y = y0; y < Math.min(H, y0 + CS); y++) {
+        let draws = 0;
+        for (let x = x0; x < x0 + CS; x++) {
+          const i = y * W + x, m = cells[i];
+          if (m !== AIR && KIND[m] !== K_GAS && m !== FIRE && m !== PLASMA) SOL[c]++;
+          if (heat[i] !== 18 || AMBIENT[m] !== 18 || SOURCE[m]) hot = true;
+          if (IDLE_SOLID[m]) continue;
+          if (IDLE_POWDER[m] && Object.is(VX[i], 0) && Object.is(VY[i], 0) &&
+              !canMove(x, y, x, y + 1) && !canMove(x, y, x - 1, y + 1) && !canMove(x, y, x + 1, y + 1)) draws++;
+          else active = true;
+        }
+        sleepDraws[y * CW + cx] = draws;
+      }
+      if (hot) { markChunk(thermal, cx, cy); markChunk(awake, cx, cy); }
+      if (active) markChunk(awake, cx, cy);
+    }
+    let hotCells = 0;
+    for (let c = 0; c < CNN; c++) if (thermal[c]) hotCells += CC[c];
+    if (hotCells > N * 0.65) {
+      fullSweep = true; denseTicks = 59;
+      activity.cellVisits = N; activity.thermalCells = N;
+    }
+  }
+  // Keep the dense path contiguous: sparse traversal helps quiet vessels, but the
+  // chunk bookkeeping itself is wasteful when most of the vessel is already awake.
+  function thermalsFull() {
     for (let i = 0; i < N; i++) { const s = SOURCE[cells[i]]; if (s > heat[i]) heat[i] = s; }
     for (let y = H - 1; y >= 1; y--) {
       const row = y * W;
@@ -994,6 +1054,54 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
         HS[c] += v;
         if (m !== AIR && KIND[m] !== K_GAS && m !== FIRE && m !== PLASMA) SOL[c]++;
         if (m === ICE && v >= 72 && !born[i]) meltList[melts++] = i;
+      }
+    }
+    heat.set(heatOut);
+    for (let k = 0; k < melts; k++) { const i = meltList[k]; if (cells[i] === ICE && !born[i]) transmute(i % W, (i / W) | 0, WATER); }
+  }
+  function thermals() {
+    if (fullSweep) { thermalsFull(); return; }
+    for (let cy = 0; cy < CH; cy++) for (let cx = 0; cx < CW; cx++) {
+      const c = cy * CW + cx; if (!thermal[c]) continue;
+      activity.thermalCells += CC[c];
+      for (let y = cy * CS; y < Math.min(H, (cy + 1) * CS); y++) {
+        for (let x = cx * CS; x < (cx + 1) * CS; x++) {
+          const i = y * W + x, s = SOURCE[cells[i]]; if (s > heat[i]) heat[i] = s;
+        }
+      }
+    }
+    for (let y = H - 1; y >= 1; y--) {
+      const row = y * W;
+      for (let cx = 0; cx < CW; cx++) {
+        if (!thermal[(y >> 3) * CW + cx]) continue;
+        for (let x = cx * CS; x < (cx + 1) * CS; x++) {
+          const i = row + x;
+          if (born[i]) continue;
+          const m = cells[i];
+          if (SOURCE[m] > 0 || cells[i - W] !== m) continue;
+          if (heat[i] < heat[i - W] + 24) continue;
+          swap(x, y, x, y - 1); born[i - W] = 1;
+        }
+      }
+    }
+    heatOut.set(heat);
+    let melts = 0;
+    for (let y = 0; y < H; y++) {
+      const row = y * W, crow = (y >> 3) * CW;
+      for (let cx = 0; cx < CW; cx++) {
+        if (!thermal[crow + cx]) continue;
+        for (let x = cx * CS; x < (cx + 1) * CS; x++) {
+          const i = row + x, t = heat[i], m = cells[i];
+          const up = y > 0 ? heat[i - W] : t, dn = y < H - 1 ? heat[i + W] : t;
+          const rt = x < W - 1 ? heat[i + 1] : t, lf = x > 0 ? heat[i - 1] : t;
+          let next = t + ((CONDUCT[m] * (up + dn + rt + lf - (t << 2))) >> 5);
+          next += ((AMBIENT[m] - next) * (m === AIR || m === STEAM || m === SMOKE ? 10 : 2)) >> 8;
+          const v = next < 0 ? 0 : next > 255 ? 255 : next;
+          heatOut[i] = v;
+          const c = crow + (x >> 3);
+          HS[c] += v - 18;
+          if (m === ICE && v >= 72 && !born[i]) meltList[melts++] = i;
+        }
       }
     }
     heat.set(heatOut);
@@ -1038,15 +1146,28 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
   function simulate() {
     const dir = scanDir; scanDir = -scanDir;
     born.fill(0);
+    rebuildActivity();
+    simulating = true;
     thermals();
     windStep();
     for (let y = H - 1; y >= 0; y--) {
-      if (dir === 1) { for (let x = 0; x < W; x++) processCell(x, y, dir); }
-      else { for (let x = W - 1; x >= 0; x--) processCell(x, y, dir); }
+      if (fullSweep) {
+        if (dir === 1) { for (let x = 0; x < W; x++) processCell(x, y, dir); }
+        else { for (let x = W - 1; x >= 0; x--) processCell(x, y, dir); }
+        continue;
+      }
+      const row = (y >> 3) * CW;
+      for (let cx = dir === 1 ? 0 : CW - 1; cx >= 0 && cx < CW; cx += dir) {
+        if (!awake[row + cx]) { random.physical.skip(sleepDraws[y * CW + cx]); continue; }
+        activity.cellVisits += CS;
+        if (dir === 1) { for (let x = cx * CS; x < (cx + 1) * CS; x++) processCell(x, y, dir); }
+        else { for (let x = (cx + 1) * CS - 1; x >= cx * CS; x--) processCell(x, y, dir); }
+      }
     }
     stigmergy();
     stormStep();
     shipStep();
+    simulating = false;
   }
 
   // ---------- world ----------
@@ -1337,6 +1458,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
     if (nextScene !== 'empty' && nextScene !== 'vessel') throw new Error(`Unknown scene: ${nextScene}`);
     initialSeed = nextSeed >>> 0; initialScene = nextScene;
     random.reset(initialSeed);
+    denseTicks = 0; fullSweep = false;
     clearGrid();
     for (const a of [born, heatOut, trailOut, meltList, PRE, WU, WV, WU0, WV0, WP, WP2, WD, HS, SOL, WS, AX, AY, BX, BY, SX, SY, SS, COUNTS]) a.fill(0);
     scanDir = 1; blastKick = 0; windEnergy = 0; tickIndex = 0; EV.length = 0;
@@ -1366,6 +1488,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
   function restore(state) {
     // Every possible validation/allocation failure happens before changing live state.
     const next = validateWorldState(state);
+    denseTicks = 0; fullSweep = false;
     initialSeed = next.seed; initialScene = next.scene; tickIndex = next.tickIndex;
     cells.set(next.cells); shades.set(next.shades); heat.set(next.heat);
     VX.set(next.VX); VY.set(next.VY); trails.set(next.trails); WU.set(next.WU); WV.set(next.WV);
@@ -1383,7 +1506,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
   }
   function inspect() {
     return {
-      cells, shades, heat, trails, VX, VY, born, WU, WV, W, H, step, setc, get, paint, paintLine, detonate,
+      cells, shades, heat, trails, VX, VY, born, WU, WV, W, H, step, setc, get, paint, paintLine, detonate, activity,
       clear: clearGrid, seed: n => random.reset(n), DENS, KIND, DISP, G, MAXV,
       // Scratch is rebuilt before being read on the next tick/operation: born, heatOut,
       // trailOut, meltList, PRE, WU0/WV0, WP/WP2/WD, HS/SOL/WS, neighbor/sense scratch.
