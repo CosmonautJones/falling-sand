@@ -390,13 +390,16 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
   }
 
   function growPlant(x, y) {
+    // Plants are patient: one try in five, so a single seed greens a pond instead of paving it in two seconds.
+    if (random.ecology.int(5) !== 0) return;
     let wet = false, plants = 0, ac = 0, gc = 0;
     for (let k = 0; k < 8; k++) {
       const nx = x + DX[k], ny = y + DY[k], n = get(nx, ny);
       if (n === WATER || n === ASH) wet = true;
       if (n === PLANT) plants++;
       if (n === AIR) { AX[ac] = nx; AY[ac] = ny; ac++; }
-      if (n === AIR || n === WATER) { BX[gc] = nx; BY[gc] = ny; gc++; }
+      // Water is only claimed at the surface: a floating mat, not a pond turned solid.
+      if (n === AIR || (n === WATER && get(nx, ny - 1) === AIR)) { BX[gc] = nx; BY[gc] = ny; gc++; }
     }
     if (wet && plants >= 2 && ac > 0) {
       const roll = random.ecology.int(6);
