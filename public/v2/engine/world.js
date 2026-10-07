@@ -459,16 +459,25 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
   let goldCount = 0, goldCX = W / 2, goldCY = H / 2, visitorCount = 0;
 
   const blastHard = n => n === OBSIDIAN || n === AZOTH || n === RIFT;
+  // Chains run from an explicit work list, depth-first in the same order nested calls used,
+  // so a slab of thousands of casks cannot overflow the stack (it used to crash the worker).
   function detonate(cx, cy, r, seen) {
-    const hit = seen || new Set();
-    const origin = cy * 1024 + cx;
-    if (hit.has(origin)) return;
-    hit.add(origin);
+    const hit = seen || new Set(), work = [cx, cy, r], chain = [];
+    while (work.length) {
+      const br = work.pop(), by = work.pop(), bx = work.pop();
+      const origin = by * 1024 + bx;
+      if (hit.has(origin)) continue;
+      hit.add(origin);
+      chain.length = 0;
+      blastOnce(bx, by, br, chain);
+      for (let i = chain.length - 3; i >= 0; i -= 3) work.push(chain[i], chain[i + 1], chain[i + 2]);
+    }
+  }
+  function blastOnce(cx, cy, r, chain) {
     blastKick = Math.max(blastKick, r);
     ev({ t: 'blast', x: cx, y: cy, r });
     for (let y = Math.max(0, cy - r - 3); y <= Math.min(H - 1, cy + r + 3); y += 4) for (let x = Math.max(0, cx - r - 3); x <= Math.min(W - 1, cx + r + 3); x += 4) markDirty(x, y);
     markDirty(Math.min(W - 1, cx + r + 3), Math.min(H - 1, cy + r + 3));
-    const chain = [];
     for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
       const d2 = dx * dx + dy * dy; if (d2 > r * r) continue;
       const nx = cx + dx, ny = cy + dy; if (!inb(nx, ny)) continue;
@@ -505,7 +514,6 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
       const c = ccy * CW + ccx; WU[c] += gx * r * 0.15; WV[c] += gy * r * 0.15 - r * 0.05;
     }
     if (ship.active && Math.abs(cx - ship.x) < r + 15 && Math.abs(cy - ship.y) < r + 8) ship.crash = true;
-    for (let i = 0; i < chain.length; i += 3) detonate(chain[i], chain[i + 1], chain[i + 2], hit);
   }
 
   function igniteCell(nx, ny, n) {
