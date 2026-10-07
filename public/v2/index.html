@@ -640,6 +640,7 @@ class Component extends DCLogic {
     const ids = this.ids; for (let i = 0, j = 3; i < ids.length; i++, j += 4) ids[i] = c[j];
     if (r.kick > 0) { if (typeof navigator !== 'undefined' && navigator.vibrate && !this.still && performance.now() - (this.lastBuzz || 0) > 250) { this.lastBuzz = performance.now(); navigator.vibrate(Math.round(10 + 30 * Math.min(1, r.kick / 6))); } }
     if (r.kick > 0) { if (!this.still) this.shake = Math.min(1, this.shake + Math.min(1, r.kick / 6)); this.boom(r.kick); }
+    if (r.kick >= 4) { if (!this.still) this.punch = Math.min(1, (this.punch || 0) + r.kick / 8); }
     this.flash = Math.max(this.flash * 0.85, r.flash || 0);
     this.wipe = r.wipe ?? -1;
     if (this.wipe >= 0) for (let k = 0; k < 6; k++) this.spawn(this.wipe, Math.random() * this.M.H, (Math.random() - 0.3) * 2, (Math.random() - 0.5) * 2, 1, 0.72, 0.3, 0.6, 1.4);
@@ -678,7 +679,7 @@ class Component extends DCLogic {
     const w = note || M.PAGES[lastId].w;
     this.setState({ discovered: [...this.known], whisper: w });
     this.toast({ label: 'TRANSMUTED · ' + M.NAMES[lastId].toUpperCase(), text: w, swatch: rgb(M.COLORS[lastId]), rite: false });
-    this.chime();
+    this.fanfare();
     if (this.nudgeGoal !== undefined && list.includes(this.nudgeGoal)) this.setState({ suggest: -1 });
     const map = { [M.GLASS]: 'first-light', [M.BLOOM]: 'garden', [M.VOID]: 'nigredo', [M.RIFT]: 'door', [M.GOLD]: 'king', [M.AZOTH]: 'opus', [M.PEARL]: 'pearl' };
     for (const id of list) if (map[id]) this.unlock(map[id]);
@@ -747,6 +748,9 @@ class Component extends DCLogic {
           for (let k = 0; k < 14; k++) { const a = Math.random() * Math.PI * 2, s = 0.3 + Math.random() * 1.6; this.spawn(e.x, e.y, Math.cos(a) * s, Math.sin(a) * s - 0.8, 0.45, 1, 0.55, 0.4 + Math.random() * 0.5, 1 + Math.random()); }
           break;
         }
+        case 'tx': if (this.still) break;
+          { const c = M.COLORS[e.m] || [255, 255, 255]; for (let k = 0; k < 3; k++) this.spawn(e.x + 0.5, e.y + 0.5, (Math.random() - 0.5) * 1.2, -Math.random() * 1.1, c[0] / 255, c[1] / 255, c[2] / 255, 0.25 + Math.random() * 0.35, 0.8 + Math.random()); }
+          break;
         case 'zap': for (let k = 0; k < 6; k++) this.spawn(e.x, e.y, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2, 0.5, 1, 0.6, 0.25, 1); break;
         case 'portal': case 'void': break;
       }
@@ -850,14 +854,16 @@ class Component extends DCLogic {
   draw(now) {
     const gl = this.gl; if (!gl) return;
     const v = this.view, u = this.u, cv = this.cvRef.current;
-    const panX = this.vw ? v.panX / this.vw : 0, panY = this.vh ? v.panY / this.vh : 0;
+    // A big blast punches the camera in a few percent about the vessel's centre.
+    const k = 1 + (this.punch || 0) * 0.035, zoom = v.zoom * k;
+    const panX = 0.5 - (0.5 - (this.vw ? v.panX / this.vw : 0)) * k, panY = 0.5 - (0.5 - (this.vh ? v.panY / this.vh : 0)) * k;
     gl.disable(gl.BLEND);
     gl.useProgram(this.prog); gl.bindVertexArray(this.vaoQ);
     gl.uniform1f(u.time, this.still ? 0 : now / 1000);
     gl.uniform1f(u.wonder, this.wonder); gl.uniform1f(u.shake, this.shake);
     gl.uniform1f(u.px, cv.width / this.M.W * v.zoom);
     gl.uniform1f(u.bloom, this.props.bloom ?? 1); gl.uniform1f(u.light, this.props.lighting ?? 1);
-    gl.uniform1f(u.zoom, v.zoom); gl.uniform2f(u.pan, panX, panY);
+    gl.uniform1f(u.zoom, zoom); gl.uniform2f(u.pan, panX, panY);
     gl.uniform1f(u.flash, this.still ? 0 : this.flash);
     gl.uniform1f(u.wipe, this.wipe);
     const s = this.ship; gl.uniform4f(u.ship, s ? s.x : 0, s ? s.y : 0, s ? s.beam : 0, s ? 1 : 0);
@@ -865,7 +871,7 @@ class Component extends DCLogic {
     if (this.pn > 0 && (this.props.particles ?? true)) {
       gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
       gl.useProgram(this.pprog); gl.bindVertexArray(this.vaoP);
-      gl.uniform1f(this.pu.zoom, v.zoom); gl.uniform2f(this.pu.pan, panX, panY); gl.uniform1f(this.pu.scale, cv.width / this.M.W);
+      gl.uniform1f(this.pu.zoom, zoom); gl.uniform2f(this.pu.pan, panX, panY); gl.uniform1f(this.pu.scale, cv.width / this.M.W);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.pbuf); gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.PD, 0, this.pn * 7);
       gl.drawArrays(gl.POINTS, 0, this.pn);
       gl.bindVertexArray(null);
@@ -882,6 +888,7 @@ class Component extends DCLogic {
     this.stepParticles(dt / 1000);
     this.draw(now);
     this.shake *= 0.8; if (this.shake < 0.012) this.shake = 0;
+    this.punch = (this.punch || 0) * 0.86; if (this.punch < 0.01) this.punch = 0;
     if (this.ac && this.fireLevel > 0.15 && Math.random() < this.fireLevel * 0.35) this.crackle();
     this.frames++;
     if (now - this.lastSample >= 500) {
@@ -1023,6 +1030,7 @@ class Component extends DCLogic {
     const pour = (x, y) => {
       const s = this.state;
       if (s.pourHint) { this.setState({ pourHint: false }); try { localStorage.setItem(PKEY, '1'); } catch (e) {} }
+      this.impactSound(s.brush);
       const lc = this.lastCell;
       if (lc) this.trackFling(x - lc.x, y - lc.y); else this.flingV = { x: 0, y: 0 };
       if (lc) this.ops.push({ t: 'l', x0: lc.x, y0: lc.y, x1: x, y1: y, r: s.radius, m: s.brush, ...this.flingFields() });
@@ -1342,6 +1350,27 @@ class Component extends DCLogic {
     osc.connect(g); g.connect(this.master); osc.start(now); osc.stop(now + dur + 0.02);
     this.burst('lowpass', 400, 0.18, 0.4 + radius * 0.06);
   }
+  tone(type, f0, f1, gain, dur, delay) {
+    if (!this.ac) return;
+    const ac = this.ac, t = ac.currentTime + (delay || 0), osc = ac.createOscillator(), g = ac.createGain();
+    osc.type = type; osc.frequency.setValueAtTime(f0, t); osc.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.0005, t + dur);
+    osc.connect(g); g.connect(this.master); osc.start(t); osc.stop(t + dur + 0.02);
+  }
+  // A small, throttled sound per pour, voiced by what kind of stuff is falling.
+  impactSound(m) {
+    if (!this.ac || !this.noise) return;
+    const now = performance.now(); if (now - (this.lastImpact || 0) < 70) return; this.lastImpact = now;
+    const M = this.M, L = M.LUT, o = m * 4;
+    if (m === M.AIR) return;
+    if (m === M.FIRE || m === M.LAVA || m === M.EMBER) { this.crackle(); return; }
+    if (m === M.LEAD || m === M.GOLD || m === M.MERCURY) { this.tone('sine', 1300 + Math.random() * 500, 1250, 0.018, 0.35); return; }
+    if (L[o] > 0) { const f = 520 + Math.random() * 260; this.tone('sine', f, f * 0.45, 0.025, 0.09); return; }
+    if (L[o + 3] > 0) { this.burst('highpass', 4200, 0.012, 0.14); return; }
+    if (L[o + 1] === 255) { this.burst('bandpass', 2200 + Math.random() * 1800, 0.035, 0.035); return; }
+    this.burst('lowpass', 420, 0.05, 0.07);
+  }
+  fanfare() { [523.25, 659.25, 783.99, 1046.5].forEach((f, k) => this.tone('sine', f, f * 1.01, 0.03, 0.32, k * 0.085)); }
   chime(f0) {
     if (!this.ac) return;
     const ac = this.ac, now = ac.currentTime, osc = ac.createOscillator(), g = ac.createGain(), f = f0 || 392;

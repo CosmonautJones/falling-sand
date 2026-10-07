@@ -420,6 +420,8 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
     const kept = prev > 20 ? prev - 20 : prev;
     if (kept > heat[i]) heat[i] = kept;
     born[i] = 1;
+    // A sampled few transmutations become sparks in the UI; the sample is positional, so no hidden counter.
+    if (EV.length < 24 && ((x * 7 + y * 13 + tickIndex) & 15) === 0) ev({ t: 'tx', x, y, m: dest });
   }
 
   function growPlant(x, y) {
