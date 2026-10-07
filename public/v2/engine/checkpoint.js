@@ -147,12 +147,12 @@ function operation(op, mode) {
   const descriptor = op && Object.getOwnPropertyDescriptor(op, 't');
   if (!descriptor || !('value' in descriptor) || typeof descriptor.value !== 'string' || !Object.hasOwn(OPS, descriptor.value)) fail('unknown operation');
   const t = descriptor.value;
-  const optional = ['l', 'p', 'spray'].includes(t) ? ['vx', 'vy'] : t === 'wipe' ? ['cells'] : [];
+  const optional = ['l', 'p', 'spray'].includes(t) ? ['vx', 'vy'] : t === 'wipe' ? ['cells', 'day'] : [];
   record(op, ['t', ...OPS[t]], optional);
   const out = { t };
   for (const key of OPS[t]) {
     if (key === 'cells') out.cells = typed(op.cells, Uint8Array, SIZE, mode, true);
-    else if (key === 'mode') out.mode = choice(op.mode, ['clear', 'reset', 'load']);
+    else if (key === 'mode') out.mode = choice(op.mode, ['clear', 'reset', 'load', 'daily']);
     else if (key === 'm') out.m = integer(op.m, 0, MATERIALS - 1);
     else if (key === 'n') out.n = integer(op.n, 0, SIZE);
     else if (key === 'r') out.r = t === 'spray' ? finite(op.r, 0, WIDTH) : integer(op.r, 0, WIDTH);
@@ -166,6 +166,7 @@ function operation(op, mode) {
   if (t === 'wipe') {
     if (op.mode === 'load' && !Object.hasOwn(op, 'cells')) fail('missing wipe load payload');
     if (Object.hasOwn(op, 'cells')) out.cells = typed(op.cells, Uint8Array, SIZE, mode, true);
+    if (Object.hasOwn(op, 'day')) out.day = integer(op.day, 0, 99991231);
   }
   return out;
 }

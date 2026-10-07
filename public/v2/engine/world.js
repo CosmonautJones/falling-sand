@@ -1,4 +1,4 @@
-import { createRandomStreams } from './random.js';
+import { createRandom, createRandomStreams } from './random.js';
 import { validateWorldState, validateCommands, validateOperations, validateCheckpointSize } from './checkpoint.js';
 
 // Alembic engine v2 — port of CosmonautJones/falling-sand sim, plus per-grain velocity, liquid dispersion,
@@ -1273,6 +1273,24 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
     const sequence = commands.reduce((next, c) => c.tick === tick ? Math.max(next, c.sequence + 1) : next, 0);
     commands = [...commands, { tick, sequence, op: { t: 'spark', x, y } }].sort((a, b) => a.tick - b.tick || a.sequence - b.sequence);
   }
+  // The daily vessel: the usual vessel plus three small gifts on stone shelves, chosen by the date alone.
+  function dailyGifts(day) {
+    const r = createRandom((day ^ 0x5eed1e55) >>> 0);
+    const gifts = [
+      (x, y) => { fill(x, y - 3, x + 11, y - 1, ICE); fill(x, y - 5, x + 11, y - 4, CLOUD); },
+      (x, y) => { fill(x, y - 3, x + 11, y - 1, WOOD); fill(x + 1, y - 4, x + 10, y - 4, MUD); },
+      (x, y) => { fill(x, y - 1, x + 11, y - 1, BLOOM); fill(x + 4, y - 3, x + 7, y - 2, AETHER); },
+      (x, y) => { fill(x, y - 6, x, y - 1, GLASS); fill(x + 11, y - 6, x + 11, y - 1, GLASS); fill(x + 1, y - 5, x + 10, y - 1, BRINE); fill(x + 3, y - 1, x + 8, y - 1, MOSS); },
+      (x, y) => { fill(x, y - 5, x, y - 1, GLASS); fill(x + 11, y - 5, x + 11, y - 1, GLASS); fill(x + 1, y - 2, x + 10, y - 1, LAVA); fill(x + 2, y - 4, x + 9, y - 3, SALT); },
+    ];
+    const picks = [0, 1, 2, 3, 4];
+    for (let i = picks.length - 1; i > 0; i--) { const j = r.int(i + 1); [picks[i], picks[j]] = [picks[j], picks[i]]; }
+    for (let k = 0; k < 3; k++) {
+      const x = 60 + k * 130 + r.int(40), y = 70 + r.int(50);
+      fill(x - 2, y, x + 13, y + 1, STONE);
+      gifts[picks[k]](x, y);
+    }
+  }
   function rainFromCeiling(m, count) {
     const span = Math.max(1, W - 2);
     for (let i = 0; i < count; i++) setc(1 + (i % span), 1, m, grain(m));
@@ -1414,7 +1432,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
       case 'reset': clearGrid(); seedVessel(false); break;
       case 'wipe': {
         const sc = cells.slice(), ss = shades.slice(), sh = heat.slice();
-        dropSparks(); clearGrid(); if (op.mode === 'reset') seedVessel(); else if (op.cells) { cells.set(op.cells); for (let i = 0; i < N; i++) shades[i] = grain(cells[i]); }
+        dropSparks(); clearGrid(); if (op.mode === 'reset') seedVessel(); else if (op.mode === 'daily') { seedVessel(); dailyGifts(op.day ?? 0); } else if (op.cells) { cells.set(op.cells); for (let i = 0; i < N; i++) shades[i] = grain(cells[i]); }
         wipeC = cells.slice(); wipeS = shades.slice();
         cells.set(sc); shades.set(ss); heat.set(sh); wipe = 0;
         if (op.mode !== 'clear' && ship.active) { ship.active = false; shipCd = 600; }
