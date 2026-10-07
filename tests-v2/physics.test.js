@@ -1,6 +1,6 @@
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { E, _sim, W, H, reset, run, positions, count, meanY, box, spread } from './helpers.js';
+import { E, _sim, W, H, reset, createEngine, run, positions, count, meanY, box, spread } from './helpers.js';
 
 const { SAND, WATER, OIL, STONE, LAVA, ASH, MUD, SALT, MERCURY, AIR } = E;
 const FLOOR_Y = H - 4;
@@ -119,7 +119,7 @@ test('oil and water separate and then sit still without flicker', () => {
 function buffers() { return [new Uint8Array(W * H * 4), new Uint8Array(W * H * 4), new Uint8Array(W * H * 4)]; }
 function paintAndRun(extra, steps = 40) {
   reset();
-  const eng = E.createEngine();
+  const eng = createEngine();
   _sim.clear(); _sim.seed(1);
   const [c, e, f] = buffers();
   eng.tick({ ops: [{ t: 'p', x: 100, y: 60, r: 3, m: SAND, ...extra }], dt: 16.7, speed: 1 }, c, e, f);
@@ -134,7 +134,7 @@ test('paint ops carry optional vx/vy into the painted grains', () => {
   assert.equal(fling.n, control.n);
   assert.ok(fling.mx > control.mx + 3, `flung ${fling.mx} vs control ${control.mx}`);
   const l = (extra) => {
-    reset(); const eng = E.createEngine(); _sim.clear(); _sim.seed(1);
+    reset(); const eng = createEngine(); _sim.clear(); _sim.seed(1);
     const [c, e, f] = buffers();
     eng.tick({ ops: [{ t: 'l', x0: 100, y0: 60, x1: 104, y1: 60, r: 2, m: SAND, ...extra }], dt: 16.7, speed: 1 }, c, e, f);
     for (let i = 0; i < 30; i++) _sim.step();
@@ -191,7 +191,7 @@ test('nitro under water rises above it', () => {
 
 function tickOp(op, keep) {
   const saved = keep ? Uint8Array.from(_sim.cells) : null;
-  const eng = E.createEngine();
+  const eng = createEngine();
   _sim.clear(); _sim.seed(1);
   if (saved) for (let i = 0; i < saved.length; i++) if (saved[i]) _sim.setc(i % W, (i / W) | 0, saved[i], 0);
   const [c, e, f] = buffers();

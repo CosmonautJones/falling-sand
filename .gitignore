@@ -12,3 +12,5 @@ qa-shots/
 # Local agent / worktree metadata
 .claude/
 
+
+.worktrees/

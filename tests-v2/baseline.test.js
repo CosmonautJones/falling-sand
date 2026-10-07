@@ -1,6 +1,6 @@
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { E, _sim, W, H, reset, run, positions, count, meanY, box, spread } from './helpers.js';
+import { E, _sim, W, H, reset, createEngine, run, positions, count, meanY, box, spread } from './helpers.js';
 
 const { SAND, WATER, OIL, STONE, LAVA, OBSIDIAN, SEED, PLANT, TNT, AIR } = E;
 const FLOOR_Y = H - 4; // first floor row
@@ -107,7 +107,7 @@ test('tnt blast clears cells inside r and throws nearby sand', () => {
 });
 
 test('createEngine().tick accepts a paint op without vx/vy', () => {
-  const eng = E.createEngine();
+  const eng = createEngine();
   _sim.clear();
   _sim.seed(1);
   const color = new Uint8Array(W * H * 4), emis = new Uint8Array(W * H * 4), fx = new Uint8Array(W * H * 4);

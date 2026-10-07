@@ -39,6 +39,56 @@ npm test
 npm run typecheck
 ```
 
+## Living Ground foundation (v2)
+
+The v2 world owns its arrays, random streams and committed simulation ticks.
+Rendering and worker polling do not advance weather or ambient ember rain.
+New flask saves and exported JSON checkpoints preserve the complete world,
+including velocities, heat, wind, weather, visitors, random streams and queued
+commands. Exact continuation is scoped to the same engine version and runtime.
+Older flask saves and existing share URLs remain readable as **scene stamps**:
+they carry material cells only. World dimensions (480×270) and material IDs are
+unchanged. This foundation does not add the later water, soil or ecology solvers.
+
+Run the release checks and deterministic host benchmark:
+
+```bash
+npm test
+npm run test:v2
+npm run build
+npm run lint
+npm run bench:v2
+npm run bench:v2 -- --scene storm --seed 73
+```
+
+The benchmark emits one JSON report with four fresh fixtures by default:
+
+| Scene | Workload |
+| --- | --- |
+| `settled` | Supported, flat sand bed |
+| `falling` | Suspended sand blocks and 24 tick-scheduled pours |
+| `wet` | Contained water/oil pool with mud and seeds |
+| `storm` | Wet pool under active weather |
+
+Each fixture starts at tick zero and runs 120 warmup ticks, then 600 measured
+ticks. `--scene` accepts one scene or `all`; `--seed` accepts a decimal or
+hexadecimal unsigned 32-bit integer. JSON includes Node/V8/platform/architecture,
+seed, scene, warmup and measurement counts, final tick count, nearest-rank
+p50/p95/p99 step times in milliseconds, and a SHA-256 hash of every authoritative
+captured field, including typed-array bytes, queues and random states. Fixture
+version 1 has a finite command budget; measured step time includes any queued
+edits and world events. Setup, rendering, worker transport, checkpoint encoding,
+storage and hashing are outside that timing interval. Invoke
+`node scripts/bench-v2.mjs` directly when stdout must contain JSON alone; npm
+prints its own command preamble.
+
+Timings are informational host measurements with no pass/fail performance
+threshold. Browser and phone acceptance, worker/local fallback, controls and
+rotation, import/export and quota recovery, and phone serialization latency
+remain pending. Node timings do not establish a phone frame budget or a device
+baseline. Later solver stages still require their own conservation and
+real-device performance gates.
+
 The vessel draws at 480×270 grains. Chrome nearest-neighbour upscales that buffer — it should not shade a 4K framebuffer for a pixel grid. In Chrome: ⋮ → **Cast, save, and share** → **Install page as app**, or **More tools** → **Create shortcut** → Open as window. That is the standalone window; no Electron.
 
 The vessel boots charged: dunes that crawl if you wait, a trough with a silver
