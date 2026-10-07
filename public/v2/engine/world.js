@@ -108,6 +108,7 @@ const CS = 8, CW = 60, CH = 34, CNN = CW * CH;
 const G = 0.16, MAXV = 7;
 const GOLD_CARRY = 90, MUD_CARRY = -40;
 const FLAMMABLE = new Uint8Array(64); for (const m of [PLANT, WOOD, OIL, SEED, BLOOM, POWDER]) FLAMMABLE[m] = 1;
+const BOIL = 100, IGNITE = 62;
 // Restless materials keep their 8x8 chunk awake even when nothing moved: they act on their own
 // (fire, critters, growth, decay, random drips) or ride the draft (gases, light powders).
 const ALIVE = new Uint8Array(64);
@@ -457,6 +458,12 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
       }
       if (n === WATER || n === BRINE) { transmute(nx, ny, STEAM); VY[ni] = -2 - rf() * 2; VX[ni] = dx * 0.3; }
       else if (d2 <= 2) transmute(nx, ny, FIRE);
+      else if (d2 >= (r - 1.5) * (r - 1.5) && (n === STONE || n === BRICK || n === WOOD)) {
+        // Debris: the rim of a wall breaks and flies instead of vanishing.
+        transmute(nx, ny, n === WOOD ? EMBER : SAND);
+        const d = Math.sqrt(d2), sp = 2 + rf() * 3;
+        VX[ni] = dx / d * sp; VY[ni] = dy / d * sp - 1.5;
+      }
       else transmute(nx, ny, AIR);
     }
     // shockwave rim: loose powder just outside the blast is thrown outward too
@@ -1022,7 +1029,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
           if (ALIVE[m] || KIND[m] === K_GAS) lv = 1;
           if (m !== AIR && KIND[m] !== K_GAS && m !== FIRE && m !== PLASMA) sol++;
           if (m !== m0 || v !== AMBIENT[m]) quiet = 0;
-          if (m === ICE && v >= 72 && !born[i]) meltList[melts++] = i;
+          if (!born[i] && ((m === ICE && v >= 72) || (m === WATER && v >= BOIL) || (FLAMMABLE[m] && v >= IGNITE))) meltList[melts++] = i;
         }
       }
       HS[c] = qHS[c] = hs; SOL[c] = qSOL[c] = sol; live[c] = qLive[c] = lv; tQuiet[c] = quiet;
@@ -1032,7 +1039,13 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
       const y0 = (c / CW | 0) << 3, x0 = (c % CW) << 3, y1 = Math.min(H, y0 + 8);
       for (let y = y0; y < y1; y++) { const i = y * W + x0; heat.set(heatOut.subarray(i, i + 8), i); }
     }
-    for (let k = 0; k < melts; k++) { const i = meltList[k]; if (cells[i] === ICE && !born[i]) transmute(i % W, (i / W) | 0, WATER); }
+    // Heat acts on its own: ice melts, hot water boils, and radiant heat lights fuel.
+    for (let k = 0; k < melts; k++) {
+      const i = meltList[k], m = cells[i]; if (born[i]) continue;
+      if (m === ICE) transmute(i % W, (i / W) | 0, WATER);
+      else if (m === WATER) transmute(i % W, (i / W) | 0, STEAM);
+      else if (FLAMMABLE[m]) transmute(i % W, (i / W) | 0, FIRE);
+    }
   }
   function stigmergy() {
     let mites = 0;
@@ -1070,6 +1083,34 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
     else if (k === K_LIQUID) moveLiquid(x, y);
     else if (k === K_GAS) tryGas(x, y, dir);
   }
+  // Communicating vessels: in each connected liquid body, a resting top cell moves to the lowest
+  // open surface spot when the two differ by two rows or more. Flat pools never churn.
+  const seenAt = new Int32Array(N), bq = new Int32Array(N); let levelPass = 0;
+  function levelLiquids() {
+    levelPass++;
+    for (let i0 = 0; i0 < N; i0++) {
+      const m = cells[i0];
+      if (KIND[m] !== K_LIQUID || m === LAVA || seenAt[i0] === levelPass) continue;
+      let head = 0, tail = 0, topY = H, topI = -1, lowY = -1, lowI = -1;
+      bq[tail++] = i0; seenAt[i0] = levelPass;
+      while (head < tail) {
+        const j = bq[head++], x = j % W, y = (j / W) | 0;
+        const above = y > 0 ? cells[j - W] : STONE;
+        if (above === AIR || KIND[above] === K_GAS) {
+          if (y < topY && VY[j] < 0.5 && VY[j] > -0.5) { topY = y; topI = j; }
+          if (y - 1 > lowY) { lowY = y - 1; lowI = j - W; }
+        }
+        if (x > 0 && cells[j - 1] === m && seenAt[j - 1] !== levelPass) { seenAt[j - 1] = levelPass; bq[tail++] = j - 1; }
+        if (x < W - 1 && cells[j + 1] === m && seenAt[j + 1] !== levelPass) { seenAt[j + 1] = levelPass; bq[tail++] = j + 1; }
+        if (y > 0 && cells[j - W] === m && seenAt[j - W] !== levelPass) { seenAt[j - W] = levelPass; bq[tail++] = j - W; }
+        if (y < H - 1 && cells[j + W] === m && seenAt[j + W] !== levelPass) { seenAt[j + W] = levelPass; bq[tail++] = j + W; }
+      }
+      if (topI < 0 || lowI < 0 || lowY - topY < 1 || cells[lowI] !== AIR) continue;
+      const s = shades[topI], h = heat[topI];
+      setc(topI % W, topY, AIR, 0);
+      setc(lowI % W, lowY, m, s); heat[lowI] = h;
+    }
+  }
   function simulate() {
     const dir = scanDir; scanDir = -scanDir;
     born.fill(0);
@@ -1091,6 +1132,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
       else { for (let cx = CW - 1; cx >= 0; cx--) if (awake[row + cx]) for (let x = (cx << 3) + 7, e = cx << 3; x >= e; x--) processCell(x, y, dir); }
     }
     stigmergy();
+    if (dir === 1) levelLiquids();
     stormStep();
     shipStep();
   }
