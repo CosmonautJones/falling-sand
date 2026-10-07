@@ -25,7 +25,10 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
 .sw{display:inline-block;flex:0 0 auto;border:1px solid #5a4630;box-shadow:inset 0 -5px 6px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.28)}.dot{display:block;border-radius:50%;background:#e8c97a}
 .sheet-backdrop{position:fixed;inset:0;z-index:24;background:rgba(6,4,3,.55)}
 .sheet{position:fixed;z-index:25;left:0;right:0;bottom:0;max-height:72dvh;flex-direction:column;background:#16110d;border-top:1px solid rgba(196,154,74,.55);border-radius:18px 18px 0 0;box-shadow:0 -18px 40px rgba(0,0,0,.6);padding-bottom:env(safe-area-inset-bottom);animation:sheet-up .22s ease-out}
-@keyframes sheet-up{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}@media(prefers-reduced-motion:reduce){.sheet{animation:none}}
+@keyframes sheet-up{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+.pour-hint{position:absolute;left:50%;top:56%;transform:translate(-50%,-50%);z-index:3;padding:8px 16px;border-radius:999px;background:rgba(20,16,12,.78);border:1px solid rgba(232,201,122,.45);color:#f0e2c4;font-size:14px;font-style:italic;letter-spacing:.03em;white-space:nowrap;pointer-events:none;animation:hint-breathe 2.4s ease-in-out infinite}
+@keyframes hint-breathe{50%{opacity:.55}}[data-suggest="true"]{animation:suggest 1.6s ease-in-out infinite}@keyframes suggest{50%{border-color:#e8c97a;box-shadow:0 0 0 2px rgba(232,201,122,.35),0 0 18px rgba(232,201,122,.35)}}
+@media(prefers-reduced-motion:reduce){[data-suggest="true"]{animation:none;border-color:#e8c97a}.sheet,.pour-hint{animation:none}}
 .sheet-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 6px;font-size:13px;letter-spacing:.24em;color:#c49a4a;text-transform:uppercase}.sheet-x{width:44px;height:44px;background:transparent;border:none;color:#cbb89a;font-size:18px;cursor:pointer}
 .sheet-body{overflow:auto;padding:0 16px 16px;display:flex;flex-direction:column;gap:8px}.sheet-label{margin-top:8px;font-size:12px;letter-spacing:.14em;color:#8f7d62;text-transform:uppercase}
 .tile-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}.tile{display:flex;align-items:center;gap:9px;height:48px;padding:0 10px;background:#1c1612;color:#f0e2c4;border:1px solid #3a3128;border-radius:12px;font-size:15px;cursor:pointer;text-align:left}.tile .sw{width:20px;height:20px;border-radius:6px}
@@ -73,6 +76,10 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
 
       <sc-if value="{{ paused }}" hint-placeholder-val="{{ false }}">
         <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(10,8,7,.4); color:#c49a4a; letter-spacing:.3em; font-size:13px; pointer-events:none;">THE VESSEL HOLDS</div>
+      </sc-if>
+
+      <sc-if value="{{ pourHint }}" hint-placeholder-val="{{ false }}">
+        <div data-pour-hint class="pour-hint">{{ pourHintText }}</div>
       </sc-if>
 
       <div class="toast" style="position:absolute; top:14px; left:50%; transform:translateX(-50%) translateY({{ toastY }}px); opacity:{{ toastOpacity }}; transition:opacity .45s ease, transform .45s ease; pointer-events:none; display:flex; align-items:center; gap:12px; padding:9px 16px 9px 10px; background:rgba(20,16,12,.9); border:1px solid {{ toastBorder }}; box-shadow:inset 0 1px 0 rgba(232,201,122,.3), 0 12px 30px rgba(0,0,0,.5); backdrop-filter:blur(4px); max-width:90%; z-index:5;">
@@ -183,7 +190,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
   <nav class="phone-bar" aria-label="Vessel controls">
     <div class="phone-hud" data-phone-hud ref="{{ phoneHudRef }}"></div>
     <div class="phone-row">
-      <button data-phone="element" class="pb pb-el" aria-haspopup="dialog" aria-expanded="{{ elementsOpen }}" aria-label="{{ elementAria }}" onClick="{{ openElements }}">
+      <button data-phone="element" class="pb pb-el" data-suggest="{{ suggesting }}" aria-haspopup="dialog" aria-expanded="{{ elementsOpen }}" aria-label="{{ elementAria }}" onClick="{{ openElements }}">
         <span class="sw" style="background:{{ brushSwatch }};"></span>
         <span class="pb-txt"><span class="pb-name">{{ brushName }}</span><span class="pb-sub">{{ toolHint }}</span></span>
         <span class="caret" aria-hidden="true">▾</span>
@@ -355,7 +362,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;quality&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;full&quot;,&quot;grain&quot;],&quot;default&quot;:&quot;full&quot;,&quot;tsType&quot;:&quot;'full' | 'grain'&quot;,&quot;section&quot;:&quot;Render&quot;},&quot;lighting&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:0,&quot;max&quot;:2,&quot;step&quot;:0.05,&quot;default&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Render&quot;},&quot;bloom&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:0,&quot;max&quot;:2,&quot;step&quot;:0.05,&quot;default&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Render&quot;},&quot;particles&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Render&quot;},&quot;hud&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Render&quot;}}">
-const DKEY = 'alembic-discovered-v2', RKEY = 'alembic-rites-v2', FKEY = 'alembic-flasks-v2', SKEY = 'alembic-sound-v2', TKEY = 'alembic-tempest-v2';
+const DKEY = 'alembic-discovered-v2', RKEY = 'alembic-rites-v2', FKEY = 'alembic-flasks-v2', SKEY = 'alembic-sound-v2', TKEY = 'alembic-tempest-v2', PKEY = 'alembic-poured-v2';
 const VERT = `#version 300 es
 out vec2 vUv;
 void main(){ vec2 p = vec2(float((gl_VertexID << 1) & 2), float(gl_VertexID & 2)); vUv = p; gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0); }`;
@@ -535,11 +542,12 @@ class Component extends DCLogic {
     this.known = new Set(); this.lastFind = ''; this.counts = null; this.windE = 0; this.storming = false;
     this.kills = 0; this.toastQ = []; this.pending = [];
     this.checkpointJobs = new Map(); this.checkpointRequests = []; this.checkpointId = 0;
-    let rites = [], flasks = [null, null, null], sound = true, tempest = false;
-    try { rites = JSON.parse(localStorage.getItem(RKEY) || '[]'); sound = localStorage.getItem(SKEY) !== '0'; tempest = localStorage.getItem(TKEY) === '1'; } catch (e) {}
+    let rites = [], flasks = [null, null, null], sound = true, tempest = false, poured = false;
+    try { rites = JSON.parse(localStorage.getItem(RKEY) || '[]'); sound = localStorage.getItem(SKEY) !== '0'; tempest = localStorage.getItem(TKEY) === '1'; poured = localStorage.getItem(PKEY) === '1'; } catch (e) {}
+    this.coarse = typeof matchMedia === 'function' && matchMedia('(pointer:coarse)').matches;
     this.unlocked = new Set(rites);
     this.P = new Float32Array(PMAX * 10); this.PD = new Float32Array(PMAX * 7); this.pn = 0;
-    this.state = { ready: false, discovered: [], brush: 1, radius: 6, tool: 'pour', paused: false, speed: 1, folio: false, tab: 'codex', sheet: '',
+    this.state = { ready: false, discovered: [], brush: 1, radius: 6, tool: 'pour', paused: false, speed: 1, folio: false, tab: 'codex', sheet: '', suggest: -1, pourHint: !poured,
       curtainMounted: !this.still, curtainOpacity: 1, whisper: '', toast: null, toastOn: false, probe: { on: false }, opus: false,
       rites: [...this.unlocked], flasks, sound, tempest, recording: false, shareLabel: 'copy scene stamp link', flaskBusy: false, flaskStatus: '', checkpointDownload: '' };
     this.frame = this.frame.bind(this);
@@ -563,7 +571,9 @@ class Component extends DCLogic {
     this.initEngine();
     this.screen = await import(new URL('./mobile-screen.js', document.baseURI).href);
     this.touchMod = await import(new URL('./touch-gesture.js', document.baseURI).href);
+    this.opening = await import(new URL('./opening.js', document.baseURI).href);
     if (!this.alive) return;
+    this.nudgeT = setTimeout(() => this.nudge(), 25000);
     this.bindInput();
     const onFullscreen = () => { if (!document.fullscreenElement) this.rootRef.current?.removeAttribute('data-immersive'); };
     document.addEventListener('fullscreenchange', onFullscreen);
@@ -581,7 +591,7 @@ class Component extends DCLogic {
     (this.unbind || []).forEach(f => f());
     for (const job of this.checkpointJobs.values()) clearTimeout(job.timer);
     this.checkpointJobs.clear();
-    clearTimeout(this.curtainT); clearTimeout(this.toastT); clearTimeout(this.watch); clearTimeout(this.miniHideT);
+    clearTimeout(this.curtainT); clearTimeout(this.toastT); clearTimeout(this.watch); clearTimeout(this.miniHideT); clearTimeout(this.nudgeT);
     if (this.ac) try { this.ac.close(); } catch (e) {}
   }
   componentDidUpdate(prev) {
@@ -646,10 +656,18 @@ class Component extends DCLogic {
   onSeen(seen) {
     const M = this.M, set = new Set(seen), fresh = [];
     for (const id of M.TRANSMUTED) if (set.has(id) && !this.known.has(id)) fresh.push(id);
-    if (fresh.length) this.revealMany(fresh);
+    // The seeded vessel's own contents are stained quietly; only what the vessel makes is announced.
+    if (!this.seenOnce) { this.seenOnce = true; this.stainQuietly(fresh); }
+    else if (fresh.length) this.revealMany(fresh);
     const opus = set.has(M.AZOTH);
     this.wonder = opus ? 1 : 0;
     if (opus !== this.state.opus) this.setState({ opus });
+  }
+  stainQuietly(list) {
+    if (!list.length) return;
+    for (const id of list) this.known.add(id);
+    try { localStorage.setItem(DKEY, JSON.stringify([...this.known])); } catch (e) {}
+    this.setState({ discovered: [...this.known] });
   }
   revealMany(list, note) {
     const M = this.M; let lastId = -1;
@@ -661,6 +679,7 @@ class Component extends DCLogic {
     this.setState({ discovered: [...this.known], whisper: w });
     this.toast({ label: 'TRANSMUTED · ' + M.NAMES[lastId].toUpperCase(), text: w, swatch: rgb(M.COLORS[lastId]), rite: false });
     this.chime();
+    if (this.nudgeGoal !== undefined && list.includes(this.nudgeGoal)) this.setState({ suggest: -1 });
     const map = { [M.GLASS]: 'first-light', [M.BLOOM]: 'garden', [M.VOID]: 'nigredo', [M.RIFT]: 'door', [M.GOLD]: 'king', [M.AZOTH]: 'opus', [M.PEARL]: 'pearl' };
     for (const id of list) if (map[id]) this.unlock(map[id]);
     if (this.known.size >= 20) this.unlock('alchemist');
@@ -673,6 +692,16 @@ class Component extends DCLogic {
     const r = RITES.find(x => x[0] === key);
     this.setState({ rites: [...this.unlocked] });
     if (r) { this.toast({ label: 'RITE · ' + r[1].toUpperCase(), text: r[2], swatch: '#e8c97a', rite: true }); this.chime(784); }
+  }
+  // One suggestion per session, after the opening blast settles (or 25 s of calm).
+  queueNudge(ms) { if (this.nudged) return; clearTimeout(this.nudgeT); this.nudgeT = setTimeout(() => this.nudge(), ms); }
+  nudge() { if (this.nudged) return;
+    this.nudged = true; clearTimeout(this.nudgeT);
+    const n = this.opening && this.M && this.opening.pickNudge(this.known, this.M);
+    if (!n) return;
+    this.nudgeGoal = n.goal;
+    this.setState({ suggest: n.brush, whisper: n.text });
+    this.toast({ label: 'TRY', text: n.text, swatch: rgb(this.M.COLORS[n.brush]), rite: false });
   }
   toast(t) {
     this.toastQ.push(t);
@@ -690,7 +719,7 @@ class Component extends DCLogic {
     const M = this.M; let blasts = 0;
     for (const e of evs) {
       switch (e.t) {
-        case 'blast': {
+        case 'blast': { this.queueNudge(2600);
           blasts++; this.unlock('sneeze'); if (e.r >= 6) this.unlock('chain');
           const n = Math.min(260, e.r * 34);
           for (let k = 0; k < n; k++) { const a = Math.random() * Math.PI * 2, s = 0.6 + Math.random() * e.r * 0.9; const hot = Math.random(); this.spawn(e.x, e.y, Math.cos(a) * s, Math.sin(a) * s - 1, 1, 0.55 + hot * 0.4, 0.15 + hot * 0.3, 0.5 + Math.random() * 1.1, 1 + Math.random() * 2.2); }
@@ -993,6 +1022,7 @@ class Component extends DCLogic {
     const rel = e => { try { vp.releasePointerCapture(e.pointerId); } catch (_) {} };
     const pour = (x, y) => {
       const s = this.state;
+      if (s.pourHint) { this.setState({ pourHint: false }); try { localStorage.setItem(PKEY, '1'); } catch (e) {} }
       const lc = this.lastCell;
       if (lc) this.trackFling(x - lc.x, y - lc.y); else this.flingV = { x: 0, y: 0 };
       if (lc) this.ops.push({ t: 'l', x0: lc.x, y0: lc.y, x1: x, y1: y, r: s.radius, m: s.brush, ...this.flingFields() });
@@ -1343,6 +1373,8 @@ class Component extends DCLogic {
       brushDot: [6, 9, 13, 18, 24][Math.max(0, [1, 3, 6, 12, 22].indexOf(s.radius))],
       toolHint: `${s.tool} · size ${s.radius}`, brushName: '', brushSwatch: 'transparent', elementAria: 'Choose an element',
       starterTiles: [], foundTiles: [], foundLabel: '', blankNote: '',
+      pourHint: s.pourHint && !s.curtainMounted, pourHintText: '',
+      suggesting: s.suggest >= 0 && s.brush !== s.suggest ? 'true' : 'false',
       showHud: this.props.hud ?? true,
       paused: s.paused, folio: s.folio, probe: s.probe, recording: s.recording,
       curtainMounted: s.curtainMounted, curtainOpacity: s.curtainOpacity, liftCurtain: () => this.liftCurtain(),
@@ -1385,16 +1417,17 @@ class Component extends DCLogic {
       const on = s.brush === id, ki = M.STARTER.indexOf(id);
       return {
         name: M.NAMES[id], title: M.PAGES[id].w, swatch: rgb(M.COLORS[id]),
-        bg: on ? '#2a2119' : '#1c1612', border: on ? '#cbb89a' : '#3a3128',
+        bg: on ? '#2a2119' : '#1c1612', border: on ? '#cbb89a' : id === s.suggest ? '#e8c97a' : '#3a3128',
         shadow: on ? 'inset 0 0 0 1px #cbb89a, 0 0 12px rgba(196,154,74,.25)' : 'none',
         hasKey: ki >= 0 && ki < 10, key: ki === 9 ? '0' : String(ki + 1),
         onClick: this.hnd('b' + id, () => this.setState({ brush: id })),
       };
     });
     const tile = id => {
-      const on = s.brush === id;
-      return { name: M.NAMES[id], swatch: rgb(M.COLORS[id]), on: on ? 'true' : 'false', bg: on ? '#2a2119' : '#1c1612', border: on ? '#c49a4a' : '#3a3128', onClick: this.hnd('pk' + id, () => this.pickElement(id)) };
+      const on = s.brush === id, tip = id === s.suggest && !on;
+      return { name: tip ? M.NAMES[id] + ' ✦' : M.NAMES[id], swatch: rgb(M.COLORS[id]), on: on ? 'true' : 'false', bg: on ? '#2a2119' : '#1c1612', border: on ? '#c49a4a' : tip ? '#e8c97a' : '#3a3128', onClick: this.hnd('pk' + id, () => this.pickElement(id)) };
     };
+    base.pourHintText = `${this.coarse ? 'Drag a finger' : 'Click and drag'} to pour ${M.NAMES[s.brush]}`;
     const found = M.TRANSMUTED.filter(id => this.known.has(id)), blank = M.TRANSMUTED.length - found.length;
     base.starterTiles = M.STARTER.map(tile);
     base.foundTiles = found.map(tile);
