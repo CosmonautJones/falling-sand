@@ -41,4 +41,6 @@ test('Alchemist counts transmuted pages, not the starting reagents', () => {
 test('phones get a slim, quicker toast', () => {
   assert.match(html, /\.toast-text\{[^}]*white-space:nowrap/);
   assert.match(html, /this\.phone \? 1600 : 2200/);
+  assert.match(html, /\.toast-label\{[^}]*white-space:nowrap/);
+  assert.match(html, /@media\(orientation:portrait\) and \(max-width:700px\)\{\.toast-text\{display:none\}\}/, 'portrait header already shows the whisper');
 });
