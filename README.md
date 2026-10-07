@@ -24,8 +24,8 @@ upscale — heat haze, water caustics, gold spark, blast shake, Magnum Opus auro
 - Per-material feel: powders, liquids and gases each move and settle differently.
 - Storms and visitors that stir the vessel on their own.
 - Simulation runs in a worker, with touch pour and two-finger pinch/pan.
-- Phone controls stay compact: swipe materials, pause, cycle brush size, or open
-  **More** for tools, speed, saves, sound, and reset.
+- Phone controls stay compact: choose an element, pause, cycle brush size, or
+  open **Options** for tools, speed, saves, sound, and reset.
 - Rotate for a wider vessel. **Fullscreen** expands the canvas with an overlay
   toolbar; browsers without native fullscreen use the same immersive layout.
   Tap **exit screen** to return. The world and discoveries survive rotation.
@@ -62,6 +62,11 @@ npm run bench:v2 -- --scene storm --seed 73
 ```
 
 The benchmark emits one JSON report with four fresh fixtures by default:
+
+The [v2 optimization report](docs/performance/v2-optimization-2026-10-06.md)
+describes idle chunk updates, unchanged-save verification and interleaved A/B
+measurements. Use `node scripts/verify-ab-v2.mjs <baselineRoot> .` to compare
+exact simulation state before interpreting performance gains.
 
 | Scene | Workload |
 | --- | --- |

@@ -1,0 +1,161 @@
+{
+  "equivalent": true,
+  "results": [
+    {
+      "scene": "settled",
+      "seed": 1,
+      "ticks": 720,
+      "hash": "4cb3c0553ecd3b8af07fa34b1657f30aa8d790f60f92e58c4f267bd5a27e8dcf",
+      "activity": {
+        "cellVisits": 0,
+        "thermalCells": 0
+      }
+    },
+    {
+      "scene": "falling",
+      "seed": 1,
+      "ticks": 720,
+      "hash": "3b8f9eeef268644947d7c8894ba5bc70d646223f68d9802b0aaaffbde24a1ce3",
+      "activity": {
+        "cellVisits": 36480,
+        "thermalCells": 0
+      }
+    },
+    {
+      "scene": "wet",
+      "seed": 1,
+      "ticks": 720,
+      "hash": "d7cd2bac0355931f0a07c9d8487517b7317bf8071be66dc8007c82906041aeec",
+      "activity": {
+        "cellVisits": 44064,
+        "thermalCells": 17280
+      }
+    },
+    {
+      "scene": "storm",
+      "seed": 1,
+      "ticks": 720,
+      "hash": "b2684c58b1e8ddc816db81c44a4424248becf65d420b725470ace6be7e35be8f",
+      "activity": {
+        "cellVisits": 129600,
+        "thermalCells": 129600
+      }
+    },
+    {
+      "scene": "vessel",
+      "seed": 1,
+      "ticks": 720,
+      "hash": "9caf44c32ba6fa13ec00a375df54aabe9eb9d1e80b4bba5caa8fbb34c7e862f6",
+      "activity": {
+        "cellVisits": 129600,
+        "thermalCells": 129600
+      }
+    },
+    {
+      "scene": "settled",
+      "seed": 73,
+      "ticks": 720,
+      "hash": "d698c359aae973919804c2180f77d38489c01af5eda8c4d1572128c26303bcea",
+      "activity": {
+        "cellVisits": 0,
+        "thermalCells": 0
+      }
+    },
+    {
+      "scene": "falling",
+      "seed": 73,
+      "ticks": 720,
+      "hash": "b772aaab7da426cd975534aac3204d21c47410664b9b36923ffa89b040aab16d",
+      "activity": {
+        "cellVisits": 43648,
+        "thermalCells": 0
+      }
+    },
+    {
+      "scene": "wet",
+      "seed": 73,
+      "ticks": 720,
+      "hash": "8ea9d5005c1421ffb7a088ef6b70a35e4ddfad90eb3fd7e92506ab80517ef9b7",
+      "activity": {
+        "cellVisits": 44064,
+        "thermalCells": 17280
+      }
+    },
+    {
+      "scene": "storm",
+      "seed": 73,
+      "ticks": 720,
+      "hash": "24e2d6c2eba0c120438c1477334430f8bc9f4f4446c3762839732cc8bd932fed",
+      "activity": {
+        "cellVisits": 129600,
+        "thermalCells": 129600
+      }
+    },
+    {
+      "scene": "vessel",
+      "seed": 73,
+      "ticks": 720,
+      "hash": "4df503f5a0f85861c12f3f4f2c1eb8e5e1854ca61924f1e8f95bba41bad26ad1",
+      "activity": {
+        "cellVisits": 129600,
+        "thermalCells": 129600
+      }
+    },
+    {
+      "scene": "settled",
+      "seed": 2738958700,
+      "ticks": 720,
+      "hash": "9de258193ea3dac37e06db055dc346d49b66a30581e99367315885562afc0597",
+      "activity": {
+        "cellVisits": 0,
+        "thermalCells": 0
+      }
+    },
+    {
+      "scene": "falling",
+      "seed": 2738958700,
+      "ticks": 720,
+      "hash": "b05b14b9e70c1da49950c8cb1673ed91b4bf66b81f862a53b19d9667626eada9",
+      "activity": {
+        "cellVisits": 33880,
+        "thermalCells": 0
+      }
+    },
+    {
+      "scene": "wet",
+      "seed": 2738958700,
+      "ticks": 720,
+      "hash": "dddc5e09d3484effe3fddf9b544a761b1a20d408ff187ba296a5c3ae4199004d",
+      "activity": {
+        "cellVisits": 44064,
+        "thermalCells": 17280
+      }
+    },
+    {
+      "scene": "storm",
+      "seed": 2738958700,
+      "ticks": 720,
+      "hash": "f39d25101d4ac36152dec7529c5cf7fe484b95c698b500c96029a603600cd6cf",
+      "activity": {
+        "cellVisits": 129600,
+        "thermalCells": 129600
+      }
+    },
+    {
+      "scene": "vessel",
+      "seed": 2738958700,
+      "ticks": 720,
+      "hash": "c918050b7660cc272df84d6b92edb48e6754ea8631e3cbb4e8d5b8a73d8f001c",
+      "activity": {
+        "cellVisits": 129600,
+        "thermalCells": 129600
+      }
+    },
+    {
+      "scene": "edit-load-wipe",
+      "seed": 21,
+      "ticks": 240,
+      "hash": "f7c034537eddfe67eb30471bc1d39e3927000c840acf545398b527445348174f"
+    }
+  ]
+}
