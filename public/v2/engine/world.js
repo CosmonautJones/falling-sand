@@ -1247,7 +1247,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
     setc(mx, ground - 2, MINNOW, grain(MINNOW)); setc(mx + 2, ground - 3, MINNOW, grain(MINNOW));
     const woodX = Math.round(w * 0.62);
     paint(woodX, ground - 3, Math.max(4, Math.round(w * 0.012)), WOOD); paint(woodX + 7, ground - 2, Math.max(3, Math.round(w * 0.01)), WOOD);
-    setc(woodX - 8, ground - 1, TNT, grain(TNT)); setc(woodX - 7, ground - 1, TNT, grain(TNT));
+    fill(woodX - 10, ground - 3, woodX - 7, ground - 1, TNT);
     const iceX = Math.round(w * 0.72); paint(iceX, ground - 5, Math.max(7, Math.round(w * 0.022)), ICE);
     const saltX = Math.round(w * 0.12), tableY = ground - Math.max(14, Math.round(h * 0.07));
     fill(saltX - 11, tableY, saltX + 11, tableY + 1, STONE);
