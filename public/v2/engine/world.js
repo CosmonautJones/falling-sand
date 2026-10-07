@@ -108,6 +108,11 @@ const CS = 8, CW = 60, CH = 34, CNN = CW * CH;
 const G = 0.16, MAXV = 7;
 const GOLD_CARRY = 90, MUD_CARRY = -40;
 const FLAMMABLE = new Uint8Array(64); for (const m of [PLANT, WOOD, OIL, SEED, BLOOM, POWDER]) FLAMMABLE[m] = 1;
+const BOIL = 100, IGNITE = 62;
+// Restless materials keep their 8x8 chunk awake even when nothing moved: they act on their own
+// (fire, critters, growth, decay, random drips) or ride the draft (gases, light powders).
+const ALIVE = new Uint8Array(64);
+for (const m of [FIRE, EMBER, LAVA, PLANT, MOSS, MUD, SMOKE, STEAM, CLOUD, PLASMA, MITE, MINNOW, VISITOR, ACID, VOID, RIFT, ICE, CRYSTAL, AZOTH, AETHER, ICHOR, ASH]) ALIVE[m] = 1;
 const CC = new Uint16Array(CNN);
 for (let cy = 0; cy < CH; cy++) for (let cx = 0; cx < CW; cx++) CC[cy * CW + cx] = 8 * Math.max(1, Math.min(8, H - cy * 8));
 
@@ -120,6 +125,11 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
   const VX = new Float32Array(N), VY = new Float32Array(N);
   const born = new Uint8Array(N), heatOut = new Uint8Array(N), trailOut = new Uint8Array(N);
   const meltList = new Int32Array(N);
+  // Sleeping chunks: a chunk runs the cell pass if it holds restless material, or if it or a neighbour changed.
+  const dirty = new Uint8Array(CNN).fill(1), awake = new Uint8Array(CNN).fill(1), live = new Uint8Array(CNN);
+  const markDirty = (x, y) => { dirty[(y >> 3) * CW + (x >> 3)] = 1; };
+  // Thermal skip state is derived (recomputed exactly when stale), so it is never checkpointed.
+  const tQuiet = new Uint8Array(CNN), tFast = new Uint8Array(CNN), qLive = new Uint8Array(CNN), qSOL = new Uint16Array(CNN), qHS = new Float32Array(CNN);
   let scanDir = 1, blastKick = 0, trailsLive = false;
   const EV = [];
   const ev = e => { if (EV.length < 48) EV.push(e); };
@@ -131,9 +141,10 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
   function grain(m) { return m === PLASMA ? 3 + ri(3) : rshade(SHADE[m]); }
   function inb(x, y) { return x >= 0 && y >= 0 && x < W && y < H; }
   function get(x, y) { return (x >= 0 && y >= 0 && x < W && y < H) ? cells[y * W + x] : STONE; }
-  function setc(x, y, m, s) { if (!inb(x, y)) return; const i = y * W + x; cells[i] = m; shades[i] = s; heat[i] = SEEDHEAT[m]; VX[i] = 0; VY[i] = 0; }
+  function setc(x, y, m, s) { if (!inb(x, y)) return; const i = y * W + x; cells[i] = m; shades[i] = s; heat[i] = SEEDHEAT[m]; VX[i] = 0; VY[i] = 0; markDirty(x, y); }
   function swap(ax, ay, bx, by) {
     if (!inb(ax, ay) || !inb(bx, by)) return;
+    markDirty(ax, ay); markDirty(bx, by);
     const a = ay * W + ax, b = by * W + bx;
     let t = cells[a]; cells[a] = cells[b]; cells[b] = t;
     t = shades[a]; shades[a] = shades[b]; shades[b] = t;
@@ -174,7 +185,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
     }
   }
   function fill(x0, y0, x1, y1, m) { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) setc(x, y, m, grain(m)); }
-  function clearGrid() { cells.fill(AIR); shades.fill(0); heat.fill(AMBIENT[AIR]); trails.fill(0); VX.fill(0); VY.fill(0); trailsLive = false; }
+  function clearGrid() { dirty.fill(1); tQuiet.fill(0); cells.fill(AIR); shades.fill(0); heat.fill(AMBIENT[AIR]); trails.fill(0); VX.fill(0); VY.fill(0); trailsLive = false; }
 
   // ---------- convection field (coarse stable-fluids lite) ----------
   const WU = new Float32Array(CNN), WV = new Float32Array(CNN), WU0 = new Float32Array(CNN), WV0 = new Float32Array(CNN);
@@ -390,13 +401,16 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
   }
 
   function growPlant(x, y) {
+    // Plants are patient: one try in five, so a single seed greens a pond instead of paving it in two seconds.
+    if (random.ecology.int(5) !== 0) return;
     let wet = false, plants = 0, ac = 0, gc = 0;
     for (let k = 0; k < 8; k++) {
       const nx = x + DX[k], ny = y + DY[k], n = get(nx, ny);
       if (n === WATER || n === ASH) wet = true;
       if (n === PLANT) plants++;
       if (n === AIR) { AX[ac] = nx; AY[ac] = ny; ac++; }
-      if (n === AIR || n === WATER) { BX[gc] = nx; BY[gc] = ny; gc++; }
+      // Water is only claimed at the surface: a floating mat, not a pond turned solid.
+      if (n === AIR || (n === WATER && get(nx, ny - 1) === AIR)) { BX[gc] = nx; BY[gc] = ny; gc++; }
     }
     if (wet && plants >= 2 && ac > 0) {
       const roll = random.ecology.int(6);
@@ -428,6 +442,8 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
     hit.add(origin);
     blastKick = Math.max(blastKick, r);
     ev({ t: 'blast', x: cx, y: cy, r });
+    for (let y = Math.max(0, cy - r - 3); y <= Math.min(H - 1, cy + r + 3); y += 4) for (let x = Math.max(0, cx - r - 3); x <= Math.min(W - 1, cx + r + 3); x += 4) markDirty(x, y);
+    markDirty(Math.min(W - 1, cx + r + 3), Math.min(H - 1, cy + r + 3));
     const chain = [];
     for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
       const d2 = dx * dx + dy * dy; if (d2 > r * r) continue;
@@ -442,6 +458,12 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
       }
       if (n === WATER || n === BRINE) { transmute(nx, ny, STEAM); VY[ni] = -2 - rf() * 2; VX[ni] = dx * 0.3; }
       else if (d2 <= 2) transmute(nx, ny, FIRE);
+      else if (d2 >= (r - 1.5) * (r - 1.5) && (n === STONE || n === BRICK || n === WOOD)) {
+        // Debris: the rim of a wall breaks and flies instead of vanishing.
+        transmute(nx, ny, n === WOOD ? EMBER : SAND);
+        const d = Math.sqrt(d2), sp = 2 + rf() * 3;
+        VX[ni] = dx / d * sp; VY[ni] = dy / d * sp - 1.5;
+      }
       else transmute(nx, ny, AIR);
     }
     // shockwave rim: loose powder just outside the blast is thrown outward too
@@ -809,7 +831,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
     const m0 = cells[hy * W + hx];
     for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
       const nx = hx + dx, ny = hy + dy; if (!inb(nx, ny)) continue;
-      const j = ny * W + nx; heat[j] = 255;
+      const j = ny * W + nx; heat[j] = 255; markDirty(nx, ny);
       const n = cells[j];
       if (n === VISITOR) { visitorDie(nx, ny); continue; }
       if (n === MITE) { transmute(nx, ny, ASH); continue; }
@@ -872,7 +894,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
       x = Math.max(1, Math.min(W - 2, x));
       y++;
     }
-    for (const j of path) { cells[j] = PLASMA; shades[j] = 3 + random.weather.int(3); heat[j] = 255; VX[j] = 0; VY[j] = 0; born[j] = 1; }
+    for (const j of path) { cells[j] = PLASMA; shades[j] = 3 + random.weather.int(3); heat[j] = 255; VX[j] = 0; VY[j] = 0; born[j] = 1; markDirty(j % W, (j / W) | 0); }
     let hx = x, hy = y;
     if (hit >= 0) { hx = hit % W; hy = (hit / W) | 0; strikeAt(hx, hy); }
     flash = 1;
@@ -978,26 +1000,52 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
         swap(x, y, x, y - 1); born[i - W] = 1;
       }
     }
-    HS.fill(0); SOL.fill(0);
     let melts = 0;
-    for (let y = 0; y < H; y++) {
-      const row = y * W, crow = (y >> 3) * CW;
-      for (let x = 0; x < W; x++) {
-        const i = row + x, t = heat[i], m = cells[i];
-        const up = y > 0 ? heat[i - W] : t, dn = y < H - 1 ? heat[i + W] : t;
-        const rt = x < W - 1 ? heat[i + 1] : t, lf = x > 0 ? heat[i - 1] : t;
-        let next = t + ((CONDUCT[m] * (up + dn + rt + lf - (t << 2))) >> 5);
-        next += ((AMBIENT[m] - next) * (m === AIR || m === STEAM || m === SMOKE ? 10 : 2)) >> 8;
-        const v = next < 0 ? 0 : next > 255 ? 255 : next;
-        heatOut[i] = v;
-        const c = crow + (x >> 3);
-        HS[c] += v;
-        if (m !== AIR && KIND[m] !== K_GAS && m !== FIRE && m !== PLASMA) SOL[c]++;
-        if (m === ICE && v >= 72 && !born[i]) meltList[melts++] = i;
+    for (let cy = 0; cy < CH; cy++) for (let cx = 0; cx < CW; cx++) {
+      const c = cy * CW + cx, y0 = cy << 3, y1 = Math.min(H, y0 + 8), x0 = cx << 3, x1 = x0 + 8;
+      // A quiet chunk (one material, every cell at its resting heat) among quiet, unchanged
+      // neighbours would recompute to exactly the same heat, so it is skipped.
+      let fast = tQuiet[c];
+      for (let dy = -1; dy <= 1 && fast; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const nx = cx + dx, ny = cy + dy;
+        if (nx < 0 || ny < 0 || nx >= CW || ny >= CH) continue;
+        const n = ny * CW + nx; if (!tQuiet[n] || dirty[n]) { fast = 0; break; }
       }
+      tFast[c] = fast;
+      if (fast) { HS[c] = qHS[c]; SOL[c] = qSOL[c]; live[c] = qLive[c]; continue; }
+      let hs = 0, sol = 0, lv = 0, quiet = 1;
+      const m0 = cells[y0 * W + x0];
+      for (let y = y0; y < y1; y++) {
+        const row = y * W;
+        for (let x = x0; x < x1; x++) {
+          const i = row + x, t = heat[i], m = cells[i];
+          const up = y > 0 ? heat[i - W] : t, dn = y < H - 1 ? heat[i + W] : t;
+          const rt = x < W - 1 ? heat[i + 1] : t, lf = x > 0 ? heat[i - 1] : t;
+          let next = t + ((CONDUCT[m] * (up + dn + rt + lf - (t << 2))) >> 5);
+          next += ((AMBIENT[m] - next) * (m === AIR || m === STEAM || m === SMOKE ? 10 : 2)) >> 8;
+          const v = next < 0 ? 0 : next > 255 ? 255 : next;
+          heatOut[i] = v;
+          hs += v;
+          if (ALIVE[m] || KIND[m] === K_GAS) lv = 1;
+          if (m !== AIR && KIND[m] !== K_GAS && m !== FIRE && m !== PLASMA) sol++;
+          if (m !== m0 || v !== AMBIENT[m]) quiet = 0;
+          if (!born[i] && ((m === ICE && v >= 72) || (m === WATER && v >= BOIL) || (FLAMMABLE[m] && v >= IGNITE))) meltList[melts++] = i;
+        }
+      }
+      HS[c] = qHS[c] = hs; SOL[c] = qSOL[c] = sol; live[c] = qLive[c] = lv; tQuiet[c] = quiet;
     }
-    heat.set(heatOut);
-    for (let k = 0; k < melts; k++) { const i = meltList[k]; if (cells[i] === ICE && !born[i]) transmute(i % W, (i / W) | 0, WATER); }
+    for (let c = 0; c < CNN; c++) {
+      if (tFast[c]) continue;
+      const y0 = (c / CW | 0) << 3, x0 = (c % CW) << 3, y1 = Math.min(H, y0 + 8);
+      for (let y = y0; y < y1; y++) { const i = y * W + x0; heat.set(heatOut.subarray(i, i + 8), i); }
+    }
+    // Heat acts on its own: ice melts, hot water boils, and radiant heat lights fuel.
+    for (let k = 0; k < melts; k++) {
+      const i = meltList[k], m = cells[i]; if (born[i]) continue;
+      if (m === ICE) transmute(i % W, (i / W) | 0, WATER);
+      else if (m === WATER) transmute(i % W, (i / W) | 0, STEAM);
+      else if (FLAMMABLE[m]) transmute(i % W, (i / W) | 0, FIRE);
+    }
   }
   function stigmergy() {
     let mites = 0;
@@ -1035,16 +1083,56 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
     else if (k === K_LIQUID) moveLiquid(x, y);
     else if (k === K_GAS) tryGas(x, y, dir);
   }
+  // Communicating vessels: in each connected liquid body, a resting top cell moves to the lowest
+  // open surface spot when the two differ by two rows or more. Flat pools never churn.
+  const seenAt = new Int32Array(N), bq = new Int32Array(N); let levelPass = 0;
+  function levelLiquids() {
+    levelPass++;
+    for (let i0 = 0; i0 < N; i0++) {
+      const m = cells[i0];
+      if (KIND[m] !== K_LIQUID || m === LAVA || seenAt[i0] === levelPass) continue;
+      let head = 0, tail = 0, topY = H, topI = -1, lowY = -1, lowI = -1;
+      bq[tail++] = i0; seenAt[i0] = levelPass;
+      while (head < tail) {
+        const j = bq[head++], x = j % W, y = (j / W) | 0;
+        const above = y > 0 ? cells[j - W] : STONE;
+        if (above === AIR || KIND[above] === K_GAS) {
+          if (y < topY && VY[j] < 0.5 && VY[j] > -0.5) { topY = y; topI = j; }
+          if (y - 1 > lowY) { lowY = y - 1; lowI = j - W; }
+        }
+        if (x > 0 && cells[j - 1] === m && seenAt[j - 1] !== levelPass) { seenAt[j - 1] = levelPass; bq[tail++] = j - 1; }
+        if (x < W - 1 && cells[j + 1] === m && seenAt[j + 1] !== levelPass) { seenAt[j + 1] = levelPass; bq[tail++] = j + 1; }
+        if (y > 0 && cells[j - W] === m && seenAt[j - W] !== levelPass) { seenAt[j - W] = levelPass; bq[tail++] = j - W; }
+        if (y < H - 1 && cells[j + W] === m && seenAt[j + W] !== levelPass) { seenAt[j + W] = levelPass; bq[tail++] = j + W; }
+      }
+      if (topI < 0 || lowI < 0 || lowY - topY < 1 || cells[lowI] !== AIR) continue;
+      const s = shades[topI], h = heat[topI];
+      setc(topI % W, topY, AIR, 0);
+      setc(lowI % W, lowY, m, s); heat[lowI] = h;
+    }
+  }
   function simulate() {
     const dir = scanDir; scanDir = -scanDir;
     born.fill(0);
     thermals();
     windStep();
+    for (let cy = 0; cy < CH; cy++) for (let cx = 0; cx < CW; cx++) {
+      const c = cy * CW + cx;
+      let on = live[c];
+      for (let dy = -1; dy <= 1 && !on; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const nx = cx + dx, ny = cy + dy;
+        if (nx >= 0 && ny >= 0 && nx < CW && ny < CH && dirty[ny * CW + nx]) { on = 1; break; }
+      }
+      awake[c] = on;
+    }
+    dirty.fill(0);
     for (let y = H - 1; y >= 0; y--) {
-      if (dir === 1) { for (let x = 0; x < W; x++) processCell(x, y, dir); }
-      else { for (let x = W - 1; x >= 0; x--) processCell(x, y, dir); }
+      const row = (y >> 3) * CW;
+      if (dir === 1) { for (let cx = 0; cx < CW; cx++) if (awake[row + cx]) for (let x = cx << 3, e = x + 8; x < e; x++) processCell(x, y, dir); }
+      else { for (let cx = CW - 1; cx >= 0; cx--) if (awake[row + cx]) for (let x = (cx << 3) + 7, e = cx << 3; x >= e; x--) processCell(x, y, dir); }
     }
     stigmergy();
+    if (dir === 1) levelLiquids();
     stormStep();
     shipStep();
   }
@@ -1119,6 +1207,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
     for (let y = cy - r; y <= cy + r; y++) for (let x = cx - r; x <= cx + r; x++) {
       const dx = x - cx, dy = y - cy; if (dx * dx + dy * dy > r2 || !inb(x, y)) continue;
       const i = y * W + x, m = cells[i];
+      markDirty(x, y);
       if (hot) {
         heat[i] = Math.min(255, heat[i] + 36);
         if (m === ICE && ri(3) === 0) transmute(x, y, WATER);
@@ -1249,6 +1338,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
   }
   function advanceWipe() {
     if (wipe >= 0) {
+      dirty.fill(1);
       const end = Math.min(W, wipe + 14);
       for (let y = 0; y < H; y++) for (let x = wipe; x < end; x++) {
         const i = y * W + x; cells[i] = wipeC[i]; shades[i] = wipeS[i]; heat[i] = SEEDHEAT[cells[i]]; VX[i] = 0; VY[i] = 0; trails[i] = 0;
@@ -1339,6 +1429,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
     random.reset(initialSeed);
     clearGrid();
     for (const a of [born, heatOut, trailOut, meltList, PRE, WU, WV, WU0, WV0, WP, WP2, WD, HS, SOL, WS, AX, AY, BX, BY, SX, SY, SS, COUNTS]) a.fill(0);
+    dirty.fill(1); awake.fill(1); live.fill(0); tQuiet.fill(0);
     scanDir = 1; blastKick = 0; windEnergy = 0; tickIndex = 0; EV.length = 0;
     commands = []; opTick = 0;
     Object.assign(ship, { active: false, x: 0, y: 24, t: 0, leaving: false, spawnCd: 0, stolen: 0, crash: false, beam: false });
@@ -1355,7 +1446,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
       cells, shades, heat, VX, VY, trails, WU, WV,
       scanDir, trailsLive, blastKick, windEnergy, ship,
       shipCd, storm, stormT, stormCd, boltCd, flash, goldCount, goldCX, goldCY, visitorCount,
-      wipe, wipeC, wipeS, events: EV, random: random.captureState(), commands,
+      wipe, wipeC, wipeS, events: EV, random: random.captureState(), commands, dirty,
     };
   }
   function captureState() {
@@ -1377,13 +1468,16 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
     boltCd = next.boltCd; flash = next.flash; goldCount = next.goldCount;
     goldCX = next.goldCX; goldCY = next.goldCY; visitorCount = next.visitorCount;
     wipe = next.wipe; wipeC = next.wipeC; wipeS = next.wipeS; commands = next.commands;
+    // Checkpoints from before sleeping chunks wake the whole vessel for one tick.
+    if (next.dirty) dirty.set(next.dirty); else dirty.fill(1);
+    tQuiet.fill(0);
     EV.length = 0; for (const event of next.events) EV.push(event);
     random.physical.reset(next.random.physical); random.ecology.reset(next.random.ecology);
     random.weather.reset(next.random.weather); random.cosmetic.reset(next.random.cosmetic);
   }
   function inspect() {
     return {
-      cells, shades, heat, trails, VX, VY, born, WU, WV, W, H, step, setc, get, paint, paintLine, detonate,
+      cells, shades, heat, trails, VX, VY, born, WU, WV, awake, dirty, W, H, step, setc, get, paint, paintLine, detonate,
       clear: clearGrid, seed: n => random.reset(n), DENS, KIND, DISP, G, MAXV,
       // Scratch is rebuilt before being read on the next tick/operation: born, heatOut,
       // trailOut, meltList, PRE, WU0/WV0, WP/WP2/WD, HS/SOL/WS, neighbor/sense scratch.

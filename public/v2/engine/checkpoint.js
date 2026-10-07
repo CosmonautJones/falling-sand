@@ -189,7 +189,7 @@ export function validateCommands(commands, tickIndex) {
 // Intake also checks the complete world envelope before installing a new queue.
 export function validateCheckpointSize(value) { checkSerializedSize(value, true); }
 function stateValue(state, mode) {
-  record(state, [...SCALAR_FIELDS, ...GRID_FIELDS, 'ship', 'wipeC', 'wipeS', 'events', 'random', 'commands']);
+  record(state, [...SCALAR_FIELDS, ...GRID_FIELDS, 'ship', 'wipeC', 'wipeS', 'events', 'random', 'commands'], ['dirty']);
   const out = {
     seed: integer(state.seed, 0, 0xffffffff), scene: choice(state.scene, ['empty', 'vessel']),
     tickIndex: integer(state.tickIndex), scanDir: choice(state.scanDir, [-1, 1]),
@@ -204,6 +204,8 @@ function stateValue(state, mode) {
     const Type = key === 'shades' ? Int8Array : ['VX', 'VY', 'WU', 'WV'].includes(key) ? Float32Array : Uint8Array;
     out[key] = typed(state[key], Type, ['WU', 'WV'].includes(key) ? FIELD_SIZE : SIZE, mode, key === 'cells');
   }
+  // Optional sleep marks (one per 8x8 chunk); older checkpoints omit them.
+  if (Object.hasOwn(state, 'dirty')) out.dirty = typed(state.dirty, Uint8Array, FIELD_SIZE, mode);
   record(state.ship, SHIP_FIELDS);
   out.ship = {
     active: boolean(state.ship.active), x: finite(state.ship.x), y: finite(state.ship.y),
