@@ -133,7 +133,7 @@ const EVENT_FIELDS = {
   blast: ['x', 'y', 'r'], vkill: ['x', 'y'], portal: ['x', 'y'], zap: ['x', 'y'],
   stolen: [], shipdown: ['x', 'y'], shipleave: [], ship: [], storm: [],
   fulgurite: ['x', 'y'], shock: ['x', 'y', 'killed'], bolt: ['x0', 'y0', 'x', 'y'],
-  stormend: [], void: ['x', 'y'],
+  stormend: [], void: ['x', 'y'], tx: ['x', 'y', 'm'],
 };
 const OPS = {
   l: ['x0', 'y0', 'x1', 'y1', 'r', 'm'], p: ['x', 'y', 'r', 'm'],
