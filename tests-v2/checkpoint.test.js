@@ -147,7 +147,7 @@ test('invalid_checkpoint_is_atomic', () => {
   const invalid = [
     c => { c.version = 2; }, c => { c.width = 479; }, c => { c.height = 271; }, c => { c.format = 'other'; },
     c => { c.tick++; }, c => { c.state.cells = new Uint8Array(E.N - 1); },
-    c => { c.state.shades = new Uint8Array(E.N); }, c => { c.state.cells[E.N - 1] = 43; },
+    c => { c.state.shades = new Uint8Array(E.N); }, c => { c.state.cells[E.N - 1] = E.COUNT; },
     c => { c.state.VX[E.N - 1] = Infinity; }, c => { c.state.VY[0] = NaN; }, c => { c.state.WU[0] = Infinity; },
     c => { c.state.storm = -1; }, c => { c.state.tickIndex = 0.5; }, c => { c.state.ship.stolen = -1; },
     c => { c.state.random.cosmetic = 2 ** 32; }, c => { c.state.commands[1].tick = c.tick; },
