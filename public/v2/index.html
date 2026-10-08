@@ -6,6 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="../icon-192.png">
 <script src="./support.js"></script>
 </head>
 <body>
@@ -19,6 +21,8 @@
 .root[data-immersive]{position:relative;padding: max(4px,env(safe-area-inset-top)) max(4px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left))!important;gap:4px!important}.root[data-immersive] .hd{display:none!important}.root[data-immersive] .fig{flex:1 1 0!important;height:auto!important;padding:0!important}.root[data-immersive] .zoom-controls{top:10px;bottom:auto!important}.root[data-immersive] [data-mobile-hud]{display:none}.root[data-immersive] .ctl{position:absolute;bottom:max(4px,env(safe-area-inset-bottom));left:max(4px,env(safe-area-inset-left));right:max(4px,env(safe-area-inset-right));width:auto!important;padding:6px;background:rgba(20,16,12,.92);z-index:10;overflow:visible!important}
 button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-offset:2px}
 .phone-bar,.sheet{display:none}.zoom-mini{width:128px}
+.root{touch-action:none}[data-scroll]{touch-action:pan-y;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}.chips{touch-action:pan-x}
+.root[data-immersive] .rotate-hint,.root[data-immersive] .flask-status{display:none}
 @media(max-width:520px){.ftab{letter-spacing:.06em!important;padding:6px 5px 8px!important;font-size:12px!important}}
 .phone-bar{flex:0 0 auto;flex-direction:column;gap:6px;width:100%;padding:0 10px}.phone-row{display:flex;gap:8px;align-items:stretch}.phone-hud{font-size:11px;letter-spacing:.06em;color:rgba(203,184,154,.7);font-variant-numeric:tabular-nums;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:1.3em}
 .pb{display:flex;align-items:center;justify-content:center;gap:8px;min-width:52px;height:52px;padding:0 12px;background:#1c1612;color:#f0e2c4;border:1px solid #3a3128;border-radius:14px;font-size:18px;cursor:pointer}.pb:active{background:#2a2119}.pb[aria-expanded="true"]{border-color:#c49a4a}
@@ -137,7 +141,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
   </figure>
 
   <div class="col ctl" style="width:min(96vw,1440px); display:flex; flex-direction:column; align-items:center; gap:7px; flex:0 0 auto;">
-    <div class="chips" style="display:grid; grid-auto-flow:column; grid-template-rows:repeat(2, 29px); gap:5px; max-width:100%; overflow-x:auto; overflow-y:hidden; padding-bottom:4px; justify-content:start;">
+    <div class="chips" data-scroll style="display:grid; grid-auto-flow:column; grid-template-rows:repeat(2, 29px); gap:5px; max-width:100%; overflow-x:auto; overflow-y:hidden; padding-bottom:4px; justify-content:start;">
       <sc-for list="{{ chips }}" as="c" hint-placeholder-count="14">
         <button onClick="{{ c.onClick }}" title="{{ c.title }}" style="display:flex; align-items:center; gap:7px; padding:5px 10px 5px 6px; background:{{ c.bg }}; color:#f0e2c4; border:1px solid {{ c.border }}; box-shadow:{{ c.shadow }}; font-size:13px; line-height:1.2; letter-spacing:.02em; cursor:pointer; white-space:nowrap; height:29px; transition:border-color .15s, background .15s;">
           <span style="width:15px; height:15px; flex:0 0 auto; background:{{ c.swatch }}; border:1px solid #5a4630; box-shadow:inset 0 -5px 6px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.28);"></span>
@@ -160,7 +164,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
       <button class="screen-button" onClick="{{ toggleScreen }}" aria-label="Toggle fullscreen" style="background:#1c1612;color:#f0e2c4;border:1px solid #3a3128;padding:6px 12px;font-size:13px;cursor:pointer;"><span class="enter-screen">fullscreen</span><span class="exit-screen">exit screen</span></button>
       <details class="more-controls">
         <summary>More <span class="current-tool">· {{ toolLabel }}</span></summary>
-        <div class="more-panel">
+        <div class="more-panel" data-scroll>
       <div style="display:flex;">
         <sc-for list="{{ tools }}" as="t" hint-placeholder-count="6">
           <button onClick="{{ t.onClick }}" title="{{ t.title }}" style="background:{{ t.bg }}; color:{{ t.color }}; border:1px solid {{ t.border }}; margin-left:-1px; padding:6px 10px; font-size:13px; cursor:pointer; position:relative; z-index:{{ t.z }};">{{ t.label }}</button>
@@ -217,7 +221,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
   <sc-if value="{{ elementsOpen }}" hint-placeholder-val="{{ false }}">
     <section class="sheet" data-sheet="elements" role="dialog" aria-modal="true" aria-label="Choose an element">
       <div class="sheet-head"><span>Elements</span><button class="sheet-x" onClick="{{ closeSheet }}" aria-label="Close">✕</button></div>
-      <div class="sheet-body">
+      <div class="sheet-body" data-scroll>
         <div class="sheet-label">Reagents</div>
         <div class="tile-grid">
           <sc-for list="{{ starterTiles }}" as="c" hint-placeholder-count="14">
@@ -237,7 +241,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
   <sc-if value="{{ optionsOpen }}" hint-placeholder-val="{{ false }}">
     <section class="sheet" data-sheet="options" role="dialog" aria-modal="true" aria-label="Options">
       <div class="sheet-head"><span>Options</span><button class="sheet-x" onClick="{{ closeSheet }}" aria-label="Close">✕</button></div>
-      <div class="sheet-body">
+      <div class="sheet-body" data-scroll>
         <div class="sheet-label">Tool</div>
         <div class="seg seg-3">
           <sc-for list="{{ tools }}" as="t" hint-placeholder-count="6">
@@ -302,7 +306,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
         <button onClick="{{ closeFolio }}" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:3px 10px; margin-bottom:6px; font-size:13px; cursor:pointer;" style-hover="border-color:#c49a4a;">close</button>
       </div>
       <div style="padding:8px 16px 0; font-size:13px; font-style:italic; color:#cbb89a;">{{ folioCount }}</div>
-      <div style="overflow:auto; padding:2px 16px 20px; flex:1;">
+      <div data-scroll style="overflow:auto; padding:2px 16px 20px; flex:1;">
         <sc-if value="{{ tabCodex }}" hint-placeholder-val="{{ true }}">
           <div>
             <sc-for list="{{ pages }}" as="p" hint-placeholder-count="6">
@@ -636,9 +640,13 @@ class Component extends DCLogic {
     if (!this.alive) return;
     this.nudgeT = setTimeout(() => this.nudge(), 25000);
     this.bindInput();
-    const onFullscreen = () => { if (!document.fullscreenElement) this.rootRef.current?.removeAttribute('data-immersive'); };
+    const onFullscreen = () => { if (!(document.fullscreenElement || document.webkitFullscreenElement)) this.rootRef.current?.removeAttribute('data-immersive'); };
     document.addEventListener('fullscreenchange', onFullscreen);
-    this.unbind.push(() => document.removeEventListener('fullscreenchange', onFullscreen));
+    document.addEventListener('webkitfullscreenchange', onFullscreen);
+    this.unbind.push(() => { document.removeEventListener('fullscreenchange', onFullscreen); document.removeEventListener('webkitfullscreenchange', onFullscreen); });
+    const gestures = await import(new URL('./gesture-lock.js', document.baseURI).href);
+    if (!this.alive) return;
+    this.unbind.push(gestures.lockPageGestures(document));
     this.setState({ ready: true, discovered: [...this.known] });
     this.raf = requestAnimationFrame(this.frame);
     this.curtainT = setTimeout(() => this.liftCurtain(), 2200);
@@ -773,6 +781,19 @@ class Component extends DCLogic {
     if (gallery === this.state.gallery) return;
     try { localStorage.setItem(GKEY, JSON.stringify(gallery)); } catch (e) {}
     this.setState({ gallery });
+  }
+  isIPhoneBrowser() { return typeof navigator !== 'undefined' && /iPhone|iPod/.test(navigator.userAgent) && !navigator.standalone; }
+  // iPhone Safari cannot go truly fullscreen; the layout still takes over, and a tip points at the Home Screen.
+  async goFullscreen() {
+    if (!this.screen) return;
+    this.setState({ sheet: '' });
+    const mode = await this.screen.toggleScreen(this.rootRef.current);
+    if (mode === 'immersive' && this.isIPhoneBrowser() && !this.homeTipShown) {
+      this.homeTipShown = true;
+      const text = 'For true fullscreen: Share → Add to Home Screen.';
+      this.setState({ whisper: text });
+      this.toast({ kind: 'tip', label: 'FULLSCREEN TIP', text, swatch: '#c49a4a', rite: true });
+    }
   }
   // Two taps: the first arms it for four seconds, the second erases every Alembic v2 save and starts fresh.
   startOver() {
@@ -1500,7 +1521,7 @@ class Component extends DCLogic {
     const s = this.state, M = this.M, t = s.toast;
     const fmt = ts => { const d = new Date(ts); return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' · ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }); };
     const base = {
-      toolLabel: s.tool, radius: s.radius, cycleBrush: () => { const sizes = this.M.BRUSH_SIZES; this.selectRadius(sizes[(sizes.indexOf(s.radius) + 1) % sizes.length]); }, rootRef: this.rootRef, toggleScreen: () => this.screen && this.screen.toggleScreen(this.rootRef.current), vpRef: this.vpRef, cvRef: this.cvRef, retRef: this.retRef, hudRef: this.hudRef, boxRef: this.boxRef, lineRef: this.lineRef,
+      toolLabel: s.tool, radius: s.radius, cycleBrush: () => { const sizes = this.M.BRUSH_SIZES; this.selectRadius(sizes[(sizes.indexOf(s.radius) + 1) % sizes.length]); }, rootRef: this.rootRef, toggleScreen: () => this.goFullscreen(), vpRef: this.vpRef, cvRef: this.cvRef, retRef: this.retRef, hudRef: this.hudRef, boxRef: this.boxRef, lineRef: this.lineRef,
       miniRef: this.miniRef || (this.miniRef = React.createRef()), miniRectRef: this.miniRectRef || (this.miniRectRef = React.createRef()), zoomLabRef: this.zoomLabRef || (this.zoomLabRef = React.createRef()),
       miniPoint: this.miniPoint, zoomIn: () => this.zoomBy(1.5), zoomOut: () => this.zoomBy(1 / 1.5), zoomFit: () => { this.setState({ sheet: '' }); this.setView({ zoom: 1, panX: 0, panY: 0 }, true); },
       phoneHudRef: this.phoneHudRef,
