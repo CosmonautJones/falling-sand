@@ -29,6 +29,12 @@ upscale — heat haze, water caustics, gold spark, blast shake, Magnum Opus auro
 - Portrait phones start with a larger close view around the pond and casks.
   Tap **overview** to see the whole vessel, then **close view** to return.
   Pinch with two fingers to zoom and pan; grains keep their square shape.
+- **Pop the dam** opens a ready-to-disturb water toy. Erase a notch in the wooden
+  seam, choose where the cascade goes, or tear the whole thing open. **Again**
+  refills it; **Back to vessel** resumes your previous experiment and controls.
+  The temporary return checkpoint stays in this tab and uses no flask slot.
+  Stopper a flask to keep either world across a reload. A direct local preview
+  is available at `/v2/index.html?play=dam`.
 - Rotate for a wider vessel. **Fullscreen** expands the canvas with an overlay
   toolbar; browsers without native fullscreen use the same immersive layout.
   Tap **exit screen** to return. The world and discoveries survive rotation.
