@@ -147,7 +147,8 @@ for (const m of [AIR, STEAM, SMOKE]) RELAX[m] = 10;
 const CC = new Uint16Array(CNN);
 for (let cy = 0; cy < CH; cy++) for (let cx = 0; cx < CW; cx++) CC[cy * CW + cx] = 8 * Math.max(1, Math.min(8, H - cy * 8));
 
-export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
+// Managed vegetation lets the separate v3 soil layer fund plant growth. v2 defaults stay native.
+export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 'native', ambientEmbers = true } = {}) {
   let initialSeed = seed >>> 0, initialScene = scene, tickIndex = 0;
   let commands = [];
   let wipe = -1, wipeC = null, wipeS = null;
@@ -997,7 +998,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
   // ---------- reactions ----------
   function react(x, y, m) {
     switch (m) {
-      case SEED: if (hasN(x, y, WATER) || hasN(x, y, MUD)) { transmute(x, y, PLANT); return true; } return false;
+      case SEED: if (vegetation === 'native' && (hasN(x, y, WATER) || hasN(x, y, MUD))) { transmute(x, y, PLANT); return true; } return false;
       case ASH: if (hasN(x, y, WATER)) { transmute(x, y, MUD); return true; } return false;
       case SALT:
         if (hasN(x, y, ASH)) { transmute(x, y, POWDER); return true; }
@@ -1020,7 +1021,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
       case MINNOW: return minnowAct(x, y);
       case VISITOR: return visitorAct(x, y);
       case ICHOR: if (hasN(x, y, FIRE) || hasN(x, y, PLASMA)) { transmute(x, y, AETHER); return true; } return false;
-      case MUD: hatchMite(x, y); return false;
+      case MUD: if (vegetation === 'native') hatchMite(x, y); return false;
       case ACID: return cookAcid(x, y);
       case LEAD: {
         const az = hasN(x, y, AZOTH);
@@ -1039,7 +1040,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
         return false;
       case FIREFLY: return fireflyAct(x, y);
       case SULFUR: if (wetN(x, y) && random.ecology.int(90) === 0) { transmute(x, y, ACID); return true; } return false;
-      case WOOD: if (random.ecology.int(400) === 0 && hasN(x, y, MUD)) { transmute(x, y, FUNGUS); return true; } return false;
+      case WOOD: if (vegetation === 'native' && random.ecology.int(400) === 0 && hasN(x, y, MUD)) { transmute(x, y, FUNGUS); return true; } return false;
       case FUNGUS: {
         const roll = random.ecology.int(3000);
         if (roll === 0) { transmute(x, y, MUD); return true; }
@@ -1071,7 +1072,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
         return false;
       case VOID: devour(x, y); return false;
       case ICE: freezeWater(x, y); return false;
-      case PLANT: growPlant(x, y); return false;
+      case PLANT: if (vegetation === 'native') growPlant(x, y); return false;
       case MOSS:
         if (hasN(x, y, BRINE) && random.ecology.int(30) === 0) { transmute(x, y, CORAL); return true; }
         creepMoss(x, y); return false;
@@ -1566,7 +1567,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
         if (!ship.active && shipCd <= 0 && goldCount >= 200) shipArrive();
       }
       // First ambient ember at 45 simulated seconds; new grain moves next tick.
-      if (nextTick % 2700 === 0) rainFromCeiling(EMBER, 1);
+      if (ambientEmbers && nextTick % 2700 === 0) rainFromCeiling(EMBER, 1);
       tickIndex = nextTick;
       events.push(...EV.map(event => ({ ...event })));
     }

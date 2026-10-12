@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#111c19" />
+    <meta
+      name="description"
+      content="Break a dam. Grow a valley. Burn it down and see what returns. A living falling-sand playground."
+    />
+    <title>Living Valley · Alembic III</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="header">
+        <div class="identity">
+          <a class="brand" href="../v2/index.html" aria-label="Return to Alembic v2"
+            >ALEMBIC <span>III</span></a
+          >
+          <h1>Living Valley</h1>
+        </div>
+        <div class="header-actions">
+          <span class="study">A SMALL WORLD WITH A MEMORY</span>
+          <details id="more">
+            <summary aria-label="Open valley options">•••</summary>
+            <div class="menu">
+              <p class="menu-label">YOUR VALLEY</p>
+              <button id="save">Save in this browser</button>
+              <button id="load">Load browser save</button>
+              <button id="export">Export valley file</button>
+              <label class="file-button"
+                >Import valley file<input id="import" type="file" accept=".json,application/json"
+              /></label>
+              <hr />
+              <button id="again">Start this valley again</button>
+              <button id="new">Generate a new valley</button>
+              <p>v3 has its own save. Your v2 flasks stay in v2.</p>
+            </div>
+          </details>
+        </div>
+      </header>
+      <section class="stage" aria-label="Living Valley playground">
+        <canvas
+          id="world"
+          tabindex="0"
+          role="application"
+          aria-label="Valley canvas. Select a tool, then draw. Arrow keys move the brush; Enter applies it. Use two fingers to explore."
+          aria-describedby="canvas-help"
+        ></canvas>
+        <p id="canvas-help" class="sr-only">
+          Water feeds soil. Seeds grow in wet, sunlit ground. Fire returns plant nutrients to
+          litter. Stone roofs shade plants. Scroll to zoom, or pan with two fingers. On a keyboard,
+          use arrow keys and Enter or Space to paint.
+        </p>
+        <div class="field-label">
+          <span class="live-dot"></span><span id="seed-label">VALLEY</span
+          ><span class="prototype">FIRST GROWTH</span>
+        </div>
+        <div class="view-controls">
+          <button id="view" title="Switch between close view and overview">Overview</button
+          ><button id="pause" aria-pressed="false" title="Pause simulation">Pause</button>
+        </div>
+        <div class="invitation">
+          <p id="hint">A dry valley. A full reservoir.<br />See what the water wakes.</p>
+          <button id="dam">Break the dam <span aria-hidden="true">↘</span></button>
+        </div>
+        <div class="readout" aria-hidden="true">
+          <span><i class="water-dot"></i><b id="wet">0</b> wet soil</span
+          ><span><i class="plant-dot"></i><b id="growth">0</b> living grains</span>
+        </div>
+        <div id="toast" role="status" aria-live="polite"></div>
+      </section>
+      <nav class="toolbar" aria-label="Valley tools">
+        <div class="tools" role="group" aria-label="Brush material">
+          <button data-tool="dig" aria-pressed="true">
+            <span class="tool-icon" aria-hidden="true">⌁</span>Dig
+          </button>
+          <button data-tool="water" aria-pressed="false">
+            <span class="tool-icon water-icon" aria-hidden="true">≈</span>Water
+          </button>
+          <button data-tool="seed" aria-pressed="false">
+            <span class="tool-icon seed-icon" aria-hidden="true">✣</span>Seed
+          </button>
+          <button data-tool="fire" aria-pressed="false">
+            <span class="tool-icon fire-icon" aria-hidden="true">✦</span>Fire
+          </button>
+          <button data-tool="stone" aria-pressed="false">
+            <span class="tool-icon" aria-hidden="true">▰</span>Stone
+          </button>
+        </div>
+        <span class="divider"></span>
+        <button id="size" aria-label="Brush size: medium">
+          <span class="brush-mark" aria-hidden="true">●</span><span id="size-label">Medium</span>
+        </button>
+        <button id="rain"><span aria-hidden="true">☂</span> Rain</button>
+      </nav>
+      <footer>
+        <span id="field-note">Water stays in the soil. The valley remembers.</span
+        ><span class="explore-hint">PINCH TO EXPLORE · NO SCORE, JUST CONSEQUENCES</span>
+      </footer>
+    </main>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

@@ -7,6 +7,14 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    files: ["public/v3/**/*.js", "tests-v3/**/*.js", "scripts/bench-v3.mjs"],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: "module",
+      globals: { ...globals.browser, ...globals.node },
+    },
+  },
+  {
     files: ["src/**/*.ts"],
     languageOptions: {
       ecmaVersion: 2022,

@@ -1,0 +1,56 @@
+{
+  "benchmark": "living-valley-v1",
+  "rounds": 5,
+  "warmup": 120,
+  "measured": 600,
+  "rows": [
+    {
+      "scene": "ready",
+      "tick_p50_ms": 1.313,
+      "tick_p95_ms": 1.5,
+      "soil_p50_ms": 0.077,
+      "soil_p95_ms": 0.261,
+      "soil_amortized_ms_per_tick": 0.0042,
+      "final": {
+        "plantGrains": 7,
+        "wetPatches": 14,
+        "nutrientUnits": 3027,
+        "flowers": 0,
+        "absorbed": 125,
+        "spentWater": 19
+      }
+    },
+    {
+      "scene": "flood",
+      "tick_p50_ms": 1.423,
+      "tick_p95_ms": 2.17,
+      "soil_p50_ms": 0.118,
+      "soil_p95_ms": 0.327,
+      "soil_amortized_ms_per_tick": 0.0098,
+      "final": {
+        "plantGrains": 891,
+        "wetPatches": 49,
+        "nutrientUnits": 3027,
+        "flowers": 0,
+        "absorbed": 4018,
+        "spentWater": 1927
+      }
+    },
+    {
+      "scene": "fire",
+      "tick_p50_ms": 1.509,
+      "tick_p95_ms": 1.76,
+      "soil_p50_ms": 0.109,
+      "soil_p95_ms": 0.321,
+      "soil_amortized_ms_per_tick": 0.0081,
+      "final": {
+        "plantGrains": 848,
+        "wetPatches": 49,
+        "nutrientUnits": 3027,
+        "flowers": 2,
+        "absorbed": 4024,
+        "spentWater": 1941
+      }
+    }
+  ]
+}
