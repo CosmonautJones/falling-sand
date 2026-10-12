@@ -1,0 +1,62 @@
+[
+  {
+    "name": "portrait",
+    "mode": "worker",
+    "water": 670,
+    "hint": false,
+    "fps": 60,
+    "simMs": 7.053797082273981,
+    "restored": true,
+    "errors": []
+  },
+  {
+    "name": "small-phone",
+    "mode": "worker",
+    "water": 669,
+    "hint": false,
+    "fps": 59.98800239952005,
+    "simMs": 5.88462805988286,
+    "restored": true,
+    "errors": []
+  },
+  {
+    "name": "landscape",
+    "mode": "worker",
+    "water": 658,
+    "hint": false,
+    "fps": 60,
+    "simMs": 4.26705681537726,
+    "restored": true,
+    "errors": []
+  },
+  {
+    "name": "desktop",
+    "mode": "worker",
+    "water": 670,
+    "hint": false,
+    "fps": 59.97600959616145,
+    "simMs": 4.804103881491702,
+    "restored": true,
+    "errors": []
+  },
+  {
+    "name": "local-2d",
+    "mode": "local",
+    "water": 658,
+    "hint": false,
+    "fps": 60,
+    "simMs": 6.636376341483832,
+    "restored": true,
+    "errors": []
+  },
+  {
+    "name": "animated-direct",
+    "mode": "worker",
+    "water": 698,
+    "hint": false,
+    "fps": 60,
+    "simMs": 4.554318507059425,
+    "restored": true,
+    "errors": []
+  }
+]

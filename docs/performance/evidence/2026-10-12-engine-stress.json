@@ -1,0 +1,33 @@
+{
+  "equivalent": true,
+  "cases": [
+    {
+      "scene": "long-vessel",
+      "seed": 19,
+      "ticks": 7200,
+      "comparisons": 120,
+      "hash": "d2827f7b468f37fdef01adb3acc126a61469181528a82d6718e872ed3fe8b405"
+    },
+    {
+      "scene": "all-materials",
+      "seed": 19,
+      "ticks": 960,
+      "comparisons": 16,
+      "hash": "6290d2fefcf8b1128469c4ce33cb60d4e5baa1b5e99d7fbbe737cd223d522e4d"
+    },
+    {
+      "scene": "dam",
+      "seed": 19,
+      "ticks": 1800,
+      "comparisons": 30,
+      "hash": "551a89d370dab3ee71715010bb71bf5f10cbafe0bbd1cf6b33e0bbf8478e7e53"
+    },
+    {
+      "scene": "dense-scent",
+      "seed": 19,
+      "ticks": 240,
+      "comparisons": 4,
+      "hash": "5985658c02150c53ac6646861447c73173b196cceabdc9064b3243eb1fe7602d"
+    }
+  ]
+}

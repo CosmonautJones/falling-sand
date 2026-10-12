@@ -1,0 +1,161 @@
+{
+  "equivalent": true,
+  "results": [
+    {
+      "scene": "settled",
+      "seed": 1,
+      "ticks": 720,
+      "hash": "5a3877fd05abd85d7a4a1aad52ae86467ba6d5ff768004f937cd7e1a5fcf6a4d",
+      "thermalWork": {
+        "sourceCells": 0,
+        "buoyancyCells": 0
+      }
+    },
+    {
+      "scene": "falling",
+      "seed": 1,
+      "ticks": 720,
+      "hash": "2d7dcd0c566b3c31f7862c06d69c5a7cf3bff313153f16acdf8a2be97fff424a",
+      "thermalWork": {
+        "sourceCells": 36880,
+        "buoyancyCells": 36880
+      }
+    },
+    {
+      "scene": "wet",
+      "seed": 1,
+      "ticks": 720,
+      "hash": "edabc4923f4a3041c3053502175ed6042bfc2c0189d1ad4d674593c670ae6f28",
+      "thermalWork": {
+        "sourceCells": 43968,
+        "buoyancyCells": 43968
+      }
+    },
+    {
+      "scene": "storm",
+      "seed": 1,
+      "ticks": 720,
+      "hash": "8c26c8b9bb49a1d8ae6ec39a4129e291ae94b21e172c569a0e709b9fa322423e",
+      "thermalWork": {
+        "sourceCells": 129600,
+        "buoyancyCells": 129120
+      }
+    },
+    {
+      "scene": "vessel",
+      "seed": 1,
+      "ticks": 720,
+      "hash": "5f8ee6852d78ba8920bbff197f252afc4b26f6c6d70616d82a52a594ea0c26d0",
+      "thermalWork": {
+        "sourceCells": 129600,
+        "buoyancyCells": 129120
+      }
+    },
+    {
+      "scene": "settled",
+      "seed": 73,
+      "ticks": 720,
+      "hash": "f722e7455677b5e05641354158934b715e677a40f2bd9d2f578398d5f7774ed4",
+      "thermalWork": {
+        "sourceCells": 0,
+        "buoyancyCells": 0
+      }
+    },
+    {
+      "scene": "falling",
+      "seed": 73,
+      "ticks": 720,
+      "hash": "c1246a5f878042bc5f0691c05f182720b371630304dc5d32599905e9312b0be4",
+      "thermalWork": {
+        "sourceCells": 41792,
+        "buoyancyCells": 41792
+      }
+    },
+    {
+      "scene": "wet",
+      "seed": 73,
+      "ticks": 720,
+      "hash": "37949324bfa199e7fd0ef7a4b956704570d76af549133900eba2e37714522487",
+      "thermalWork": {
+        "sourceCells": 43968,
+        "buoyancyCells": 43968
+      }
+    },
+    {
+      "scene": "storm",
+      "seed": 73,
+      "ticks": 720,
+      "hash": "9f2e8038d3c34d787fd1dfa980e206acf3c33302307215e61abdac85a411185c",
+      "thermalWork": {
+        "sourceCells": 129600,
+        "buoyancyCells": 129120
+      }
+    },
+    {
+      "scene": "vessel",
+      "seed": 73,
+      "ticks": 720,
+      "hash": "14582bd99f8916d9a06d1a21884b2b14d94297a69745ba275b682e2a3dd128ed",
+      "thermalWork": {
+        "sourceCells": 129600,
+        "buoyancyCells": 129120
+      }
+    },
+    {
+      "scene": "settled",
+      "seed": 2738958700,
+      "ticks": 720,
+      "hash": "7e95ac7d71ba2c878f09ee82658d03790167cdeb5b4a281b3b2633b9475791a9",
+      "thermalWork": {
+        "sourceCells": 0,
+        "buoyancyCells": 0
+      }
+    },
+    {
+      "scene": "falling",
+      "seed": 2738958700,
+      "ticks": 720,
+      "hash": "fe65def93f1d8aea118474cc7c9659cadf6ffb48090b8d190d5663624a23bec8",
+      "thermalWork": {
+        "sourceCells": 29184,
+        "buoyancyCells": 29184
+      }
+    },
+    {
+      "scene": "wet",
+      "seed": 2738958700,
+      "ticks": 720,
+      "hash": "a8e178fabcc0d36b547acf38a06461e503f48a67e586323eb7a7ff5571b456f3",
+      "thermalWork": {
+        "sourceCells": 43968,
+        "buoyancyCells": 43968
+      }
+    },
+    {
+      "scene": "storm",
+      "seed": 2738958700,
+      "ticks": 720,
+      "hash": "2f3d892e4a683e8170759c3012cef07764f1e4197bb9065603638a02d60a1110",
+      "thermalWork": {
+        "sourceCells": 129600,
+        "buoyancyCells": 129120
+      }
+    },
+    {
+      "scene": "vessel",
+      "seed": 2738958700,
+      "ticks": 720,
+      "hash": "d6cb9c4ff983454f21bfd70323578d8d9c7e3b65e3f7b7f2a7c06f1605ae424b",
+      "thermalWork": {
+        "sourceCells": 129600,
+        "buoyancyCells": 129120
+      }
+    },
+    {
+      "scene": "edit-load-wipe",
+      "seed": 21,
+      "ticks": 240,
+      "hash": "0b315824b7387d1909a4ebc469b039f63a2919bcd70a6059d3886d5dceadd5a5"
+    }
+  ]
+}
