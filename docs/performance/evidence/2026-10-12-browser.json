@@ -1,0 +1,57 @@
+[
+  {
+    "name": "portrait",
+    "initial": {
+      "x": 0,
+      "y": 68.9375,
+      "width": 390,
+      "height": 659.0625
+    },
+    "hud": "60 fps · sim 5.5 ms",
+    "errors": []
+  },
+  {
+    "name": "landscape",
+    "initial": {
+      "x": 41.4375,
+      "y": 4,
+      "width": 679.109375,
+      "height": 381.984375
+    },
+    "hud": "60 fps · sim 4.1 ms",
+    "errors": []
+  },
+  {
+    "name": "desktop",
+    "initial": {
+      "x": 139.796875,
+      "y": 99.28125,
+      "width": 1160.375,
+      "height": 652.703125
+    },
+    "hud": "45 fps · sim 5.7 ms",
+    "errors": []
+  },
+  {
+    "name": "portrait-2d",
+    "initial": {
+      "x": -610.5208129882812,
+      "y": -95.828125,
+      "width": 1464.578125,
+      "height": 823.828125
+    },
+    "hud": "60 fps · sim 6.4 ms · 3.8×",
+    "errors": []
+  },
+  {
+    "name": "portrait-grain",
+    "initial": {
+      "x": 0,
+      "y": 68.9375,
+      "width": 390,
+      "height": 659.0625
+    },
+    "hud": "60 fps · sim 5.1 ms · 3.8×",
+    "errors": []
+  }
+]

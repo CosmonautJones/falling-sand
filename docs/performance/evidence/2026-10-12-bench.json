@@ -1,0 +1,40 @@
+{
+  "benchmark": "alembic-v2-ab",
+  "rounds": 5,
+  "rootA": "baseline b11c88d63092e6cdf9a19deffa367cff5bcd3e8e (identical source tree)",
+  "rootB": ".",
+  "rows": [
+    {
+      "scene": "settled",
+      "A_p50_ms": 2.047,
+      "B_p50_ms": 1.424,
+      "ratio": 0.696
+    },
+    {
+      "scene": "falling",
+      "A_p50_ms": 3.198,
+      "B_p50_ms": 2.757,
+      "ratio": 0.862
+    },
+    {
+      "scene": "wet",
+      "A_p50_ms": 3.526,
+      "B_p50_ms": 2.995,
+      "ratio": 0.849
+    },
+    {
+      "scene": "storm",
+      "A_p50_ms": 8.93,
+      "B_p50_ms": 8.359,
+      "ratio": 0.936
+    }
+  ],
+  "runtime": {
+    "node": "v22.19.0",
+    "v8": "12.4.254.21-node.29",
+    "platform": "win32",
+    "arch": "x64"
+  },
+  "baselineCommit": "b11c88d63092e6cdf9a19deffa367cff5bcd3e8e",
+  "date": "2026-10-12"
+}
