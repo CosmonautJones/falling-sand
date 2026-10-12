@@ -1,0 +1,22 @@
+[
+  {
+    "renderer": "webgl",
+    "expectedPaintCell": {
+      "x": 264,
+      "y": 151
+    },
+    "pausedTick": 94,
+    "paintProbePinchFlaskRotationFullscreen": "pass",
+    "errors": []
+  },
+  {
+    "renderer": "2d",
+    "expectedPaintCell": {
+      "x": 264,
+      "y": 151
+    },
+    "pausedTick": 95,
+    "paintProbePinchFlaskRotationFullscreen": "pass",
+    "errors": []
+  }
+]

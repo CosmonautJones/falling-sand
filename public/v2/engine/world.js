@@ -152,6 +152,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
   const markDirty = (x, y) => { dirty[(y >> 3) * CW + (x >> 3)] = 1; };
   // Thermal skip state is derived (recomputed exactly when stale), so it is never checkpointed.
   const tQuiet = new Uint8Array(CNN), tFast = new Uint8Array(CNN), qLive = new Uint8Array(CNN), qSOL = new Uint16Array(CNN), qHS = new Float32Array(CNN);
+  const tSkip = new Uint8Array(CNN), thermalWork = { sourceCells: 0, buoyancyCells: 0 };
   let scanDir = 1, blastKick = 0, trailsLive = false;
   const EV = [];
   const ev = e => { if (EV.length < 48) EV.push(e); };
@@ -1083,19 +1084,51 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
 
   // ---------- fields ----------
   function thermals() {
-    for (let i = 0; i < N; i++) { const s = SOURCE[cells[i]]; if (s > heat[i]) heat[i] = s; }
-    for (let y = H - 1; y >= 1; y--) {
-      const row = y * W;
-      for (let x = 0; x < W; x++) {
-        const i = row + x;
-        if (born[i]) continue;
-        const m = cells[i];
-        if (SOURCE[m] > 0 || cells[i - W] !== m) continue;
-        if (heat[i] < heat[i - W] + 24) continue;
-        swap(x, y, x, y - 1); born[i - W] = 1;
+    // Freeze the previous quiet halo before sources/buoyancy can dirty neighbouring chunks.
+    // Quiet homogeneous chunks at resting heat cannot source heat or exchange a hot/cold pair.
+    let active = 0;
+    for (let cy = 0; cy < CH; cy++) for (let cx = 0; cx < CW; cx++) {
+      const c = cy * CW + cx;
+      let quiet = tQuiet[c];
+      for (let dy = -1; dy <= 1 && quiet; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const nx = cx + dx, ny = cy + dy;
+        if (nx < 0 || ny < 0 || nx >= CW || ny >= CH) continue;
+        const n = ny * CW + nx;
+        if (!tQuiet[n] || dirty[n]) { quiet = 0; break; }
+      }
+      tSkip[c] = quiet;
+      if (!quiet) active += CC[c];
+    }
+    const dense = active > N * 0.65;
+    thermalWork.sourceCells = dense ? N : active;
+    thermalWork.buoyancyCells = 0;
+    if (dense) {
+      for (let i = 0; i < N; i++) { const s = SOURCE[cells[i]]; if (s > heat[i]) heat[i] = s; }
+    } else {
+      for (let c = 0; c < CNN; c++) {
+        if (tSkip[c]) continue;
+        const y0 = (c / CW | 0) << 3, x0 = (c % CW) << 3, y1 = Math.min(H, y0 + 8);
+        for (let y = y0; y < y1; y++) for (let i = y * W + x0, end = i + 8; i < end; i++) {
+          const s = SOURCE[cells[i]]; if (s > heat[i]) heat[i] = s;
+        }
       }
     }
-    let melts = 0;
+    for (let y = H - 1; y >= 1; y--) {
+      const row = y * W, crow = (y >> 3) * CW;
+      for (let cx = 0; cx < CW; cx++) {
+        if (!dense && tSkip[crow + cx]) continue;
+        thermalWork.buoyancyCells += 8;
+        for (let x = cx << 3, end = x + 8; x < end; x++) {
+          const i = row + x;
+          if (born[i]) continue;
+          const m = cells[i];
+          if (SOURCE[m] > 0 || cells[i - W] !== m) continue;
+          if (heat[i] < heat[i - W] + 24) continue;
+          swap(x, y, x, y - 1); born[i - W] = 1;
+        }
+      }
+    }
+    let melts = 0, fastChunks = 0;
     for (let cy = 0; cy < CH; cy++) for (let cx = 0; cx < CW; cx++) {
       const c = cy * CW + cx, y0 = cy << 3, y1 = Math.min(H, y0 + 8), x0 = cx << 3, x1 = x0 + 8;
       // A quiet chunk (one material, every cell at its resting heat) among quiet, unchanged
@@ -1107,7 +1140,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
         const n = ny * CW + nx; if (!tQuiet[n] || dirty[n]) { fast = 0; break; }
       }
       tFast[c] = fast;
-      if (fast) { HS[c] = qHS[c]; SOL[c] = qSOL[c]; live[c] = qLive[c]; continue; }
+      if (fast) { fastChunks++; HS[c] = qHS[c]; SOL[c] = qSOL[c]; live[c] = qLive[c]; continue; }
       let hs = 0, sol = 0, lv = 0, quiet = 1;
       const m0 = cells[y0 * W + x0];
       for (let y = y0; y < y1; y++) {
@@ -1129,10 +1162,17 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
       }
       HS[c] = qHS[c] = hs; SOL[c] = qSOL[c] = sol; live[c] = qLive[c] = lv; tQuiet[c] = quiet;
     }
-    for (let c = 0; c < CNN; c++) {
-      if (tFast[c]) continue;
-      const y0 = (c / CW | 0) << 3, x0 = (c % CW) << 3, y1 = Math.min(H, y0 + 8);
-      for (let y = y0; y < y1; y++) { const i = y * W + x0; heat.set(heatOut.subarray(i, i + 8), i); }
+    if (!fastChunks) heat.set(heatOut);
+    else for (let cy = 0; cy < CH; cy++) {
+      const crow = cy * CW, y0 = cy << 3, y1 = Math.min(H, y0 + 8);
+      for (let cx = 0; cx < CW;) {
+        if (tFast[crow + cx]) { cx++; continue; }
+        const x0 = cx << 3;
+        while (cx < CW && !tFast[crow + cx]) cx++;
+        const x1 = cx << 3;
+        // Copy adjacent active chunks together instead of allocating a view per 8-cell row.
+        for (let y = y0; y < y1; y++) { const row = y * W; heat.set(heatOut.subarray(row + x0, row + x1), row + x0); }
+      }
     }
     // Heat acts on its own: ice melts, hot water boils, and radiant heat lights fuel.
     for (let k = 0; k < melts; k++) {
@@ -1591,7 +1631,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
   }
   function inspect() {
     return {
-      cells, shades, heat, trails, VX, VY, born, WU, WV, awake, dirty, W, H, step, setc, get, paint, paintLine, detonate,
+      cells, shades, heat, trails, VX, VY, born, WU, WV, awake, dirty, thermalWork, W, H, step, setc, get, paint, paintLine, detonate,
       clear: clearGrid, seed: n => random.reset(n), DENS, KIND, DISP, G, MAXV,
       // Scratch is rebuilt before being read on the next tick/operation: born, heatOut,
       // trailOut, meltList, PRE, WU0/WV0, WP/WP2/WD, HS/SOL/WS, neighbor/sense scratch.

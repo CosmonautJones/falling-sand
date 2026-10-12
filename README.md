@@ -26,6 +26,9 @@ upscale — heat haze, water caustics, gold spark, blast shake, Magnum Opus auro
 - Simulation runs in a worker, with touch pour and two-finger pinch/pan.
 - Phone controls stay compact: swipe materials, pause, cycle brush size, or open
   **More** for tools, speed, saves, sound, and reset.
+- Portrait phones start with a larger close view around the pond and casks.
+  Tap **overview** to see the whole vessel, then **close view** to return.
+  Pinch with two fingers to zoom and pan; grains keep their square shape.
 - Rotate for a wider vessel. **Fullscreen** expands the canvas with an overlay
   toolbar; browsers without native fullscreen use the same immersive layout.
   Tap **exit screen** to return. The world and discoveries survive rotation.
@@ -88,6 +91,9 @@ rotation, import/export and quota recovery, and phone serialization latency
 remain pending. Node timings do not establish a phone frame budget or a device
 baseline. Later solver stages still require their own conservation and
 real-device performance gates.
+
+For the October 2026 thermal optimization, exact-state A/B checks and portrait
+browser acceptance, see the [performance report](docs/performance/2026-10-12-heat-portrait.md).
 
 The vessel draws at 480×270 grains. Chrome nearest-neighbour upscales that buffer — it should not shade a 4K framebuffer for a pixel grid. In Chrome: ⋮ → **Cast, save, and share** → **Install page as app**, or **More tools** → **Create shortcut** → Open as window. That is the standalone window; no Electron.
 

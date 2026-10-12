@@ -21,10 +21,12 @@
 .root[data-immersive]{position:relative;padding: max(4px,env(safe-area-inset-top)) max(4px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left))!important;gap:4px!important}.root[data-immersive] .hd{display:none!important}.root[data-immersive] .fig{flex:1 1 0!important;height:auto!important;padding:0!important}.root[data-immersive] .zoom-controls{top:10px;bottom:auto!important}.root[data-immersive] [data-mobile-hud]{display:none}.root[data-immersive] .ctl{position:absolute;bottom:max(4px,env(safe-area-inset-bottom));left:max(4px,env(safe-area-inset-left));right:max(4px,env(safe-area-inset-right));width:auto!important;padding:6px;background:rgba(20,16,12,.92);z-index:10;overflow:visible!important}
 button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-offset:2px}
 .phone-bar,.sheet{display:none}.zoom-mini{width:128px}
+.flask-status{position:absolute;top:max(6px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:6;pointer-events:none;text-align:center;width:max-content;max-width:92%!important}.flask-status:not(:empty){padding:4px 10px;border-radius:12px;background:rgba(20,16,12,.88)}
 .root{touch-action:none}[data-scroll]{touch-action:pan-y;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}.chips{touch-action:pan-x}
 .root[data-immersive] .rotate-hint,.root[data-immersive] .flask-status{display:none}
 @media(max-width:520px){.ftab{letter-spacing:.06em!important;padding:6px 5px 8px!important;font-size:12px!important}}
 .phone-bar{flex:0 0 auto;flex-direction:column;gap:6px;width:100%;padding:0 10px}.phone-row{display:flex;gap:8px;align-items:stretch}.phone-hud{font-size:11px;letter-spacing:.06em;color:rgba(203,184,154,.7);font-variant-numeric:tabular-nums;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:1.3em}
+.phone-status{display:contents}.view-toggle{display:none;align-items:center;justify-content:center;min-height:44px;padding:0 14px;background:#1c1612;color:#e8c97a;border:1px solid #3a3128;border-radius:12px;font-size:13px;cursor:pointer}
 .pb{display:flex;align-items:center;justify-content:center;gap:8px;min-width:52px;height:52px;padding:0 12px;background:#1c1612;color:#f0e2c4;border:1px solid #3a3128;border-radius:14px;font-size:18px;cursor:pointer}.pb:active{background:#2a2119}.pb[aria-expanded="true"]{border-color:#c49a4a}
 .pb-el{flex:1;justify-content:flex-start;min-width:0;text-align:left}.pb-el .sw{width:26px;height:26px;border-radius:8px}.pb-txt{display:flex;flex-direction:column;min-width:0;line-height:1.15}.pb-name{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pb-sub{font-size:11px;color:#a8977c;letter-spacing:.04em}.caret{margin-left:auto;color:#c49a4a;font-size:14px}
 .sw{display:inline-block;flex:0 0 auto;border:1px solid #5a4630;box-shadow:inset 0 -5px 6px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.28)}.dot{display:block;border-radius:50%;background:#e8c97a}
@@ -47,12 +49,13 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
 .root{gap:6px!important;padding:max(8px,env(safe-area-inset-top)) env(safe-area-inset-right) max(8px,env(safe-area-inset-bottom)) env(safe-area-inset-left)!important}
 .hd{width:100%!important;display:flex!important;flex-direction:column;align-items:center;gap:0!important;padding:0 14px}.hd-title{font-size:17px!important;letter-spacing:.32em!important}.hd-line{font-size:13px!important;min-height:2.7em!important}
 .fig{width:100%!important;flex:1 1 0!important;padding:0!important;background:none!important;box-shadow:none!important;border-radius:0!important}.rivet{display:none}
-.flask-status{position:absolute;top:max(6px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:6;pointer-events:none;text-align:center}.toast{top:6px!important;padding:4px 12px 4px 6px!important;gap:8px!important;max-width:92%!important;border-radius:999px!important;background:rgba(20,16,12,.72)!important;box-shadow:none!important}
+.toast{top:6px!important;padding:4px 12px 4px 6px!important;gap:8px!important;max-width:92%!important;border-radius:999px!important;background:rgba(20,16,12,.72)!important;box-shadow:none!important}
 .toast > div:first-child{width:14px!important;height:14px!important}.toast > div:last-child{flex-direction:row!important;align-items:baseline;gap:8px;min-width:0}.toast-label{font-size:10px!important;letter-spacing:.14em!important;white-space:nowrap}
 .toast-text{font-size:12px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:62vw}}
 @media(orientation:landscape) and (max-height:520px){.root{flex-direction:row!important;align-items:stretch!important;padding:max(4px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))!important}.hd,.ctl,.zoom-buttons,[data-mobile-hud]{display:none!important}.sheet{display:flex}.fig{flex:1 1 0!important;padding:0!important;background:none!important;box-shadow:none!important}.rivet{display:none}
 .phone-bar{display:flex;flex-direction:column-reverse;justify-content:flex-end;width:76px;padding:0}.phone-row{flex-direction:column}.pb-el{flex:0 0 auto;flex-direction:column;justify-content:center;gap:2px;height:76px;padding:4px}.pb-el .pb-txt{align-items:center}.pb-el .caret,.pb-sub{display:none}.pb-name{font-size:12px;max-width:68px}.phone-hud{white-space:normal;font-size:10px;margin-top:auto}
 .sheet{left:auto;top:0;width:min(380px,58vw);max-height:none;border-radius:18px 0 0 18px;border-top:none;border-left:1px solid rgba(196,154,74,.55);padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) 0}}
+@media(orientation:portrait) and (max-width:700px){.vessel-viewport[data-view="close"]{width:100%!important;height:100%!important;aspect-ratio:auto!important}.phone-status{display:flex;align-items:center;gap:8px}.phone-hud{flex:1;min-width:0}.view-toggle{display:flex}.rotate-hint{display:none}}
 </style>
 </helmet>
 <div ref="{{ rootRef }}" class="root" style="height:100dvh; display:flex; flex-direction:column; align-items:center; gap:8px; padding:max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); overflow:hidden; color:#f0e2c4; font:15px/1.5 Palatino,'Palatino Linotype','Book Antiqua','EB Garamond',Georgia,serif; -webkit-font-smoothing:antialiased; background:radial-gradient(70% 45% at 50% -8%, rgba(176,137,72,.16), transparent 55%), #100c09;">
@@ -74,7 +77,6 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
       <button onClick="{{ openFlasks }}" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:6px 12px; font-size:13px; letter-spacing:.06em; cursor:pointer;" style-hover="border-color:#c49a4a;" class="hb">flasks</button>
     </div>
   </header>
-  <div class="flask-status" role="status" aria-live="polite" aria-atomic="true" style="color:#d4b56a; font-size:13px; max-width:100%;">{{ flaskStatus }}</div>
 
   <figure class="col fig" style="margin:0; position:relative; width:min(96vw,1440px); flex:1 1 0; min-height:0; padding:10px; border-radius:4px; background:radial-gradient(120% 80% at 50% 0%, rgba(176,137,72,.26), transparent 48%), linear-gradient(180deg, #43382c, #2b231b); box-shadow:inset 0 1px 0 rgba(232,201,122,.7), inset 0 -1px 0 rgba(0,0,0,.6), inset 0 0 0 1px #2a2118, 0 0 0 1px #5a4630, 0 30px 60px rgba(0,0,0,.65); container-type:size; display:flex; align-items:center; justify-content:center;">
     <div class="rivet" style="position:absolute; top:4px; left:4px; width:5px; height:5px; border-radius:50%; background:radial-gradient(circle at 35% 35%, #f0d38a, #6b5130);"></div>
@@ -82,7 +84,8 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
     <div class="rivet" style="position:absolute; bottom:4px; left:4px; width:5px; height:5px; border-radius:50%; background:radial-gradient(circle at 35% 35%, #f0d38a, #6b5130);"></div>
     <div class="rivet" style="position:absolute; bottom:4px; right:4px; width:5px; height:5px; border-radius:50%; background:radial-gradient(circle at 35% 35%, #f0d38a, #6b5130);"></div>
 
-    <div ref="{{ vpRef }}" style="position:relative; overflow:hidden; width:min(100cqw, calc(100cqh * 480 / 270)); aspect-ratio:480 / 270; max-height:100%; background:#0b090e; touch-action:none; -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; cursor:none; border-radius:2px;">
+    <div ref="{{ vpRef }}" class="vessel-viewport" data-view="{{ viewMode }}" style="position:relative; overflow:hidden; width:min(100cqw, calc(100cqh * 480 / 270)); aspect-ratio:480 / 270; max-height:100%; background:#0b090e; touch-action:none; -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; cursor:none; border-radius:2px;">
+      <div class="flask-status" role="status" aria-live="polite" aria-atomic="true" style="color:#d4b56a; font-size:13px; max-width:100%;">{{ flaskStatus }}</div>
       <canvas ref="{{ cvRef }}" style="position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none;"></canvas>
       <div style="position:absolute; inset:0; pointer-events:none; background:linear-gradient(112deg, rgba(255,236,200,.06) 0%, rgba(255,236,200,0) 18%, rgba(255,236,200,0) 74%, rgba(255,236,200,.035) 100%); box-shadow:inset 0 0 0 1px rgba(232,201,122,.14), inset 0 0 60px rgba(0,0,0,.45);"></div>
 
@@ -202,7 +205,10 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
   </div>
 
   <nav class="phone-bar" aria-label="Vessel controls">
-    <div class="phone-hud" data-phone-hud ref="{{ phoneHudRef }}"></div>
+    <div class="phone-status">
+      <div class="phone-hud" data-phone-hud ref="{{ phoneHudRef }}"></div>
+      <button class="view-toggle" data-phone="view" aria-label="{{ viewToggleAria }}" aria-pressed="{{ portraitOverview }}" onClick="{{ togglePortraitView }}">{{ viewToggleLabel }}</button>
+    </div>
     <div class="phone-row">
       <button data-phone="element" class="pb pb-el" data-suggest="{{ suggesting }}" aria-haspopup="dialog" aria-expanded="{{ elementsOpen }}" aria-label="{{ elementAria }}" onClick="{{ openElements }}">
         <span class="sw" style="background:{{ brushSwatch }};"></span>
@@ -428,7 +434,7 @@ const FRAG = `#version 300 es
 precision highp float;
 uniform sampler2D uMap; uniform sampler2D uEmis; uniform sampler2D uLut; uniform sampler2D uFx;
 uniform vec2 uGrid; uniform float uTime; uniform float uWonder; uniform float uShake;
-uniform float uPx; uniform float uBloom; uniform float uZoom; uniform vec2 uPan;
+uniform float uPx; uniform float uBloom; uniform float uZoom; uniform vec2 uPan; uniform vec2 uViewScale;
 uniform float uFlash; uniform float uWipe; uniform float uLight; uniform vec4 uShip;
 in vec2 vUv; out vec4 o;
 float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
@@ -444,7 +450,7 @@ vec3 backdrop(vec2 st){
 }
 void main(){
   vec2 su = vec2(vUv.x, 1.0 - vUv.y);
-  vec2 st = (su - uPan) / uZoom;
+  vec2 st = (su - uPan) / (uZoom * uViewScale);
   if (uShake > 0.001) st += (vec2(hash(vec2(uTime, 2.1)), hash(vec2(uTime, 7.7))) - 0.5) * uShake * 0.014;
   vec3 eLow = textureLod(uEmis, st, 3.0).rgb;
   float hz = dot(eLow, vec3(0.7, 0.25, 0.05));
@@ -556,9 +562,9 @@ void main(){
 }`;
 const PVERT = `#version 300 es
 in vec4 aP; in vec3 aC;
-uniform vec2 uGrid; uniform float uZoom; uniform vec2 uPan; uniform float uScale;
+uniform vec2 uGrid; uniform float uZoom; uniform vec2 uPan; uniform float uScale; uniform vec2 uViewScale;
 out vec3 vC; out float vA;
-void main(){ vec2 su = (aP.xy / uGrid) * uZoom + uPan; gl_Position = vec4(su.x * 2.0 - 1.0, 1.0 - su.y * 2.0, 0.0, 1.0); gl_PointSize = max(1.0, aP.z * uScale * uZoom); vC = aC; vA = aP.w; }`;
+void main(){ vec2 su = (aP.xy / uGrid) * uZoom * uViewScale + uPan; gl_Position = vec4(su.x * 2.0 - 1.0, 1.0 - su.y * 2.0, 0.0, 1.0); gl_PointSize = max(1.0, aP.z * uScale * uZoom); vC = aC; vA = aP.w; }`;
 const PFRAG = `#version 300 es
 precision mediump float;
 in vec3 vC; in float vA; out vec4 o;
@@ -609,7 +615,7 @@ class Component extends DCLogic {
     this.armOpening();
     this.unlocked = new Set(rites);
     this.P = new Float32Array(PMAX * 10); this.PD = new Float32Array(PMAX * 7); this.pn = 0;
-    this.state = { ready: false, discovered: [], brush: 1, radius: 6, tool: 'pour', paused: false, speed: 1, folio: false, tab: 'codex', sheet: '', suggest: -1, pourHint: !poured, ambitions: [...this.ambDone], gallery: Array.isArray(gallery) ? gallery : [],
+    this.state = { ready: false, discovered: [], brush: 1, radius: 6, tool: 'pour', paused: false, speed: 1, folio: false, tab: 'codex', sheet: '', suggest: -1, pourHint: !poured, portraitOverview: false, ambitions: [...this.ambDone], gallery: Array.isArray(gallery) ? gallery : [],
       curtainMounted: !this.still, curtainOpacity: 1, whisper: '', toast: null, toastOn: false, probe: { on: false }, opus: false,
       rites: [...this.unlocked], flasks, sound, tempest, recording: false, shareLabel: 'copy scene stamp link', flaskBusy: false, flaskStatus: '', checkpointDownload: '' };
     this.frame = this.frame.bind(this);
@@ -619,6 +625,8 @@ class Component extends DCLogic {
     this.alive = true;
     this.url = new URL('./alembic-engine-v2.js', document.baseURI).href;
     try { this.M = await import(this.url); } catch (e) { console.error('engine load failed', e); return; }
+    if (!this.alive) return;
+    this.camera = await import(new URL('./camera.js', document.baseURI).href);
     if (!this.alive) return;
     this.flaskStorage = await import(new URL('./engine/flask-storage.js', document.baseURI).href);
     if (!this.alive) return;
@@ -935,11 +943,11 @@ class Component extends DCLogic {
     const U = n => gl.getUniformLocation(prog, n);
     gl.uniform1i(U('uMap'), 0); gl.uniform1i(U('uEmis'), 1); gl.uniform1i(U('uLut'), 2); gl.uniform1i(U('uFx'), 3);
     gl.uniform2f(U('uGrid'), M.W, M.H);
-    this.u = { time: U('uTime'), wonder: U('uWonder'), shake: U('uShake'), px: U('uPx'), bloom: U('uBloom'), zoom: U('uZoom'), pan: U('uPan'), flash: U('uFlash'), wipe: U('uWipe'), light: U('uLight'), ship: U('uShip') };
+    this.u = { time: U('uTime'), wonder: U('uWonder'), shake: U('uShake'), px: U('uPx'), bloom: U('uBloom'), zoom: U('uZoom'), pan: U('uPan'), viewScale: U('uViewScale'), flash: U('uFlash'), wipe: U('uWipe'), light: U('uLight'), ship: U('uShip') };
     gl.useProgram(pprog);
     const PU = n => gl.getUniformLocation(pprog, n);
     gl.uniform2f(PU('uGrid'), M.W, M.H);
-    this.pu = { zoom: PU('uZoom'), pan: PU('uPan'), scale: PU('uScale') };
+    this.pu = { zoom: PU('uZoom'), pan: PU('uPan'), scale: PU('uScale'), viewScale: PU('uViewScale') };
     this.vaoP = gl.createVertexArray(); gl.bindVertexArray(this.vaoP);
     this.pbuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, this.pbuf); gl.bufferData(gl.ARRAY_BUFFER, this.PD.byteLength, gl.DYNAMIC_DRAW);
     const aP = gl.getAttribLocation(pprog, 'aP'), aC = gl.getAttribLocation(pprog, 'aC');
@@ -952,15 +960,18 @@ class Component extends DCLogic {
   observe() { this.ro = new ResizeObserver(() => this.resize()); this.ro.observe(this.vpRef.current); this.resize(); }
   resize() {
     const cv = this.cvRef.current, vp = this.vpRef.current; if (!cv || !vp || !this.M) return;
-    const r = vp.getBoundingClientRect(); this.vw = r.width; this.vh = r.height;
+    const r = vp.getBoundingClientRect(); if (!r.width || !r.height) return;
+    const before = this.layout, close = matchMedia('(orientation:portrait) and (max-width:700px)').matches && !this.state.portraitOverview;
+    this.vw = r.width; this.vh = r.height; this.layout = this.camera.layout(r.width, r.height);
+    const next = !before || close !== this.portraitClose
+      ? (close ? this.camera.closeView(this.layout) : { zoom: 1, panX: 0, panY: 0 })
+      : this.camera.reframe(before, this.layout, this.view);
+    this.portraitClose = close;
+    this.setView(next, false);
     if (!this.gl) return;
-    let bw = this.M.W, bh = this.M.H;
-    if ((this.props.quality ?? 'full') === 'full') {
-      const s = Math.min(window.devicePixelRatio || 1, 2);
-      bw = Math.max(this.M.W, Math.round(r.width * s)); bh = Math.max(this.M.H, Math.round(r.height * s));
-      if (bw > 2560) { bh = Math.round(bh * 2560 / bw); bw = 2560; }
-      cv.style.imageRendering = 'auto';
-    } else cv.style.imageRendering = 'pixelated';
+    const full = (this.props.quality ?? 'full') === 'full';
+    const { width: bw, height: bh } = this.camera.bufferSize(this.layout, full ? Math.min(window.devicePixelRatio || 1, 2) : 0);
+    cv.style.imageRendering = full ? 'auto' : 'pixelated';
     if (cv.width !== bw || cv.height !== bh) { cv.width = bw; cv.height = bh; }
     this.gl.viewport(0, 0, bw, bh);
     this.updateReticleSize();
@@ -982,7 +993,8 @@ class Component extends DCLogic {
     const k = 1 + (this.punch || 0) * 0.05, zoom = v.zoom * k;
     const px0 = this.vw ? v.panX / this.vw : 0, py0 = this.vh ? v.panY / this.vh : 0;
     const ax = this.punchAt ? this.punchAt.x : 0.5, ay = this.punchAt ? this.punchAt.y : 0.5;
-    const sx = ax * v.zoom + px0, sy = ay * v.zoom + py0;
+    const scaleY = this.layout.worldHeight / this.vh;
+    const sx = ax * v.zoom + px0, sy = ay * v.zoom * scaleY + py0;
     const panX = sx - (sx - px0) * k, panY = sy - (sy - py0) * k;
     gl.disable(gl.BLEND);
     gl.useProgram(this.prog); gl.bindVertexArray(this.vaoQ);
@@ -991,6 +1003,7 @@ class Component extends DCLogic {
     gl.uniform1f(u.px, cv.width / this.M.W * v.zoom);
     gl.uniform1f(u.bloom, this.props.bloom ?? 1); gl.uniform1f(u.light, this.props.lighting ?? 1);
     gl.uniform1f(u.zoom, zoom); gl.uniform2f(u.pan, panX, panY);
+    gl.uniform2f(u.viewScale, 1, scaleY);
     gl.uniform1f(u.flash, this.still ? 0 : this.flash);
     gl.uniform1f(u.wipe, this.wipe);
     const s = this.ship; gl.uniform4f(u.ship, s ? s.x : 0, s ? s.y : 0, s ? s.beam : 0, s ? 1 : 0);
@@ -999,6 +1012,7 @@ class Component extends DCLogic {
       gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
       gl.useProgram(this.pprog); gl.bindVertexArray(this.vaoP);
       gl.uniform1f(this.pu.zoom, zoom); gl.uniform2f(this.pu.pan, panX, panY); gl.uniform1f(this.pu.scale, cv.width / this.M.W);
+      gl.uniform2f(this.pu.viewScale, 1, scaleY);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.pbuf); gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.PD, 0, this.pn * 7);
       gl.drawArrays(gl.POINTS, 0, this.pn);
       gl.bindVertexArray(null);
@@ -1051,12 +1065,12 @@ class Component extends DCLogic {
   }
 
   // ---------- view / input ----------
-  clampPan(v) { const minX = this.vw - this.vw * v.zoom, minY = this.vh - this.vh * v.zoom; return { zoom: v.zoom, panX: Math.min(0, Math.max(minX, v.panX)), panY: Math.min(0, Math.max(minY, v.panY)) }; }
+  clampPan(v) { return this.camera.clampView(this.layout, v); }
   cellAt(cx, cy) {
-    const r = this.vpRef.current.getBoundingClientRect(), v = this.view;
-    return { x: Math.floor(((cx - r.left - v.panX) / (r.width * v.zoom)) * this.M.W), y: Math.floor(((cy - r.top - v.panY) / (r.height * v.zoom)) * this.M.H) };
+    const r = this.vpRef.current.getBoundingClientRect();
+    return this.camera.cellAt(this.layout, this.view, cx - r.left, cy - r.top);
   }
-  cellToPx(c) { const v = this.view; return { x: ((c.x + 0.5) / this.M.W) * this.vw * v.zoom + v.panX, y: ((c.y + 0.5) / this.M.H) * this.vh * v.zoom + v.panY }; }
+  cellToPx(c) { return this.camera.cellToPx(this.layout, this.view, c); }
   updateReticleSize() {
     const el = this.retRef.current; if (!el || !this.vw || !this.M) return;
     const s = this.state, r = s.tool === 'spray' ? Math.max(2, s.radius * 1.6) : s.radius;
@@ -1094,7 +1108,7 @@ class Component extends DCLogic {
   }
   setView(v, smooth, anchor) {
     v = this.clampPan(v); this.viewT = v; this.zoomAnchor = anchor || null;
-    if (!smooth) { this.view = v; this.updateReticleSize(); this.syncViewUI(); return; }
+    if (!smooth) { if (this.viewRaf) cancelAnimationFrame(this.viewRaf); this.viewRaf = 0; this.view = v; this.updateReticleSize(); this.syncViewUI(); return; }
     if (!this.viewRaf) this.viewRaf = requestAnimationFrame(this.stepView);
   }
   stepView = () => {
@@ -1102,7 +1116,7 @@ class Component extends DCLogic {
     const a = this.view, b = this.viewT; if (!a || !b) return;
     const k = 0.3, z = a.zoom * Math.pow(b.zoom / a.zoom, k), an = this.zoomAnchor;
     let px, py;
-    if (an) { px = an.sx - an.gx * this.vw * z; py = an.sy - an.gy * this.vh * z; }
+    if (an) { px = an.sx - an.gx * this.layout.worldWidth * z; py = an.sy - an.gy * this.layout.worldHeight * z; }
     else { px = a.panX + (b.panX - a.panX) * k; py = a.panY + (b.panY - a.panY) * k; }
     let v = this.clampPan({ zoom: z, panX: px, panY: py });
     const done = Math.abs(v.zoom - b.zoom) < 0.003 && Math.abs(v.panX - b.panX) < 0.6 && Math.abs(v.panY - b.panY) < 0.6;
@@ -1113,14 +1127,23 @@ class Component extends DCLogic {
   zoomBy(f, sx, sy) {
     const base = this.viewT || this.view;
     if (sx == null) { sx = this.vw / 2; sy = this.vh / 2; }
-    const gx = (sx - base.panX) / (this.vw * base.zoom), gy = (sy - base.panY) / (this.vh * base.zoom);
-    const zoom = Math.min(12, Math.max(1, base.zoom * f));
-    this.setView({ zoom, panX: sx - gx * this.vw * zoom, panY: sy - gy * this.vh * zoom }, true, { sx, sy, gx, gy });
+    const gx = (sx - base.panX) / (this.layout.worldWidth * base.zoom), gy = (sy - base.panY) / (this.layout.worldHeight * base.zoom);
+    const next = this.camera.zoomAt(this.layout, base, base.zoom * f, sx, sy);
+    this.setView(next, !this.still, { sx, sy, gx, gy });
   }
   panBy(dx, dy, smooth) { const b = smooth ? (this.viewT || this.view) : this.view; this.setView({ zoom: b.zoom, panX: b.panX + dx, panY: b.panY + dy }, smooth); }
-  centerOn(fx, fy, smooth) { const b = this.viewT || this.view; this.setView({ zoom: b.zoom, panX: this.vw / 2 - fx * this.vw * b.zoom, panY: this.vh / 2 - fy * this.vh * b.zoom }, smooth); }
+  centerOn(fx, fy, smooth) { const b = this.viewT || this.view; this.setView({ zoom: b.zoom, panX: this.vw / 2 - fx * this.layout.worldWidth * b.zoom, panY: this.vh / 2 - fy * this.layout.worldHeight * b.zoom }, smooth); }
+  togglePortraitView() { this.setState({ portraitOverview: !this.state.portraitOverview }, () => this.resize()); }
+  fitWorld() {
+    this.setState({ sheet: '', portraitOverview: true }, () => { this.resize(); this.setView({ zoom: 1, panX: 0, panY: 0 }, !this.still); });
+  }
   syncViewUI() {
     const v = this.view; if (!v) return;
+    if (this.ctx2d) {
+      const cv = this.cvRef.current;
+      cv.style.width = this.layout.worldWidth * v.zoom + 'px'; cv.style.height = this.layout.worldHeight * v.zoom + 'px';
+      cv.style.transform = `translate(${v.panX}px, ${v.panY}px)`;
+    }
     const lab = this.zoomLabRef?.current; if (lab) lab.textContent = Math.round(v.zoom * 100) + '%';
     const mini = this.miniRef?.current, rect = this.miniRectRef?.current;
     if (mini) {
@@ -1131,8 +1154,8 @@ class Component extends DCLogic {
       if (on) this.miniHideT = setTimeout(() => show(false), 1600);
     }
     if (rect && this.vw) {
-      rect.style.left = (-v.panX / (this.vw * v.zoom) * 100) + '%'; rect.style.top = (-v.panY / (this.vh * v.zoom) * 100) + '%';
-      rect.style.width = (100 / v.zoom) + '%'; rect.style.height = (100 / v.zoom) + '%';
+      rect.style.left = (-v.panX / (this.layout.worldWidth * v.zoom) * 100) + '%'; rect.style.top = (-v.panY / (this.layout.worldHeight * v.zoom) * 100) + '%';
+      rect.style.width = (this.vw / (this.layout.worldWidth * v.zoom) * 100) + '%'; rect.style.height = (this.vh / (this.layout.worldHeight * v.zoom) * 100) + '%';
     }
   }
   miniPoint = e => {
@@ -1191,7 +1214,7 @@ class Component extends DCLogic {
       const d = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
       this.zoomBy(Math.exp(-d * (e.ctrlKey ? 0.012 : 0.0022)), sx, sy);
     }, { passive: false });
-    on(vp, 'dblclick', e => { if (e.button === 0 && !isUi(e)) this.setView({ zoom: 1, panX: 0, panY: 0 }, true); });
+    on(vp, 'dblclick', e => { if (e.button === 0 && !isUi(e)) this.fitWorld(); });
     on(vp, 'pointerdown', e => {
       if (isUi(e)) return;
       this.ensureAudio();
@@ -1203,7 +1226,7 @@ class Component extends DCLogic {
         touch.cancel();
         this.painting = false; this.lastCell = null; this.dragStart = null; this.drawPreview();
         this.gesture = 'pinch'; cap(e);
-        this.pinch = { d: Math.hypot(p.x - q.x, p.y - q.y) || 1, zoom: v.zoom, gx: (mx - v.panX) / (this.vw * v.zoom), gy: (my - v.panY) / (this.vh * v.zoom) };
+        this.pinch = { d: Math.hypot(p.x - q.x, p.y - q.y) || 1, zoom: v.zoom, gx: (mx - v.panX) / (this.layout.worldWidth * v.zoom), gy: (my - v.panY) / (this.layout.worldHeight * v.zoom) };
         return;
       }
       if (ptrs.size > 2 || this.gesture === 'held') return;
@@ -1236,8 +1259,8 @@ class Component extends DCLogic {
         if (ptrs.size < 2) return;
         const [p, q] = [...ptrs.values()], pc = this.pinch;
         const mx = (p.x + q.x) / 2 - r.left, my = (p.y + q.y) / 2 - r.top;
-        const zoom = Math.min(12, Math.max(1, pc.zoom * Math.hypot(p.x - q.x, p.y - q.y) / pc.d));
-        this.setView({ zoom, panX: mx - pc.gx * this.vw * zoom, panY: my - pc.gy * this.vh * zoom }, false);
+        const zoom = Math.min(12, Math.max(this.layout.minZoom, pc.zoom * Math.hypot(p.x - q.x, p.y - q.y) / pc.d));
+        this.setView({ zoom, panX: mx - pc.gx * this.layout.worldWidth * zoom, panY: my - pc.gy * this.layout.worldHeight * zoom }, false);
         return;
       }
       if (this.gesture === 'held') return;
@@ -1284,7 +1307,7 @@ class Component extends DCLogic {
       if (e.key === ']') { this.selectRadius(sizes[Math.min(sizes.length - 1, (i < 0 ? 0 : i) + 1)]); return; }
       if (e.key === '=' || e.key === '+') { e.preventDefault(); this.zoomBy(1.5); return; }
       if (e.key === '-' || e.key === '_') { e.preventDefault(); this.zoomBy(1 / 1.5); return; }
-      if (e.key === 'f' || e.key === 'F') { this.setView({ zoom: 1, panX: 0, panY: 0 }, true); return; }
+      if (e.key === 'f' || e.key === 'F') { this.fitWorld(); return; }
       const arrows = { ArrowLeft: [1, 0], ArrowRight: [-1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] }[e.key];
       if (arrows) { e.preventDefault(); const st = this.vw * 0.18; this.panBy(arrows[0] * st, arrows[1] * st, true); return; }
       const digit = e.key === '0' ? 10 : Number(e.key);
@@ -1523,7 +1546,9 @@ class Component extends DCLogic {
     const base = {
       toolLabel: s.tool, radius: s.radius, cycleBrush: () => { const sizes = this.M.BRUSH_SIZES; this.selectRadius(sizes[(sizes.indexOf(s.radius) + 1) % sizes.length]); }, rootRef: this.rootRef, toggleScreen: () => this.goFullscreen(), vpRef: this.vpRef, cvRef: this.cvRef, retRef: this.retRef, hudRef: this.hudRef, boxRef: this.boxRef, lineRef: this.lineRef,
       miniRef: this.miniRef || (this.miniRef = React.createRef()), miniRectRef: this.miniRectRef || (this.miniRectRef = React.createRef()), zoomLabRef: this.zoomLabRef || (this.zoomLabRef = React.createRef()),
-      miniPoint: this.miniPoint, zoomIn: () => this.zoomBy(1.5), zoomOut: () => this.zoomBy(1 / 1.5), zoomFit: () => { this.setState({ sheet: '' }); this.setView({ zoom: 1, panX: 0, panY: 0 }, true); },
+      miniPoint: this.miniPoint, zoomIn: () => this.zoomBy(1.5), zoomOut: () => this.zoomBy(1 / 1.5), zoomFit: () => this.fitWorld(),
+      portraitOverview: s.portraitOverview, viewMode: s.portraitOverview ? 'overview' : 'close',
+      viewToggleLabel: s.portraitOverview ? 'close view' : 'overview', viewToggleAria: s.portraitOverview ? 'Return to close view' : 'Show whole vessel', togglePortraitView: () => this.togglePortraitView(),
       phoneHudRef: this.phoneHudRef,
       sheetOpen: !!s.sheet, elementsOpen: s.sheet === 'elements', optionsOpen: s.sheet === 'options',
       openElements: () => this.setState({ sheet: s.sheet === 'elements' ? '' : 'elements' }),
