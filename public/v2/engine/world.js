@@ -135,6 +135,15 @@ const BOIL = 90, IGNITE = 62;
 const ALIVE = new Uint8Array(64);
 for (const m of [FIRE, EMBER, LAVA, PLANT, MOSS, MUD, SMOKE, STEAM, CLOUD, PLASMA, MITE, MINNOW, VISITOR, ACID, VOID, RIFT, ICE, CRYSTAL, AZOTH, AETHER, ICHOR, ASH,
   SNOW, SULFUR, FUNGUS, SPORE, FIREFLY, CORAL]) ALIVE[m] = 1;
+// Derived once from the material rules: keep branches out of the thermal cell pass.
+const THERMAL_LIVE = new Uint8Array(256), THERMAL_SOLID = new Uint8Array(256);
+const RELAX = new Uint8Array(256).fill(2), PHASE_AT = new Uint16Array(256).fill(256);
+for (let m = 0; m < COUNT; m++) {
+  THERMAL_LIVE[m] = ALIVE[m] || KIND[m] === K_GAS ? 1 : 0;
+  THERMAL_SOLID[m] = m !== AIR && KIND[m] !== K_GAS && m !== FIRE && m !== PLASMA ? 1 : 0;
+  PHASE_AT[m] = m === ICE ? 72 : m === SNOW ? 40 : m === WATER ? BOIL : FLAMMABLE[m] ? IGNITE : 256;
+}
+for (const m of [AIR, STEAM, SMOKE]) RELAX[m] = 10;
 const CC = new Uint16Array(CNN);
 for (let cy = 0; cy < CH; cy++) for (let cx = 0; cx < CW; cx++) CC[cy * CW + cx] = 8 * Math.max(1, Math.min(8, H - cy * 8));
 
@@ -153,6 +162,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
   // Thermal skip state is derived (recomputed exactly when stale), so it is never checkpointed.
   const tQuiet = new Uint8Array(CNN), tFast = new Uint8Array(CNN), qLive = new Uint8Array(CNN), qSOL = new Uint16Array(CNN), qHS = new Float32Array(CNN);
   const tSkip = new Uint8Array(CNN), thermalWork = { sourceCells: 0, buoyancyCells: 0 };
+  const trailWork = { diffusionCells: 0 };
   let scanDir = 1, blastKick = 0, trailsLive = false;
   const EV = [];
   const ev = e => { if (EV.length < 48) EV.push(e); };
@@ -1085,7 +1095,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
   // ---------- fields ----------
   function thermals() {
     // Freeze the previous quiet halo before sources/buoyancy can dirty neighbouring chunks.
-    // Quiet homogeneous chunks at resting heat cannot source heat or exchange a hot/cold pair.
+    // Chunks at one shared resting temperature cannot source heat or exchange a hot/cold pair.
     let active = 0;
     for (let cy = 0; cy < CH; cy++) for (let cx = 0; cx < CW; cx++) {
       const c = cy * CW + cx;
@@ -1131,7 +1141,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
     let melts = 0, fastChunks = 0;
     for (let cy = 0; cy < CH; cy++) for (let cx = 0; cx < CW; cx++) {
       const c = cy * CW + cx, y0 = cy << 3, y1 = Math.min(H, y0 + 8), x0 = cx << 3, x1 = x0 + 8;
-      // A quiet chunk (one material, every cell at its resting heat) among quiet, unchanged
+      // A quiet chunk (every material at the same resting heat) among quiet, unchanged
       // neighbours would recompute to exactly the same heat, so it is skipped.
       let fast = tQuiet[c];
       for (let dy = -1; dy <= 1 && fast; dy++) for (let dx = -1; dx <= 1; dx++) {
@@ -1142,7 +1152,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
       tFast[c] = fast;
       if (fast) { fastChunks++; HS[c] = qHS[c]; SOL[c] = qSOL[c]; live[c] = qLive[c]; continue; }
       let hs = 0, sol = 0, lv = 0, quiet = 1;
-      const m0 = cells[y0 * W + x0];
+      const rest = AMBIENT[cells[y0 * W + x0]];
       for (let y = y0; y < y1; y++) {
         const row = y * W;
         for (let x = x0; x < x1; x++) {
@@ -1150,14 +1160,14 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
           const up = y > 0 ? heat[i - W] : t, dn = y < H - 1 ? heat[i + W] : t;
           const rt = x < W - 1 ? heat[i + 1] : t, lf = x > 0 ? heat[i - 1] : t;
           let next = t + ((CONDUCT[m] * (up + dn + rt + lf - (t << 2))) >> 5);
-          next += ((AMBIENT[m] - next) * (m === AIR || m === STEAM || m === SMOKE ? 10 : 2)) >> 8;
+          next += ((AMBIENT[m] - next) * RELAX[m]) >> 8;
           const v = next < 0 ? 0 : next > 255 ? 255 : next;
           heatOut[i] = v;
           hs += v;
-          if (ALIVE[m] || KIND[m] === K_GAS) lv = 1;
-          if (m !== AIR && KIND[m] !== K_GAS && m !== FIRE && m !== PLASMA) sol++;
-          if (m !== m0 || v !== AMBIENT[m]) quiet = 0;
-          if (!born[i] && ((m === ICE && v >= 72) || (m === SNOW && v >= 40) || (m === WATER && v >= BOIL) || (FLAMMABLE[m] && v >= IGNITE))) meltList[melts++] = i;
+          lv |= THERMAL_LIVE[m];
+          sol += THERMAL_SOLID[m];
+          if (AMBIENT[m] !== rest || v !== rest) quiet = 0;
+          if (!born[i] && v >= PHASE_AT[m]) meltList[melts++] = i;
         }
       }
       HS[c] = qHS[c] = hs; SOL[c] = qSOL[c] = sol; live[c] = qLive[c] = lv; tQuiet[c] = quiet;
@@ -1190,11 +1200,31 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
       const next = trails[i] + (cargoOf(shades[i]) === 0 ? 6 : 14);
       trails[i] = next > 255 ? 255 : next;
     }
+    trailWork.diffusionCells = 0;
     if (!mites && !trailsLive) return;
+    // Sample coverage before finding bounds: widespread scent keeps the dense
+    // pass, avoiding a second full bounding scan. This affects work, never values.
+    let dense = false, samples = 0;
+    for (let i = 0; i < N; i += 64) if (trails[i] && ++samples >= N / 256) { dense = true; break; }
+    let x0 = dense ? 0 : W, x1 = dense ? W - 1 : -1, y0 = dense ? 0 : H, y1 = dense ? H - 1 : -1;
+    if (!dense) for (let i = 0; i < N; i++) if (trails[i]) {
+      const x = i % W, y = (i / W) | 0;
+      if (x < x0) x0 = x; if (x > x1) x1 = x;
+      if (y < y0) y0 = y; y1 = y;
+    }
+    // The stencil reaches only one cell beyond nonzero scent. Rebuild bounds each
+    // tick so edits/restores need no new persisted cache. Clear output to discard
+    // old scent outside a shrinking rectangle (and arbitrary scratch contents).
+    trailOut.fill(0);
+    if (x1 >= 0) {
+      x0 = Math.max(0, x0 - 1); x1 = Math.min(W - 1, x1 + 1);
+      y0 = Math.max(0, y0 - 1); y1 = Math.min(H - 1, y1 + 1);
+      trailWork.diffusionCells = (x1 - x0 + 1) * (y1 - y0 + 1);
+    }
     let any = false;
-    for (let y = 0; y < H; y++) {
+    for (let y = y0; y <= y1; y++) {
       const row = y * W;
-      for (let x = 0; x < W; x++) {
+      for (let x = x0; x <= x1; x++) {
         const i = row + x, t = trails[i];
         const up = y > 0 ? trails[i - W] : t, dn = y < H - 1 ? trails[i + W] : t;
         const rt = x < W - 1 ? trails[i + 1] : t, lf = x > 0 ? trails[i - 1] : t;
@@ -1631,7 +1661,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel' } = {}) {
   }
   function inspect() {
     return {
-      cells, shades, heat, trails, VX, VY, born, WU, WV, awake, dirty, thermalWork, W, H, step, setc, get, paint, paintLine, detonate,
+      cells, shades, heat, trails, VX, VY, born, WU, WV, awake, dirty, thermalWork, trailWork, W, H, step, setc, get, paint, paintLine, detonate,
       clear: clearGrid, seed: n => random.reset(n), DENS, KIND, DISP, G, MAXV,
       // Scratch is rebuilt before being read on the next tick/operation: born, heatOut,
       // trailOut, meltList, PRE, WU0/WV0, WP/WP2/WD, HS/SOL/WS, neighbor/sense scratch.

@@ -1,0 +1,37 @@
+{
+  "benchmark": "alembic-engine-extra",
+  "rounds": 5,
+  "measuredTicks": 360,
+  "rows": [
+    {
+      "scene": "mixed",
+      "A_p50_ms": 3.817,
+      "B_p50_ms": 0.955,
+      "ratio": 0.25
+    },
+    {
+      "scene": "dam",
+      "A_p50_ms": 2.821,
+      "B_p50_ms": 2.536,
+      "ratio": 0.899
+    },
+    {
+      "scene": "local-scent",
+      "A_p50_ms": 1.573,
+      "B_p50_ms": 1.145,
+      "ratio": 0.728
+    },
+    {
+      "scene": "dense-scent",
+      "A_p50_ms": 1.573,
+      "B_p50_ms": 1.531,
+      "ratio": 0.973
+    },
+    {
+      "scene": "hot-air",
+      "A_p50_ms": 4.286,
+      "B_p50_ms": 3.877,
+      "ratio": 0.905
+    }
+  ]
+}

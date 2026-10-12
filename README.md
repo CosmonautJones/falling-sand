@@ -100,6 +100,8 @@ real-device performance gates.
 
 For the October 2026 thermal optimization, exact-state A/B checks and portrait
 browser acceptance, see the [performance report](docs/performance/2026-10-12-heat-portrait.md).
+The subsequent [engine field report](docs/performance/2026-10-12-engine-fields.md)
+covers mixed-material thermal caching and bounded scent diffusion.
 
 The vessel draws at 480×270 grains. Chrome nearest-neighbour upscales that buffer — it should not shade a 4K framebuffer for a pixel grid. In Chrome: ⋮ → **Cast, save, and share** → **Install page as app**, or **More tools** → **Create shortcut** → Open as window. That is the standalone window; no Electron.
 

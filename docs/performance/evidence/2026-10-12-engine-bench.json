@@ -1,0 +1,32 @@
+{
+  "benchmark": "alembic-v2-ab",
+  "rounds": 5,
+  "rootA": "../alembic-engine-baseline",
+  "rootB": ".",
+  "rows": [
+    {
+      "scene": "settled",
+      "A_p50_ms": 1.404,
+      "B_p50_ms": 0.995,
+      "ratio": 0.708
+    },
+    {
+      "scene": "falling",
+      "A_p50_ms": 2.608,
+      "B_p50_ms": 2.263,
+      "ratio": 0.867
+    },
+    {
+      "scene": "wet",
+      "A_p50_ms": 2.702,
+      "B_p50_ms": 2.333,
+      "ratio": 0.864
+    },
+    {
+      "scene": "storm",
+      "A_p50_ms": 7.953,
+      "B_p50_ms": 7.22,
+      "ratio": 0.908
+    }
+  ]
+}
