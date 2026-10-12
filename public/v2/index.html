@@ -20,6 +20,7 @@
 .more-controls{position:relative}.more-controls summary{cursor:pointer;list-style:none;padding:9px 14px;border:1px solid #3a3128;background:#1c1612;min-height:44px}.more-controls summary::-webkit-details-marker{display:none}.more-panel{position:absolute;right:0;bottom:calc(100% + 8px);z-index:15;width:min(420px,calc(100vw - 32px));max-height:65dvh;overflow:auto;display:flex;flex-wrap:wrap;gap:12px;padding:16px;background:#14100c;border:1px solid #c49a4a;box-shadow:0 12px 40px #000}.more-panel > div{flex-wrap:wrap}.current-tool{font-size:12px;color:#cbb89a}.exit-screen{display:none}.root[data-immersive] .enter-screen{display:none}.root[data-immersive] .exit-screen{display:inline}
 .root[data-immersive]{position:relative;padding: max(4px,env(safe-area-inset-top)) max(4px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left))!important;gap:4px!important}.root[data-immersive] .hd{display:none!important}.root[data-immersive] .fig{flex:1 1 0!important;height:auto!important;padding:0!important}.root[data-immersive] .zoom-controls{top:10px;bottom:auto!important}.root[data-immersive] [data-mobile-hud]{display:none}.root[data-immersive] .ctl{position:absolute;bottom:max(4px,env(safe-area-inset-bottom));left:max(4px,env(safe-area-inset-left));right:max(4px,env(safe-area-inset-right));width:auto!important;padding:6px;background:rgba(20,16,12,.92);z-index:10;overflow:visible!important}
 button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-offset:2px}
+.play-bar{display:flex;align-items:center;justify-content:center;gap:8px;flex:0 0 auto;padding:0 10px;max-width:100%;font-size:14px}.play-bar button{min-height:44px;padding:8px 14px;border:1px solid #5f5141;border-radius:12px;background:#211b15;color:#f0e2c4;cursor:pointer;white-space:nowrap}.play-bar .play-primary{border-color:#8a754d;color:#f3d999}.play-bar button:active{background:#3a3022}.play-bar button:disabled{opacity:.45;cursor:wait}.play-caption{color:#a8977c;font-style:italic}.play-name{color:#d4b56a}.root[data-immersive] .play-bar{position:absolute;top:max(8px,env(safe-area-inset-top));left:0;right:0;z-index:9}.play-hint{position:absolute;pointer-events:none;color:#f3d999;font-size:13px;text-shadow:0 1px 4px #000;transform:translate(-50%,8px);white-space:nowrap}.play-hint::before{content:'↑';display:block;text-align:center;font-size:18px;line-height:1.1}@media(max-width:380px){.play-caption{display:none}.play-bar{gap:6px;font-size:13px}.play-bar button{padding:8px 11px}}@media(orientation:landscape) and (max-height:520px){.play-bar{position:absolute;top:6px;left:0;right:80px;z-index:9}.play-caption,.play-name{display:none}}
 .phone-bar,.sheet{display:none}.zoom-mini{width:128px}
 .flask-status{position:absolute;top:max(6px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:6;pointer-events:none;text-align:center;width:max-content;max-width:92%!important}.flask-status:not(:empty){padding:4px 10px;border-radius:12px;background:rgba(20,16,12,.88)}
 .root{touch-action:none}[data-scroll]{touch-action:pan-y;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}.chips{touch-action:pan-x}
@@ -78,6 +79,18 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
     </div>
   </header>
 
+  <div class="play-bar" aria-label="Quick play">
+    <sc-if value="{{ notPlaying }}" hint-placeholder-val="{{ true }}">
+      <button class="play-primary" data-play="start" onClick="{{ onPlayDam }}" disabled="{{ playBusy }}">▶ Pop the dam</button>
+      <span class="play-caption">A little hole. A lot of water.</span>
+    </sc-if>
+    <sc-if value="{{ playing }}" hint-placeholder-val="{{ false }}">
+      <span class="play-name">Pop the dam</span>
+      <button class="play-primary" data-play="again" onClick="{{ onAgainDam }}" disabled="{{ playBusy }}">↻ Again</button>
+      <button data-play="back" onClick="{{ onLeaveDam }}" disabled="{{ playBusy }}">Back to vessel</button>
+    </sc-if>
+  </div>
+
   <figure class="col fig" style="margin:0; position:relative; width:min(96vw,1440px); flex:1 1 0; min-height:0; padding:10px; border-radius:4px; background:radial-gradient(120% 80% at 50% 0%, rgba(176,137,72,.26), transparent 48%), linear-gradient(180deg, #43382c, #2b231b); box-shadow:inset 0 1px 0 rgba(232,201,122,.7), inset 0 -1px 0 rgba(0,0,0,.6), inset 0 0 0 1px #2a2118, 0 0 0 1px #5a4630, 0 30px 60px rgba(0,0,0,.65); container-type:size; display:flex; align-items:center; justify-content:center;">
     <div class="rivet" style="position:absolute; top:4px; left:4px; width:5px; height:5px; border-radius:50%; background:radial-gradient(circle at 35% 35%, #f0d38a, #6b5130);"></div>
     <div class="rivet" style="position:absolute; top:4px; right:4px; width:5px; height:5px; border-radius:50%; background:radial-gradient(circle at 35% 35%, #f0d38a, #6b5130);"></div>
@@ -87,6 +100,9 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
     <div ref="{{ vpRef }}" class="vessel-viewport" data-view="{{ viewMode }}" style="position:relative; overflow:hidden; width:min(100cqw, calc(100cqh * 480 / 270)); aspect-ratio:480 / 270; max-height:100%; background:#0b090e; touch-action:none; -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; cursor:none; border-radius:2px;">
       <div class="flask-status" role="status" aria-live="polite" aria-atomic="true" style="color:#d4b56a; font-size:13px; max-width:100%;">{{ flaskStatus }}</div>
       <canvas ref="{{ cvRef }}" style="position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none;"></canvas>
+      <sc-if value="{{ playHint }}" hint-placeholder-val="{{ false }}">
+        <div ref="{{ playHintRef }}" class="play-hint" style="left:{{ playHintX }}px;top:{{ playHintY }}px;">Erase the wooden seam</div>
+      </sc-if>
       <div style="position:absolute; inset:0; pointer-events:none; background:linear-gradient(112deg, rgba(255,236,200,.06) 0%, rgba(255,236,200,0) 18%, rgba(255,236,200,0) 74%, rgba(255,236,200,.035) 100%); box-shadow:inset 0 0 0 1px rgba(232,201,122,.14), inset 0 0 60px rgba(0,0,0,.45);"></div>
 
       <sc-if value="{{ paused }}" hint-placeholder-val="{{ false }}">
@@ -596,7 +612,7 @@ const TOOLS = [['pour', 'Hold to pour'], ['spray', 'Scatter single grains'], ['l
 class Component extends DCLogic {
   constructor(props) {
     super(props);
-    ['rootRef', 'cvRef', 'vpRef', 'retRef', 'hudRef', 'phoneHudRef', 'boxRef', 'lineRef'].forEach(k => this[k] = React.createRef());
+    ['rootRef', 'cvRef', 'vpRef', 'retRef', 'hudRef', 'phoneHudRef', 'boxRef', 'lineRef', 'playHintRef'].forEach(k => this[k] = React.createRef());
     this.view = { zoom: 1, panX: 0, panY: 0 };
     this.ops = []; this.h = {}; this.shake = 0; this.wonder = 0; this.flash = 0; this.wipe = -1; this.ship = null; this.pendingDt = 0; this.simMs = 0;
     this.last = performance.now(); this.frames = 0; this.lastSample = performance.now(); this.fps = 0;
@@ -615,7 +631,7 @@ class Component extends DCLogic {
     this.armOpening();
     this.unlocked = new Set(rites);
     this.P = new Float32Array(PMAX * 10); this.PD = new Float32Array(PMAX * 7); this.pn = 0;
-    this.state = { ready: false, discovered: [], brush: 1, radius: 6, tool: 'pour', paused: false, speed: 1, folio: false, tab: 'codex', sheet: '', suggest: -1, pourHint: !poured, portraitOverview: false, ambitions: [...this.ambDone], gallery: Array.isArray(gallery) ? gallery : [],
+    this.state = { ready: false, playing: false, playHint: false, discovered: [], brush: 1, radius: 6, tool: 'pour', paused: false, speed: 1, folio: false, tab: 'codex', sheet: '', suggest: -1, pourHint: !poured, portraitOverview: false, ambitions: [...this.ambDone], gallery: Array.isArray(gallery) ? gallery : [],
       curtainMounted: !this.still, curtainOpacity: 1, whisper: '', toast: null, toastOn: false, probe: { on: false }, opus: false,
       rites: [...this.unlocked], flasks, sound, tempest, recording: false, shareLabel: 'copy scene stamp link', flaskBusy: false, flaskStatus: '', checkpointDownload: '' };
     this.frame = this.frame.bind(this);
@@ -645,6 +661,7 @@ class Component extends DCLogic {
     this.toastsMod = await import(new URL('./toasts.js', document.baseURI).href);
     this.goals = await import(new URL('./ambitions.js', document.baseURI).href);
     this.galleryMod = await import(new URL('./gallery.js', document.baseURI).href);
+    this.playMod = await import(new URL('./play.js', document.baseURI).href);
     if (!this.alive) return;
     this.nudgeT = setTimeout(() => this.nudge(), 25000);
     this.bindInput();
@@ -659,6 +676,7 @@ class Component extends DCLogic {
     this.raf = requestAnimationFrame(this.frame);
     this.curtainT = setTimeout(() => this.liftCurtain(), 2200);
     this.loadFromHash();
+    if (new URLSearchParams(location.search).get('play') === 'dam' && !location.hash) this.enterDam();
   }
   componentWillUnmount() {
     this.alive = false;
@@ -691,10 +709,11 @@ class Component extends DCLogic {
     for (const [requestId, job] of this.checkpointJobs) this.onCheckpointReply({ t: job.operation, requestId, ok: false, error: 'Worker unavailable; please retry.' });
     this.checkpointRequests = [];
     this.eng = this.M.createEngine(); this.mode = 'local';
+    if (this.toySession) this.eng.restore(this.toySession.start);
     const n = this.M.N * 4; this.bufs = [new ArrayBuffer(n), new ArrayBuffer(n), new ArrayBuffer(n)]; this.have = true;
   }
   send() {
-    const msg = { type: 'tick', dt: this.pendingDt, speed: this.state.speed, paused: this.state.paused, still: this.still, ops: this.ops };
+    const msg = { type: 'tick', dt: this.pendingDt, speed: this.state.speed, paused: this.state.paused || !!this.toyBusy, still: this.still, ops: this.ops };
     this.ops = []; this.pendingDt = 0; this.have = false;
     const requests = this.checkpointRequests; this.checkpointRequests = [];
     if (this.mode === 'worker') {
@@ -818,6 +837,7 @@ class Component extends DCLogic {
   // One suggestion per session, after the opening blast settles (or 25 s of calm).
   queueNudge(ms) { if (this.nudged) return; clearTimeout(this.nudgeT); this.nudgeT = setTimeout(() => this.nudge(), ms); }
   nudge() { if (this.nudged) return;
+    if (this.toySession || this.toyBusy) return;
     this.nudged = true; clearTimeout(this.nudgeT);
     const n = this.opening && this.M && this.opening.pickNudge(this.known, this.M);
     if (!n) return;
@@ -964,7 +984,7 @@ class Component extends DCLogic {
     const before = this.layout, close = matchMedia('(orientation:portrait) and (max-width:700px)').matches && !this.state.portraitOverview;
     this.vw = r.width; this.vh = r.height; this.layout = this.camera.layout(r.width, r.height);
     const next = !before || close !== this.portraitClose
-      ? (close ? this.camera.closeView(this.layout) : { zoom: 1, panX: 0, panY: 0 })
+      ? (this.state.playing && !this.state.portraitOverview ? this.playMod.damView(this.layout) : close ? this.camera.closeView(this.layout) : { zoom: 1, panX: 0, panY: 0 })
       : this.camera.reframe(before, this.layout, this.view);
     this.portraitClose = close;
     this.setView(next, false);
@@ -1056,6 +1076,7 @@ class Component extends DCLogic {
     return { vx: v.x, vy: v.y };
   }
   toolTick() {
+    if (this.toyBusy) return;
     if (!this.painting || !this.curCell) return;
     const s = this.state, c = this.curCell;
     if (s.tool === 'pour') { if (this.flingV) { this.flingV.x *= 0.85; this.flingV.y *= 0.85; } this.ops.push({ t: 'p', x: c.x, y: c.y, r: s.radius, m: s.brush, ...this.flingFields() }); }
@@ -1139,6 +1160,8 @@ class Component extends DCLogic {
   }
   syncViewUI() {
     const v = this.view; if (!v) return;
+    const hint = this.playHintRef.current;
+    if (hint && this.layout) { const p = this.cellToPx({ x: 264, y: 118 }); hint.style.left = p.x + 'px'; hint.style.top = p.y + 'px'; }
     if (this.ctx2d) {
       const cv = this.cvRef.current;
       cv.style.width = this.layout.worldWidth * v.zoom + 'px'; cv.style.height = this.layout.worldHeight * v.zoom + 'px';
@@ -1179,6 +1202,8 @@ class Component extends DCLogic {
     const rel = e => { try { vp.releasePointerCapture(e.pointerId); } catch (_) {} };
     const pour = (x, y) => {
       const s = this.state;
+      if (this.toyBusy) return;
+      if (s.playHint && s.brush === M.AIR && x >= 216 && x <= 312 && y >= 106 && y <= 124) this.setState({ playHint: false });
       if (s.pourHint) { this.setState({ pourHint: false }); try { localStorage.setItem(PKEY, '1'); } catch (e) {} }
       this.impactSound(s.brush);
       const lc = this.lastCell;
@@ -1205,6 +1230,7 @@ class Component extends DCLogic {
       end: () => {},
     });
     const ptrs = this.ptrs = new Map();
+    this.cancelPlayInput = () => { touch.cancel(); ptrs.clear(); cancelLongPress(); this.gesture = 'none'; this.painting = false; this.lastCell = null; this.curCell = null; this.dragStart = null; this.drawPreview(); };
     const isUi = e => e.target && e.target.closest && e.target.closest('[data-ui]');
     on(vp, 'wheel', e => {
       e.preventDefault();
@@ -1216,6 +1242,7 @@ class Component extends DCLogic {
     }, { passive: false });
     on(vp, 'dblclick', e => { if (e.button === 0 && !isUi(e)) this.fitWorld(); });
     on(vp, 'pointerdown', e => {
+      if (this.toyBusy) return;
       if (isUi(e)) return;
       this.ensureAudio();
       ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -1377,6 +1404,63 @@ class Component extends DCLogic {
       setTimeout(() => this.alive && this.remember(url, this.thumbFrom(this.lastColor)), 1500);
     } catch (e) { this.setState({ flaskStatus: 'Scene stamp link failed to load.' }); }
   }
+  // A scoped play session: one start checkpoint and one return checkpoint, no flask slots.
+  enterDam() {
+    if (!this.state.ready || !this.playMod || this.toySession || this.checkpointJobs.size) return;
+    const ui = {};
+    for (const key of ['brush', 'radius', 'tool', 'paused', 'speed', 'portraitOverview', 'whisper', 'pourHint', 'suggest', 'opus']) ui[key] = this.state[key];
+    const start = this.playMod.createDamCheckpoint();
+    this.toyBusy = true; this.cancelPlayInput?.();
+    this.requestCheckpoint('checkpoint', {}, { kind: 'toy-enter', start, ui, view: { ...this.view }, layout: this.layout });
+    this.setState({ sheet: '', folio: false });
+  }
+  againDam() {
+    if (!this.toySession || this.checkpointJobs.size) return;
+    this.toyBusy = true; this.clearPlayFrame();
+    this.requestCheckpoint('restore', { checkpoint: this.toySession.start }, { kind: 'toy-again' });
+  }
+  leaveDam() {
+    if (!this.toySession || this.checkpointJobs.size) return;
+    this.toyBusy = true; this.clearPlayFrame();
+    this.requestCheckpoint('restore', { checkpoint: this.toySession.back }, { kind: 'toy-back' });
+  }
+  clearPlayFrame() {
+    this.cancelPlayInput?.();
+    this.pendingDt = 0; this.ops = []; this.pending = []; this.pn = 0;
+    this.shake = 0; this.punch = 0; this.flash = 0; this.wipe = -1; this.ship = null; this.counts = null;
+    this.toastQ = []; clearTimeout(this.toastT); this.toastBusy = false;
+    this.setState({ toast: null, toastOn: false, probe: { on: false } });
+  }
+  onToyReply(reply, job) {
+    if (!reply.ok) {
+      this.toyBusy = false;
+      this.setState({ playing: !!this.toySession, flaskStatus: 'Could not switch play scenes: ' + (reply.error || 'Please retry.') });
+      return;
+    }
+    if (job.kind === 'toy-enter') {
+      this.toySession = { back: reply.checkpoint, start: job.start, ui: job.ui, view: job.view, layout: job.layout,
+        openingPending: this.openingPending, openingMs: Math.max(0, this.openingUntil - performance.now()), seenOnce: this.seenOnce };
+      this.clearPlayFrame();
+      this.requestCheckpoint('restore', { checkpoint: job.start }, { kind: 'toy-start' });
+      return;
+    }
+    this.clearPlayFrame(); this.toyBusy = false;
+    if (job.kind === 'toy-back') {
+      const back = this.toySession;
+      this.toySession = null; this.seenOnce = back.seenOnce;
+      this.openingPending = back.openingPending; this.openingUntil = performance.now() + back.openingMs;
+      this.setState({ ...back.ui, playing: false, playHint: false, folio: false, sheet: '', flaskStatus: '' }, () => {
+        this.resize(); this.setView(this.camera.reframe(back.layout, this.layout, back.view), false);
+      });
+      if (!this.nudged) this.queueNudge(2500);
+      return;
+    }
+    this.openingPending = false; this.seenOnce = true;
+    this.setState({ playing: true, playHint: true, brush: this.M.AIR, tool: 'pour', radius: 6, paused: false, speed: 1,
+      portraitOverview: false, pourHint: false, suggest: -1, opus: false, folio: false, sheet: '', whisper: '', flaskStatus: '' }, () => {
+      this.resize(); this.setView(this.playMod.damView(this.layout), false);
+    });
+  }
   requestCheckpoint(operation, payload, job) {
     if (this.checkpointJobs.size) return null;
     const requestId = ++this.checkpointId;
@@ -1395,6 +1479,7 @@ class Component extends DCLogic {
     clearTimeout(job.timer); this.checkpointJobs.delete(reply.requestId);
     this.checkpointRequests = this.checkpointRequests.filter(r => r.requestId !== reply.requestId);
     this.setState({ flaskBusy: this.checkpointJobs.size > 0 });
+    if (job.kind.startsWith('toy-')) { this.onToyReply(reply, job); return; }
     if (!reply.ok) { this.setState({ flaskStatus: 'Checkpoint ' + (job.kind === 'restore' ? 'restore' : 'save') + ' failed: ' + (reply.error || 'Unknown error') }); return; }
     if (job.kind === 'restore') {
       this.pendingDt = 0; this.ops = []; this.pending = []; this.openingPending = false;
@@ -1542,6 +1627,7 @@ class Component extends DCLogic {
 
   renderVals() {
     const s = this.state, M = this.M, t = s.toast;
+    const playHintPoint = this.layout ? this.cellToPx({ x: 264, y: 118 }) : { x: 0, y: 0 };
     const fmt = ts => { const d = new Date(ts); return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' · ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }); };
     const base = {
       toolLabel: s.tool, radius: s.radius, cycleBrush: () => { const sizes = this.M.BRUSH_SIZES; this.selectRadius(sizes[(sizes.indexOf(s.radius) + 1) % sizes.length]); }, rootRef: this.rootRef, toggleScreen: () => this.goFullscreen(), vpRef: this.vpRef, cvRef: this.cvRef, retRef: this.retRef, hudRef: this.hudRef, boxRef: this.boxRef, lineRef: this.lineRef,
@@ -1550,6 +1636,10 @@ class Component extends DCLogic {
       portraitOverview: s.portraitOverview, viewMode: s.portraitOverview ? 'overview' : 'close',
       viewToggleLabel: s.portraitOverview ? 'close view' : 'overview', viewToggleAria: s.portraitOverview ? 'Return to close view' : 'Show whole vessel', togglePortraitView: () => this.togglePortraitView(),
       phoneHudRef: this.phoneHudRef,
+      playing: s.playing, notPlaying: !s.playing, playBusy: !s.ready || s.flaskBusy || !!this.toyBusy,
+      playHint: s.playing && s.playHint && !s.curtainMounted, playHintRef: this.playHintRef,
+      playHintX: playHintPoint.x, playHintY: playHintPoint.y,
+      onPlayDam: () => this.enterDam(), onAgainDam: () => this.againDam(), onLeaveDam: () => this.leaveDam(),
       sheetOpen: !!s.sheet, elementsOpen: s.sheet === 'elements', optionsOpen: s.sheet === 'options',
       openElements: () => this.setState({ sheet: s.sheet === 'elements' ? '' : 'elements' }),
       openOptions: () => this.setState({ sheet: s.sheet === 'options' ? '' : 'options' }),
@@ -1558,13 +1648,13 @@ class Component extends DCLogic {
       brushDot: [6, 9, 13, 18, 24][Math.max(0, [1, 3, 6, 12, 22].indexOf(s.radius))],
       toolHint: `${s.tool} · size ${s.radius}`, brushName: '', brushSwatch: 'transparent', elementAria: 'Choose an element',
       starterTiles: [], foundTiles: [], foundLabel: '', blankNote: '',
-      pourHint: s.pourHint && !s.curtainMounted, pourHintText: '',
+      pourHint: s.pourHint && !s.curtainMounted && !s.playing, pourHintText: '',
       suggesting: s.suggest >= 0 && s.brush !== s.suggest ? 'true' : 'false',
       showHud: this.props.hud ?? true,
       paused: s.paused, folio: s.folio, probe: s.probe, recording: s.recording,
       curtainMounted: s.curtainMounted, curtainOpacity: s.curtainOpacity, liftCurtain: () => this.liftCurtain(),
       titleColor: s.opus ? '#e8b86a' : '#c49a4a', titleGlow: s.opus ? 22 : 0,
-      line: s.opus ? 'The Magnum Opus is in the glass. Lead kneels.' : (s.whisper || (this.coarse ? 'Drag to pour. Hold still to name a grain. Pinch to zoom.' : 'Hold to pour. Right-click names a grain; hold right-click to pan when zoomed. Scroll zooms. Casks remember fire. Space pauses; [ ] the brush.')),
+      line: s.playing ? 'Cut a small notch. Or let it all go.' : s.opus ? 'The Magnum Opus is in the glass. Lead kneels.' : (s.whisper || (this.coarse ? 'Drag to pour. Hold still to name a grain. Pinch to zoom.' : 'Hold to pour. Right-click names a grain; hold right-click to pan when zoomed. Scroll zooms. Casks remember fire. Space pauses; [ ] the brush.')),
       lineColor: s.opus || s.whisper ? '#d4b56a' : '#cbb89a',
       onTitle: () => { this.rite.title++; if (this.rite.title >= 7) { this.rite.title = 0; this.enact('aether-rain'); } },
       openCodex: () => this.setState({ folio: true, tab: 'codex', sheet: '' }), openRites: () => this.setState({ folio: true, tab: 'rites', sheet: '' }), openFlasks: () => this.setState({ folio: true, tab: 'flasks', sheet: '' }),
@@ -1627,6 +1717,7 @@ class Component extends DCLogic {
     base.foundLabel = `Transmuted · ${found.length} of ${M.TRANSMUTED.length}`;
     base.blankNote = blank ? `${blank} still unmade. The codex keeps a hint for each →` : 'Every reagent is yours. The codex is complete.';
     base.brushName = M.NAMES[s.brush]; base.brushSwatch = rgb(M.COLORS[s.brush]);
+    if (s.playing && s.brush === M.AIR) { base.brushName = 'eraser'; base.brushSwatch = '#cbb89a'; base.toolHint = 'cut a hole · size ' + s.radius; }
     base.elementAria = `Element: ${M.NAMES[s.brush]}. Choose another`;
     base.sizes = M.BRUSH_SIZES.map((r, i) => ({
       title: 'size ' + r, dot: [3, 5, 8, 12, 17][i], color: s.radius === r ? '#e8c97a' : '#8f7d62',
