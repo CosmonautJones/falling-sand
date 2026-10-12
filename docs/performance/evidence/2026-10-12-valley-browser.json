@@ -1,0 +1,30 @@
+[
+  {
+    "name": "desktop",
+    "wet": 48,
+    "growth": 911,
+    "saveBytes": 2109933,
+    "errors": []
+  },
+  {
+    "name": "portrait",
+    "wet": 49,
+    "growth": 1012,
+    "saveBytes": 2110571,
+    "errors": []
+  },
+  {
+    "name": "small",
+    "wet": 49,
+    "growth": 951,
+    "saveBytes": 2110172,
+    "errors": []
+  },
+  {
+    "name": "landscape",
+    "wet": 48,
+    "growth": 925,
+    "saveBytes": 2110036,
+    "errors": []
+  }
+]

@@ -48,6 +48,36 @@ npm test
 npm run typecheck
 ```
 
+## Living Valley preview (v3)
+
+Open `/v3/index.html` on the local dev server for the first Living Valley slice.
+It shares v2 grain physics and adds a seeded landscape with a breakable dam.
+Floodwater soaks into sixty surface-soil patches. Sunlit seeds spend stored
+water and nutrients to grow real plant grains. Flooded roots favor reeds;
+burned ground favors fireflowers. Drought and damage return plant investment
+to litter, which decomposes back into nutrients. Stone roofs cast shade.
+
+Dig, pour water, sow seeds, start fires, or build with stone. **Rain** adds water;
+**Again** replays the same landscape, while **Generate a new valley** changes its
+seed. Pinch/pan or scroll to explore; **Overview** fits the entire valley. The
+canvas also supports arrow keys and Enter/Space with the selected tool.
+
+The options menu saves one complete valley in browser storage, or exports and
+imports a JSON file. Storage failures preserve the previous save and offer file
+export. V3 uses its own save key; v2 flasks and share links continue in v2.
+Seed URLs reproduce the starting terrain, not an evolved saved valley.
+
+This is the first ecological toy, not inherited evolution or a groundwater
+solver. Soil water is counted separately from v2's alchemical chemistry. Natural
+ground uses fire-safe fired earth, so clearing vegetation does not endlessly
+fuel a stone fire. See [design and limits](docs/design/living-valley.md) and the
+[verification report with screenshots](docs/performance/2026-10-12-living-valley.md).
+
+```powershell
+npm run test:v3
+node scripts/bench-v3.mjs 5
+```
+
 ## Living Ground foundation (v2)
 
 The v2 world owns its arrays, random streams and committed simulation ticks.

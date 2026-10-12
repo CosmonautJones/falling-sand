@@ -1,0 +1,32 @@
+{
+  "benchmark": "alembic-v2-ab",
+  "rounds": 5,
+  "rootA": "../alembic-valley-baseline",
+  "rootB": ".",
+  "rows": [
+    {
+      "scene": "settled",
+      "A_p50_ms": 1.018,
+      "B_p50_ms": 1.025,
+      "ratio": 1.006
+    },
+    {
+      "scene": "falling",
+      "A_p50_ms": 2.31,
+      "B_p50_ms": 2.234,
+      "ratio": 0.967
+    },
+    {
+      "scene": "wet",
+      "A_p50_ms": 2.415,
+      "B_p50_ms": 2.536,
+      "ratio": 1.05
+    },
+    {
+      "scene": "storm",
+      "A_p50_ms": 7.355,
+      "B_p50_ms": 7.447,
+      "ratio": 1.012
+    }
+  ]
+}
