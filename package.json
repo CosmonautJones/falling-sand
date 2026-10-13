@@ -15,7 +15,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src public/v3 tests-v3 --max-warnings 0",
     "format": "prettier --write src",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test:webgpu": "node --test tests-webgpu/*.test.js"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

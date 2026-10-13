@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Grid } from './grid';
+import { WebGpuPresenter } from './public/webgpu-presenter';
 
 const VERT = /* glsl */ `
 out vec2 vUv;
@@ -89,6 +90,9 @@ export class Stage {
   } | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
   private image: ImageData | null = null;
+  private gpu: WebGpuPresenter | null = null;
+  private gpuActive = false;
+  private time = 0;
 
   constructor(canvas: HTMLCanvasElement, grid: Grid) {
     this.canvas = canvas;
@@ -97,6 +101,20 @@ export class Stage {
       this.initGl();
     } catch {
       this.init2d();
+    }
+    const renderer = new URLSearchParams(globalThis.location?.search ?? '').get('renderer');
+    if (renderer !== 'webgl' && renderer !== 'canvas') {
+      this.gpu = new WebGpuPresenter(canvas, grid.width, grid.height, {
+        onReady: () => {
+          this.gpuActive = true;
+          this.canvas.style.opacity = '0';
+        },
+        onLost: () => {
+          this.gpuActive = false;
+          this.canvas.style.opacity = '';
+        },
+      });
+      this.gpu.start();
     }
   }
 
@@ -173,10 +191,16 @@ export class Stage {
   }
 
   present(pixels: Uint8ClampedArray, glow: number, wonder = 0, shake = 0): void {
+    if (this.gpuActive && this.gpu) {
+      this.time += 1;
+      this.gpu.present(pixels, this.time, glow, wonder, shake);
+      return;
+    }
     if (this.gl && this.tex && this.texData && this.uniforms && this.scene && this.camera) {
       this.texData.set(pixels);
       this.tex.needsUpdate = true;
-      this.uniforms.uTime.value += 1;
+      this.time += 1;
+      this.uniforms.uTime.value = this.time;
       this.uniforms.uGlow.value = glow;
       this.uniforms.uWonder.value = wonder;
       this.uniforms.uShake.value = shake;
