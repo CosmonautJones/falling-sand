@@ -18,6 +18,7 @@ export function rleDecode(b) {
 
 // ---------- engine ----------
 const STEP_MS = 1000 / 60;
+export const MAX_STEP = 60;
 export function createEngine(options = {}) {
   const world = createWorld(options);
   let acc = 0, tickN = 0, frames = 0;
@@ -48,8 +49,11 @@ export function createEngine(options = {}) {
         while (nextAcc >= STEP_MS && steps < 3) { nextAcc -= STEP_MS; steps++; }
         if (nextAcc > STEP_MS * 3) { discardedMs += nextAcc; nextAcc = 0; }
       }
+      // While paused, `step` commits exactly that many fixed ticks (capped), so stepping is deterministic.
+      const stepN = msg.paused && Number.isFinite(msg.step) ? Math.min(MAX_STEP, Math.max(0, Math.floor(msg.step))) : 0;
+      if (stepN) steps = stepN;
       const observeOperation = (op, result) => { if (op.t === 'snap') snap = result; };
-      const events = msg.paused
+      const events = msg.paused && !stepN
         ? world.applyOperations(ops, observeOperation, true)
         : world.advanceTicks(steps, world.commandsForNextTick(ops), observeOperation);
       acc = nextAcc;
