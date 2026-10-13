@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" href="../icon-192.png">
+<script src="../webgpu-presenter.js"></script>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -615,6 +616,7 @@ class Component extends DCLogic {
     this.armOpening();
     this.unlocked = new Set(rites);
     this.P = new Float32Array(PMAX * 10); this.PD = new Float32Array(PMAX * 7); this.pn = 0;
+    this.gpuPresenter = null; this.gpuActive = false;
     this.state = { ready: false, discovered: [], brush: 1, radius: 6, tool: 'pour', paused: false, speed, folio: false, tab: 'codex', sheet: '', suggest: -1, pourHint: !poured, ambitions: [...this.ambDone], gallery: Array.isArray(gallery) ? gallery : [],
       curtainMounted: !this.still, curtainOpacity: 1, whisper: '', toast: null, toastOn: false, probe: { on: false }, opus: false,
       rites: [...this.unlocked], flasks, sound, tempest, recording: false, shareLabel: 'copy scene stamp link', flaskBusy: false, flaskStatus: '', checkpointDownload: '' };
@@ -914,6 +916,14 @@ class Component extends DCLogic {
   // ---------- render ----------
   initGL() {
     const cv = this.cvRef.current, M = this.M;
+    const renderer = new URLSearchParams(globalThis.location?.search || '').get('renderer');
+    if (renderer === 'webgpu' && globalThis.WebGpuPresenter) {
+      this.gpuPresenter = new globalThis.WebGpuPresenter(cv, M.W, M.H, {
+        onReady: () => { this.gpuActive = true; cv.style.opacity = '0'; },
+        onLost: () => { this.gpuActive = false; cv.style.opacity = ''; },
+      });
+      this.gpuPresenter.start();
+    }
     const gl = cv.getContext('webgl2', { antialias: false, alpha: false, depth: false, stencil: false, powerPreference: 'high-performance', preserveDrawingBuffer: false });
     if (!gl) {
       this.ctx2d = cv.getContext('2d'); cv.width = M.W; cv.height = M.H; cv.style.imageRendering = 'pixelated';
@@ -959,7 +969,7 @@ class Component extends DCLogic {
   resize() {
     const cv = this.cvRef.current, vp = this.vpRef.current; if (!cv || !vp || !this.M) return;
     const r = vp.getBoundingClientRect(); this.vw = r.width; this.vh = r.height;
-    if (!this.gl) return;
+    if (!this.gl) { this.gpuPresenter?.resize(cv.width, cv.height); return; }
     let bw = this.M.W, bh = this.M.H;
     if ((this.props.quality ?? 'full') === 'full') {
       const s = Math.min(window.devicePixelRatio || 1, 2);
@@ -968,10 +978,12 @@ class Component extends DCLogic {
       cv.style.imageRendering = 'auto';
     } else cv.style.imageRendering = 'pixelated';
     if (cv.width !== bw || cv.height !== bh) { cv.width = bw; cv.height = bh; }
+    this.gpuPresenter?.resize(cv.width, cv.height);
     this.gl.viewport(0, 0, bw, bh);
     this.updateReticleSize();
   }
   upload(c, e, fx) {
+    if (this.gpuActive) return;
     const gl = this.gl, M = this.M;
     if (!gl) { if (this.ctx2d) { const d = this.img.data; d.set(c); for (let i = 3; i < d.length; i += 4) d[i] = 255; this.ctx2d.putImageData(this.img, 0, 0); } return; }
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, this.tMap);
@@ -982,6 +994,21 @@ class Component extends DCLogic {
     gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, M.W, M.H, gl.RGBA, gl.UNSIGNED_BYTE, fx); gl.generateMipmap(gl.TEXTURE_2D);
   }
   draw(now) {
+    if (this.gpuActive && this.gpuPresenter) {
+      const v = this.view;
+      const k = 1 + (this.punch || 0) * 0.05, zoom = v.zoom * k;
+      const px0 = this.vw ? v.panX / this.vw : 0, py0 = this.vh ? v.panY / this.vh : 0;
+      const ax = this.punchAt ? this.punchAt.x : 0.5, ay = this.punchAt ? this.punchAt.y : 0.5;
+      const sx = ax * v.zoom + px0, sy = ay * v.zoom + py0;
+      const panX = (sx - (sx - px0) * k) * this.vw, panY = (sy - (sy - py0) * k) * this.vh;
+      this.gpuPresenter.setView({ x: panX, y: panY, width: this.vw * zoom, height: this.vh * zoom });
+      this.gpuPresenter.present(this.lastColor, this.still ? 0 : now / 1000, this.props.bloom ?? 1, this.wonder, this.shake);
+      if (this.wantShot) {
+        this.wantShot = false;
+        this.gpuPresenter.toBlob('image/png').then(b => b && this.download(b, 'alembic.png'));
+      }
+      return;
+    }
     const gl = this.gl; if (!gl) return;
     const v = this.view, u = this.u, cv = this.cvRef.current;
     // A big blast punches the camera in a few percent, leaning toward where it went off.
@@ -1456,8 +1483,9 @@ class Component extends DCLogic {
   download(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
   clip() {
     if (this.rec) return;
-    const cv = this.cvRef.current; if (!cv.captureStream || typeof MediaRecorder === 'undefined') return;
-    const stream = cv.captureStream(30);
+    const cv = this.cvRef.current;
+    const stream = this.gpuPresenter?.captureStream(30) || (cv.captureStream ? cv.captureStream(30) : null);
+    if (!stream || typeof MediaRecorder === 'undefined') return;
     const mime = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm', 'video/mp4'].find(t => MediaRecorder.isTypeSupported(t)) || '';
     const rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 8e6 } : undefined);
     const chunks = [];

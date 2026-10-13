@@ -7,6 +7,15 @@ import { TERRAIN_VERSION } from './terrain.js';
 const $ = (id) => document.getElementById(id);
 const canvas = $('world'),
   ctx = canvas.getContext('2d', { alpha: false });
+const cursorRing = document.getElementById('cursor-ring');
+const rendererMode = new URLSearchParams(globalThis.location.search).get('renderer');
+const gpuPresenter = rendererMode !== 'canvas' && rendererMode !== 'webgl' && globalThis.WebGpuPresenter
+  ? new globalThis.WebGpuPresenter(canvas, W, H, {
+      onReady: () => { canvas.style.opacity = '0'; needsDraw = true; },
+      onLost: () => { canvas.style.opacity = ''; if (cursorRing) cursorRing.style.display = 'none'; needsDraw = true; },
+    })
+  : null;
+gpuPresenter?.start();
 const buffer = document.createElement('canvas');
 buffer.width = W;
 buffer.height = H;
@@ -75,6 +84,7 @@ function resize() {
     dpr = Math.min(2, devicePixelRatio || 1);
   canvas.width = Math.round(rect.width * dpr);
   canvas.height = Math.round(rect.height * dpr);
+  gpuPresenter?.resize(canvas.width, canvas.height);
   view = createView(rect.width, rect.height, !overview);
   needsDraw = true;
 }
@@ -129,6 +139,19 @@ function readStats() {
   }
   lastStats = stats.tick;
 }
+function syncCursorRing() {
+  if (!cursorRing) return;
+  if (!gpuPresenter?.active || !cursor || pointers.size || !view) {
+    cursorRing.style.display = 'none';
+    return;
+  }
+  cursorRing.style.display = 'block';
+  cursorRing.style.left = `${cursor.x * view.scale + view.x}px`;
+  cursorRing.style.top = `${cursor.y * view.scale + view.y}px`;
+  const diameter = sizes[size] * 2 * view.scale;
+  cursorRing.style.width = `${diameter}px`;
+  cursorRing.style.height = `${diameter}px`;
+}
 function draw() {
   const { world, soil, surface, tick } = valley.inspect();
   valley.render(color, emission, effects, reduced.matches ? 0 : tick);
@@ -179,6 +202,18 @@ function draw() {
       color[o + 1] = rgb[1] + s;
       color[o + 2] = rgb[2] + s;
     }
+  }
+  if (gpuPresenter?.active) {
+    syncCursorRing();
+    gpuPresenter.setView({
+      x: view.x,
+      y: view.y,
+      width: W * view.scale,
+      height: H * view.scale,
+    });
+    gpuPresenter.present(color, reduced.matches ? 0 : tick, 1, 0, 0);
+    needsDraw = false;
+    return;
   }
   pixels.putImageData(frame, 0, 0);
   const dpr = canvas.width / view.width;

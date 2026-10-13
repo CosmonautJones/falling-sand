@@ -39,6 +39,32 @@ npm test
 npm run typecheck
 ```
 
+## Optional WebGPU rendering
+
+The classic game and Living Valley (v3) use WebGPU when the browser supplies a
+working adapter and device. They keep the existing WebGL/Canvas rendering path
+when WebGPU is unavailable, initialization fails, or the device is lost. The
+simulation, saves and material rules remain on the CPU. WebGPU rendering alone
+does not promise faster simulation or a particular frame rate.
+
+V2 keeps its full WebGL lighting and particle effects by default. Its simpler
+WebGPU preview is opt-in with `?renderer=webgpu`; it does not yet reproduce the
+full V2 emission, LUT lighting or particles. For comparison, `?renderer=webgl`
+keeps the classic/V2 renderer and `?renderer=canvas` keeps V3 Canvas rendering.
+These switches do not change saves.
+
+Use HTTPS when hosting the game; localhost also permits WebGPU for development.
+Mobile touch, pinch/pan and the renderer fallback keep devices without WebGPU
+playable. Physical Android/iOS testing remains necessary before a mobile release.
+
+The separate native port lives in `alembic-godot`, with its own checkpoint format
+and the original source commit recorded. Godot currently exports to WebGL 2,
+not WebGPU: see [Godot web export documentation](https://docs.godotengine.org/en/stable/tutorials/export/exporting_for_web.html).
+WebGPU API requirements are described in [Chrome's official overview](https://developer.chrome.com/docs/web-platform/webgpu/overview).
+
+Run `npm run test:webgpu` alongside the existing checks. Development routes are
+`/`, `/v2/index.html`, and `/v3/index.html`.
+
 ## Living Valley (v3)
 
 Open `/v3/index.html` on the local dev server. Break the reservoir dam, dig a
