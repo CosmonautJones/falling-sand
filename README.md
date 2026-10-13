@@ -39,6 +39,24 @@ npm test
 npm run typecheck
 ```
 
+## Living Valley (v3)
+
+Open `/v3/index.html` on the local dev server. Break the reservoir dam, dig a
+channel, and watch retained soil moisture grow plants. Wet roots favor reeds;
+burned ground favors fireflowers. Seeds generate broad basins, twin hollows or
+terraces with different flood habitats. The options menu accepts a decimal
+Landscape seed, saves complete valleys, and imports/exports JSON files.
+
+Same seed and terrain version reproduce starting ground; full saves preserve
+an evolved valley. Original experimental seed links and version 1 valley files
+remain readable and replay their original generator. New files record terrain
+version in a version 2 envelope and require this updated page. Variation can
+repeat; every playthrough is not guaranteed unique. V1/V2 routes and flasks stay
+available. This is surface-soil ecology, not inherited evolution or groundwater.
+
+Run `npm run test:v3` alongside the existing checks. Mobile controls support
+keyboard tools, touch painting, pinch/pan, overview, pause and rotation.
+
 ## Living Ground foundation (v2)
 
 The v2 world owns its arrays, random streams and committed simulation ticks.
