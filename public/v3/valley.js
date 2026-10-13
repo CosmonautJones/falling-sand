@@ -24,7 +24,7 @@ const uint = (v) => Number.isSafeInteger(v) && v >= 0 && v <= 0xffffffff;
 export function createValley({ seed = 0xc00c17, terrainVersion = TERRAIN_VERSION } = {}) {
   if (!uint(seed)) throw new Error('Invalid valley seed');
   let terrain = createTerrain(seed, terrainVersion);
-  const world = createWorld({ seed, scene: 'empty', vegetation: 'managed', ambientEmbers: false });
+  const world = createWorld({ seed, scene: 'empty', vegetation: 'managed', ambientEmbers: false, weather: false });
   const sim = world.inspect();
   let valleySeed = seed,
     tick = 0;

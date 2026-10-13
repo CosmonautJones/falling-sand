@@ -29,6 +29,20 @@ The real gaps are pacing controls, phone zoom ergonomics, a single place to tune
 | 1.5 | Two-finger tap toggles between fit and a 3× close-up at the tap | done |
 | 1.6 | Pinch snaps to a whole zoom level when released near one, so grains stay crisp | done |
 
+## Phase 1b — Living things, cold and weather (shipped in the second PR)
+
+| # | Item | Status |
+|---|---|---|
+| 1b.1 | Minnows fall out of water and gasp to ash on land | done |
+| 1b.2 | Mites die of old age, hunger, drowning and being frozen in (`LIFE` table) | done |
+| 1b.3 | Heat exchange no longer drains toward the coldest grain; things settle back to resting heat | done |
+| 1b.4 | Ice freezes only cold water and thaws in warm water; lava melts ice before crusting (`COLD` table) | done |
+| 1b.5 | Warm spells and cold snaps from seed and tick, storm gusts, HUD and whispers (`CLIMATE` table) | done |
+| 1b.6 | Open: lava slowly eats the stone floor in the untouched vessel (81 → ~900 grains in 4 min, also on main) | todo |
+| 1b.7 | Open: real mite hives — a nest, kept-open tunnels, stored food | todo |
+
+The `LIFE`, `COLD` and `CLIMATE` tables move into `engine/rates.js` in Phase 2.
+
 ## Phase 2 — One rates table (foundation for all content work)
 
 The world feels fast partly because each reaction's chance is a literal scattered through `world.js` (`rnd() < 0.02`). Past "too fast" fixes (lava eating stone, plants paving ponds, rites unlocking at once) were each fixed by hand.

@@ -422,6 +422,8 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;quality&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;full&quot;,&quot;grain&quot;],&quot;default&quot;:&quot;full&quot;,&quot;tsType&quot;:&quot;'full' | 'grain'&quot;,&quot;section&quot;:&quot;Render&quot;},&quot;lighting&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:0,&quot;max&quot;:2,&quot;step&quot;:0.05,&quot;default&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Render&quot;},&quot;bloom&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:0,&quot;max&quot;:2,&quot;step&quot;:0.05,&quot;default&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Render&quot;},&quot;particles&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Render&quot;},&quot;hud&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Render&quot;}}">
 const DKEY = 'alembic-discovered-v2', RKEY = 'alembic-rites-v2', FKEY = 'alembic-flasks-v2', SKEY = 'alembic-sound-v2', TKEY = 'alembic-tempest-v2', PKEY = 'alembic-poured-v2', AKEY = 'alembic-ambitions-v2', GKEY = 'alembic-gallery-v2', CKEY = 'alembic-speed-v2';
+const CLIMATE_WHISPER = { 1: 'A warm spell. Ice weeps; snow will not keep.', '-1': 'A cold snap. Still water skins over; the rain turns to snow.', 0: 'The air settles.' };
+const climateLabel = c => c >= 0.5 ? ' · warm spell' : c <= -0.5 ? ' · cold snap' : '';
 const TAP_ZOOM = 3, SNAP_ZOOM = 0.12, ZOOM_STEPS = [2, 4];
 const CLOCKS = [0.25, 0.5, 1, 2], CLOCK_LABEL = { 0.25: '¼×', 0.5: '½×', 1: '1×', 2: '2×' };
 const SAVE_KEYS = [DKEY, RKEY, FKEY, SKEY, TKEY, PKEY, AKEY, GKEY];
@@ -722,6 +724,11 @@ class Component extends DCLogic {
     this.ship = r.ship;
     this.windE = r.wind || 0;
     if (r.storm !== this.storming) this.storming = r.storm;
+    this.climate = r.climate || 0;
+    // Storm gusts: pale streaks race across the upper air in the gust's direction.
+    if (this.gustDir && performance.now() < this.gustUntil && !this.still) for (let k = 0; k < 3; k++) {
+      const d = this.gustDir; this.spawn(d > 0 ? Math.random() * this.M.W * 0.3 : this.M.W * (0.7 + Math.random() * 0.3), Math.random() * this.M.H * 0.55, d * (3 + Math.random() * 3), (Math.random() - 0.5) * 0.3, 0.78, 0.84, 0.95, 0.35 + Math.random() * 0.3, 0.8);
+    }
     if (r.events && r.events.length) this.onEvents(r.events);
     if (r.counts) { this.counts = r.counts; this.updateAmbient(); this.checkGoals(r.counts); }
     if (r.seen) this.onSeen(r.seen);
@@ -861,6 +868,8 @@ class Component extends DCLogic {
           this.thunder(); if (!this.still) this.shake = Math.min(1, this.shake + 0.35);
           break;
         }
+        case 'gust': this.gustDir = e.dir; this.gustUntil = performance.now() + 2500 / Math.max(0.25, this.state.speed || 1); break;
+        case 'climate': this.setState({ whisper: CLIMATE_WHISPER[e.v] || CLIMATE_WHISPER[0] }); break;
         case 'storm': this.setState({ whisper: 'The ceiling darkens. The steam remembers weather.' }); if (!this.state.tempest) { this.setState({ tempest: true }); try { localStorage.setItem(TKEY, '1'); } catch (er) {} } break;
         case 'fulgurite': this.unlock('fulgurite'); break;
         case 'shock': this.unlock('shock'); break;
@@ -1030,11 +1039,11 @@ class Component extends DCLogic {
       const phoneHud = this.phoneHudRef.current;
       if (phoneHud) {
         const z = this.view.zoom;
-        phoneHud.textContent = `${this.fps.toFixed(0)} fps · sim ${this.simMs.toFixed(1)} ms${z === 1 ? '' : ` · ${z.toFixed(1)}×`}${this.storming ? ' · storm' : ''}${this.ship ? ' · visitation' : ''}`;
+        phoneHud.textContent = `${this.fps.toFixed(0)} fps · sim ${this.simMs.toFixed(1)} ms${z === 1 ? '' : ` · ${z.toFixed(1)}×`}${this.storming ? ' · storm' : ''}${climateLabel(this.climate)}${this.ship ? ' · visitation' : ''}`;
       }
       if (hud) {
         const s = this.state, v = this.view;
-        hud.textContent = `${this.M.W}×${this.M.H} · ${this.fps.toFixed(0)} fps · sim ${this.simMs.toFixed(1)} ms${this.mode === 'worker' ? ' (worker)' : ''} · ${s.tool} · ${this.M.NAMES[s.brush]} · size ${s.radius}${s.speed === 1 ? '' : ` · ${s.speed}×`}${v.zoom === 1 ? '' : ` · ${v.zoom.toFixed(1)}×`}${this.storming ? ' · storm' : ''}${this.ship ? ' · visitation' : ''}${s.paused ? ' · paused' : ''}`;
+        hud.textContent = `${this.M.W}×${this.M.H} · ${this.fps.toFixed(0)} fps · sim ${this.simMs.toFixed(1)} ms${this.mode === 'worker' ? ' (worker)' : ''} · ${s.tool} · ${this.M.NAMES[s.brush]} · size ${s.radius}${s.speed === 1 ? '' : ` · ${s.speed}×`}${v.zoom === 1 ? '' : ` · ${v.zoom.toFixed(1)}×`}${this.storming ? ' · storm' : ''}${climateLabel(this.climate)}${this.ship ? ' · visitation' : ''}${s.paused ? ' · paused' : ''}`;
       }
     }
   }

@@ -36,8 +36,61 @@ export const TRANSMUTED = [PLANT,ASH,MUD,GLASS,MOSS,STEAM,SMOKE,EMBER,OBSIDIAN,B
   SNOW,CHARCOAL,SULFUR,HONEY,AMBER,FUNGUS,SPORE,FIREFLY,CORAL,PUMICE];
 export const BRUSH_SIZES = [1, 3, 6, 12, 22];
 
+// The cold side of the vessel. Heat values are the engine's 0-255 scale; still water rests at 34.
+export const COLD = Object.freeze({
+  iceRest: 14,         // ice rests a little under still water instead of acting as a refrigerator (was 3)
+  freezeBelow: 12,     // water next to ice freezes only below this heat (water usually sits near 18)
+  thawAbove: 24,       // ice touching water at least this warm slowly melts back
+  thawOdds: 900,       // 1 in N per tick for that thaw (~15 s per edge grain)
+  freezeOdds: 10,      // 1 in N per tick for cold water beside ice
+  meltAt: 50,          // ice turns to water at or above this heat (was 72)
+  lavaCrustOnIce: 10,  // 1 in N: lava that melts an ice grain crusts to obsidian (was every time)
+});
+// Weather: the vessel drifts through calm, warm spells and cold snaps. Each spell is chosen from the
+// world seed and the tick, so it needs no saved state and replays exactly.
+export const CLIMATE = Object.freeze({
+  spell: 5400,          // ticks per spell (90 s at 1x); the first quarter eases in from the last
+  calmSpells: 2,        // the first three minutes are always calm
+  coldFreezeBoost: 6,   // a full cold snap lets water this much warmer freeze beside ice
+  surfaceFreeze: 2400,  // 1 in N per tick for open water under air to skin over in a full cold snap
+  warmThaw: 1500,       // 1 in N per tick for ice or snow open to air to melt in a full warm spell
+  gustEvery: 420,       // during storms a gust every 7 s ...
+  gustFor: 150,         // ... lasting 2.5 s
+  gustPush: 0.16,       // sideways push added to the wind field each tick of a gust
+});
+export function climateLevel(seed, k) {
+  if (k < CLIMATE.calmSpells) return 0; // k may be -1 for the spell before the first
+  let h = Math.imul((seed >>> 0) ^ Math.imul(k + 1, 0x9e3779b1), 0x85ebca6b) >>> 0;
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35) >>> 0; h ^= h >>> 16;
+  const r = h % 8;
+  return r < 2 ? -1 : r < 4 ? 1 : 0;
+}
+// -1 is a full cold snap, +1 a full warm spell, in steps of 1/20.
+export function climateAt(seed, tick) {
+  const L = CLIMATE.spell, k = Math.floor(tick / L), f = (tick - k * L) / L;
+  // Each spell eases in from the one before over its first quarter.
+  const a = climateLevel(seed, k - 1), b = climateLevel(seed, k);
+  const t = f >= 0.25 ? 1 : f / 0.25, e = t * t * (3 - 2 * t);
+  return Math.round((a + (b - a) * e) * 20) / 20 || 0; // || 0 folds -0 into 0
+}
+const climateKind = v => v >= 0.5 ? 1 : v <= -0.5 ? -1 : 0;
+export function gustAt(seed, stormT) {
+  const n = Math.floor(stormT / CLIMATE.gustEvery), p = stormT - n * CLIMATE.gustEvery;
+  if (n === 0 || p >= CLIMATE.gustFor) return 0; // the storm builds for a while before the first gust
+  const h = (Math.imul((seed >>> 0) + n * 2654435761, 0x27d4eb2d) >>> 15) & 1;
+  return (h ? 1 : -1) * Math.sin(Math.PI * p / CLIMATE.gustFor);
+}
+// Creature lifetimes, as the expected number of ticks (60 per second at 1x) before the event.
+// Each tick is an independent roll, so these are averages, not timers.
+export const LIFE = Object.freeze({
+  minnowGasp: 150,   // a minnow on land with air beside it: ~2.5 s
+  miteAge: 36000,    // old age: ~10 min
+  miteHunger: 21600, // a mite with no food beside it: ~6 min
+  miteDrown: 240,    // a mite with no air and water around it: ~4 s
+  miteFreeze: 300,   // a mite sealed in by ice: ~5 s
+});
 const AMBIENT = new Uint8Array(256).fill(18), CONDUCT = new Uint8Array(256).fill(4), SOURCE = new Uint8Array(256), SEEDHEAT = new Uint8Array(256);
-Object.entries({[ICE]:3,[WATER]:34,[BRINE]:32,[STEAM]:88,[FIRE]:220,[LAVA]:255,[EMBER]:200,[OIL]:22,[ACID]:28,[MERCURY]:24,[NITRO]:26,[AETHER]:40,[OBSIDIAN]:14,[GLASS]:16,[CRYSTAL]:12,[SMOKE]:40,[CLOUD]:16,[PLASMA]:255,[SNOW]:6}).forEach(([k,v])=>AMBIENT[k]=v);
+Object.entries({[ICE]:COLD.iceRest,[WATER]:34,[BRINE]:32,[STEAM]:88,[FIRE]:220,[LAVA]:255,[EMBER]:200,[OIL]:22,[ACID]:28,[MERCURY]:24,[NITRO]:26,[AETHER]:40,[OBSIDIAN]:14,[GLASS]:16,[CRYSTAL]:12,[SMOKE]:40,[CLOUD]:16,[PLASMA]:255,[SNOW]:6}).forEach(([k,v])=>AMBIENT[k]=v);
 Object.entries({[AIR]:7,[STEAM]:7,[AETHER]:7,[SMOKE]:7,[CLOUD]:7,[WATER]:6,[BRINE]:6,[ACID]:6,[MERCURY]:8,[GOLD]:8,[LEAD]:8,[RELIC]:8,[ICE]:5,[GLASS]:2,[WOOD]:2,[PLANT]:3,[BLOOM]:3,[MOSS]:3,[OBSIDIAN]:1,[FIRE]:6,[LAVA]:6,[EMBER]:6,[PLASMA]:6}).forEach(([k,v])=>CONDUCT[k]=v);
 Object.entries({[FIRE]:220,[LAVA]:255,[EMBER]:200,[STEAM]:90,[PLASMA]:255}).forEach(([k,v])=>SOURCE[k]=v);
 for (let i = 0; i < 256; i++) SEEDHEAT[i] = SOURCE[i] > 0 ? SOURCE[i] : AMBIENT[i];
@@ -139,7 +192,7 @@ const CC = new Uint16Array(CNN);
 for (let cy = 0; cy < CH; cy++) for (let cx = 0; cx < CW; cx++) CC[cy * CW + cx] = 8 * Math.max(1, Math.min(8, H - cy * 8));
 
 // Managed vegetation lets the separate v3 soil layer fund plant growth. v2 defaults stay native.
-export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 'native', ambientEmbers = true } = {}) {
+export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 'native', ambientEmbers = true, weather = true } = {}) {
   let initialSeed = seed >>> 0, initialScene = scene, tickIndex = 0;
   let commands = [];
   let wipe = -1, wipeC = null, wipeS = null;
@@ -213,7 +266,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
   // ---------- convection field (coarse stable-fluids lite) ----------
   const WU = new Float32Array(CNN), WV = new Float32Array(CNN), WU0 = new Float32Array(CNN), WV0 = new Float32Array(CNN);
   const WP = new Float32Array(CNN), WP2 = new Float32Array(CNN), WD = new Float32Array(CNN), HS = new Float32Array(CNN), SOL = new Uint16Array(CNN), WS = new Uint8Array(CNN);
-  let windEnergy = 0;
+  let windEnergy = 0, climate = 0, cold = 0, warm = 0;
   function sampleField(F, px, py) {
     px = Math.max(0, Math.min(CW - 1.001, px)); py = Math.max(0, Math.min(CH - 1.001, py));
     const x0 = px | 0, y0 = py | 0, fx = px - x0, fy = py - y0, i = y0 * CW + x0;
@@ -232,6 +285,12 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       const px = cx - WU0[c] / CS, py = cy - WV0[c] / CS;
       WU[c] = sampleField(WU0, px, py) * 0.985;
       WV[c] = sampleField(WV0, px, py) * 0.985;
+    }
+    // Storm gusts push the upper air sideways, so clouds, smoke, ash and snow visibly stream.
+    if (weather && storm > 0) {
+      const g = gustAt(initialSeed, stormT);
+      if (stormT > 0 && stormT % CLIMATE.gustEvery === 0) ev({ t: 'gust', dir: gustAt(initialSeed, stormT + (CLIMATE.gustFor >> 1)) > 0 ? 1 : -1 });
+      if (g) { const rows = (CH * 0.6) | 0, push = g * CLIMATE.gustPush; for (let c = 0; c < rows * CW; c++) if (!WS[c]) WU[c] += push; }
     }
     const at = (F, cx, cy, c) => (cx < 0 || cy < 0 || cx >= CW || cy >= CH) ? 0 : (WS[cy * CW + cx] ? 0 : F[cy * CW + cx]);
     for (let cy = 0; cy < CH; cy++) for (let cx = 0; cx < CW; cx++) {
@@ -556,7 +615,10 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     for (let k = 0; k < 8; k++) {
       const nx = x + DX[k], ny = y + DY[k]; if (!inb(nx, ny)) continue;
       const n = cells[ny * W + nx];
-      if (n === WATER || n === BRINE || n === ICE) { transmute(nx, ny, STEAM); transmute(x, y, OBSIDIAN); return true; }
+      // Water flashes to steam and the lava skin crusts at once, which shields the lava behind it.
+      // Ice is different: lava melts it to water first and only sometimes crusts doing so.
+      if (n === ICE || n === SNOW) { transmute(nx, ny, WATER); if (ri(COLD.lavaCrustOnIce) === 0) transmute(x, y, OBSIDIAN); return true; }
+      if (n === WATER || n === BRINE) { transmute(nx, ny, STEAM); transmute(x, y, OBSIDIAN); return true; }
       // Lava melts stone, slowly: a floor should survive an afternoon.
       if (n === STONE && ri(4000) === 0) transmute(nx, ny, LAVA);
       if (n === SAND) transmute(nx, ny, GLASS);
@@ -633,8 +695,16 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     for (let k = 0; k < 8; k++) {
       const nx = x + DX[k], ny = y + DY[k]; if (!inb(nx, ny)) continue;
       const i = ny * W + nx;
-      if (born[i] || cells[i] !== WATER || heat[i] >= 40) continue;
-      if (ri(6) === 0) transmute(nx, ny, ICE);
+      // Only water that is already cold freezes, so ice chills its edge but cannot swallow a warm pool.
+      if (born[i] || cells[i] !== WATER || heat[i] >= COLD.freezeBelow + cold * CLIMATE.coldFreezeBoost) continue;
+      if (ri(COLD.freezeOdds) === 0) transmute(nx, ny, ICE);
+    }
+    if (born[y * W + x] || cold >= 0.3) return;
+    if (warm > 0 && gatherAir(x, y) && ri(Math.round(CLIMATE.warmThaw / warm)) === 0) { transmute(x, y, WATER); return; }
+    for (let k = 0; k < 8; k++) {
+      const nx = x + DX[k], ny = y + DY[k]; if (!inb(nx, ny)) continue;
+      const i = ny * W + nx;
+      if ((cells[i] === WATER || cells[i] === BRINE) && heat[i] >= COLD.thawAbove) { if (ri(Math.round(COLD.thawOdds * (1 - 0.75 * warm))) === 0) transmute(x, y, WATER); return; }
     }
   }
 
@@ -694,9 +764,9 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     setc(x, y, MITE, rshade(SHADE[MITE]));
     return true;
   }
-  let sHeat = false, sFood = -1, sFoodIchor = false, sGold = -1, sMud = -1, sKin = 0, sVis = false;
+  let sHeat = false, sFood = -1, sFoodIchor = false, sGold = -1, sMud = -1, sKin = 0, sVis = false, sAir = 0, sWet = 0, sIce = 0;
   function senseMite(x, y) {
-    sHeat = false; sFood = -1; sFoodIchor = false; sGold = -1; sMud = -1; sKin = 0; sVis = false; let fr = 0;
+    sHeat = false; sFood = -1; sFoodIchor = false; sGold = -1; sMud = -1; sKin = 0; sVis = false; sAir = 0; sWet = 0; sIce = 0; let fr = 0;
     for (let k = 0; k < 8; k++) {
       const nx = x + DX[k], ny = y + DY[k]; if (!inb(nx, ny)) continue;
       const i = ny * W + nx, n = cells[i];
@@ -706,6 +776,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       if (n === MUD && sMud < 0) sMud = i;
       if (n === MITE) sKin++;
       if (n === VISITOR) sVis = true;
+      if (n === AIR) sAir++; else if (n === WATER || n === BRINE) sWet++; else if (n === ICE || n === SNOW) sIce++;
     }
   }
   function pickUp(x, y, ci, shade) { transmute(ci % W, (ci / W) | 0, AIR); setc(x, y, MITE, shade); }
@@ -721,6 +792,11 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     senseMite(x, y);
     const cargo = cargoOf(shades[y * W + x]);
     if (sHeat) { if (miteWalk(x, y, cargo)) return true; transmute(x, y, ASH); return true; }
+    // A mite's life: old age, hunger away from food, drowning, and being frozen in. It leaves ash.
+    const eco = random.ecology;
+    if (eco.int(LIFE.miteAge) === 0 || (sFood < 0 && eco.int(LIFE.miteHunger) === 0)
+      || (sAir === 0 && sWet >= 3 && eco.int(LIFE.miteDrown) === 0)
+      || (sAir === 0 && sIce >= 3 && eco.int(LIFE.miteFreeze) === 0)) { transmute(x, y, ASH); return true; }
     if (sVis) return true;
     if (sFood >= 0) {
       const fx = sFood % W, fy = (sFood / W) | 0;
@@ -759,7 +835,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     return s;
   }
   function minnowAct(x, y) {
-    let hurt = false, mite = -1, seed = -1, crystal = false, kin = false, wc = 0;
+    let hurt = false, mite = -1, seed = -1, crystal = false, wc = 0;
     for (let k = 0; k < 8; k++) {
       const nx = x + DX[k], ny = y + DY[k]; if (!inb(nx, ny)) continue;
       const i = ny * W + nx, n = cells[i];
@@ -767,7 +843,6 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       if ((n === MITE || n === FIREFLY) && mite < 0) mite = i;
       if (n === SEED && seed < 0) seed = i;
       if (n === CRYSTAL) crystal = true;
-      if (n === MINNOW) kin = true;
       if (n === WATER || n === BRINE) { BX[wc] = nx; BY[wc] = ny; wc++; }
     }
     if (hurt) { transmute(x, y, ASH); return true; }
@@ -778,7 +853,12 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       if (ac > 0) { const k = random.ecology.int(ac); transmute(AX[k], AY[k], PEARL); return true; }
       if (wc > 0) { const k = random.ecology.int(wc); transmute(BX[k], BY[k], PEARL); return true; }
     }
-    if (wc === 0) return kin;
+    // Out of water a minnow falls like any grain (a beached school no longer holds itself up),
+    // and with open air beside it, it gasps: a few seconds on land and it is ash.
+    if (wc === 0) {
+      if (gatherAir(x, y) && random.ecology.int(LIFE.minnowGasp) === 0) { transmute(x, y, ASH); return true; }
+      return false;
+    }
     for (let i = 0; i < wc; i++) { SX[i] = BX[i]; SY[i] = BY[i]; SS[i] = minnowScore(BX[i], BY[i]); }
     if (!pickBest(wc)) return true;
     swap(x, y, PBX, PBY); markBorn(PBX, PBY); return true;
@@ -1003,7 +1083,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       case CLOUD:
         if (hasN(x, y, ICE)) { transmute(x, y, SNOW); return true; }
         if (storm <= 0 && random.weather.int(100) === 0) { transmute(x, y, AIR); return true; }
-        if (storm > 0 && random.weather.int(240) === 0 && get(x, y + 1) === AIR) { transmute(x, y + 1, WATER); VY[(y + 1) * W + x] = 1.2; }
+        if (storm > 0 && random.weather.int(240) === 0 && get(x, y + 1) === AIR) { transmute(x, y + 1, cold >= 0.5 ? SNOW : WATER); VY[(y + 1) * W + x] = 1.2; }
         return false;
       case PLASMA: { const i = y * W + x; if (shades[i] <= 1) { transmute(x, y, AIR); return true; } shades[i]--; return true; }
       case MITE: return miteAct(x, y);
@@ -1117,15 +1197,20 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
           const i = row + x, t = heat[i], m = cells[i];
           const up = y > 0 ? heat[i - W] : t, dn = y < H - 1 ? heat[i + W] : t;
           const rt = x < W - 1 ? heat[i + 1] : t, lf = x > 0 ? heat[i - 1] : t;
-          let next = t + ((CONDUCT[m] * (up + dn + rt + lf - (t << 2))) >> 5);
-          next += ((AMBIENT[m] - next) * (m === AIR || m === STEAM || m === SMOKE ? 10 : 2)) >> 8;
+          // Both steps are symmetric. A bare >> floors, which made every small exchange lose heat, so
+          // the coldest thing in a pool (any ice) slowly dragged the whole pool down to its own heat.
+          const dq = CONDUCT[m] * (up + dn + rt + lf - (t << 2));
+          let next = t + (dq >= 0 ? (dq + 16) >> 5 : -((16 - dq) >> 5));
+          // The pull back to resting heat moves at least one step, so warmed or chilled things settle.
+          const da = AMBIENT[m] - next, wa = m === AIR || m === STEAM || m === SMOKE ? 10 : 2;
+          next += da > 0 ? (da * wa + 255) >> 8 : da < 0 ? -((255 - da * wa) >> 8) : 0;
           const v = next < 0 ? 0 : next > 255 ? 255 : next;
           heatOut[i] = v;
           hs += v;
           if (ALIVE[m] || KIND[m] === K_GAS) lv = 1;
           if (m !== AIR && KIND[m] !== K_GAS && m !== FIRE && m !== PLASMA) sol++;
           if (m !== m0 || v !== AMBIENT[m]) quiet = 0;
-          if (!born[i] && ((m === ICE && v >= 72) || (m === SNOW && v >= 40) || (m === WATER && v >= BOIL) || (FLAMMABLE[m] && v >= IGNITE))) meltList[melts++] = i;
+          if (!born[i] && ((m === ICE && v >= COLD.meltAt) || (m === SNOW && v >= 40) || (m === WATER && v >= BOIL) || (FLAMMABLE[m] && v >= IGNITE))) meltList[melts++] = i;
         }
       }
       HS[c] = qHS[c] = hs; SOL[c] = qSOL[c] = sol; live[c] = qLive[c] = lv; tQuiet[c] = quiet;
@@ -1210,6 +1295,9 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
   function simulate() {
     const dir = scanDir; scanDir = -scanDir;
     born.fill(0);
+    climate = weather ? climateAt(initialSeed, tickIndex) : 0; cold = climate < 0 ? -climate : 0; warm = climate > 0 ? climate : 0;
+    const kind = climateKind(climate);
+    if (weather && kind !== climateKind(climateAt(initialSeed, tickIndex - 1))) ev({ t: 'climate', v: kind });
     thermals();
     windStep();
     for (let cy = 0; cy < CH; cy++) for (let cx = 0; cx < CW; cx++) {
@@ -1231,6 +1319,19 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     if (dir === 1) levelLiquids();
     stormStep();
     shipStep();
+    weatherSweep();
+  }
+  // Settled pools and snowfields sleep, so weather reaches them with a sparse sweep of the topmost
+  // grain in every 16th column, a different set of columns each tick.
+  function weatherSweep() {
+    if (!weather || (cold < 0.3 && warm < 0.3)) return;
+    for (let x = tickIndex & 15; x < W; x += 16) {
+      let y = 0; while (y < H && cells[y * W + x] === AIR) y++;
+      if (y === 0 || y >= H) continue;
+      const i = y * W + x, m = cells[i];
+      if (cold >= 0.3 && m === WATER && heat[i] < 40 && random.weather.int(Math.max(1, Math.round(CLIMATE.surfaceFreeze / cold / 16))) === 0) transmute(x, y, ICE);
+      else if (warm >= 0.3 && (m === SNOW || m === ICE) && random.weather.int(Math.max(1, Math.round(CLIMATE.warmThaw / warm / 16))) === 0) transmute(x, y, WATER);
+    }
   }
 
   // ---------- world ----------
@@ -1535,7 +1636,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     return {
       kick: blastKick, seen, counts, events: EV.map(event => ({ ...event })),
       ship: ship.active ? { x: ship.x, y: ship.y, beam: ship.beam ? 1 : 0 } : null,
-      flash, wipe, wind: windEnergy, storm: storm > 0,
+      flash, wipe, wind: windEnergy, storm: storm > 0, climate: weather ? climateAt(initialSeed, Math.max(0, tickIndex - 1)) : 0,
     };
   }
   function reset({ seed: nextSeed = initialSeed, scene: nextScene = initialScene } = {}) {

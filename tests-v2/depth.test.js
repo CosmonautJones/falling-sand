@@ -57,8 +57,11 @@ test('water in a glass cup over lava boils away as steam', () => {
   box(w, 206, FLOOR - 12, 234, FLOOR - 5, E.AIR);
   box(w, 206, FLOOR - 7, 234, FLOOR - 5, E.WATER);
   const n = count(w, E.WATER);
-  w.advanceTicks(1800);
-  assert.ok(count(w, E.WATER) < n * 0.7, `water boiled: ${count(w, E.WATER)} of ${n}`);
+  // The cup boils dry within seconds; afterwards steam condenses and rains back, so the level
+  // at any one later moment is noisy. Check the lowest level reached over 30 s.
+  let low = n;
+  for (let t = 0; t < 1800; t += 60) { w.advanceTicks(60); low = Math.min(low, count(w, E.WATER)); }
+  assert.ok(low < n * 0.3, `water boiled: as low as ${low} of ${n}`);
 });
 
 test('blasts leave debris: the rim of a stone wall breaks into flying sand', () => {
