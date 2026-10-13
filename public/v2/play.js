@@ -1,4 +1,4 @@
-import { createEngine, AIR, STONE, WATER, WOOD, SAND, SEED } from './alembic-engine-v2.js';
+import { createEngine, AIR, STONE, WATER, WOOD, SAND, SEED, BRICK, POWDER, TNT } from './alembic-engine-v2.js';
 import { clampView } from './camera.js';
 
 // A composed toy made entirely from ordinary materials and existing operations.
@@ -38,6 +38,46 @@ export function damView(l) {
   return clampView(l, {
     zoom,
     panX: l.width / 2 - 264 / 480 * l.worldWidth * zoom,
+    panY: l.height / 2 - 150 / 270 * l.worldHeight * zoom,
+  });
+}
+
+// Ordinary powder, casks and combustible supports. The player supplies every spark.
+export function createFuseCheckpoint() {
+  const engine = createEngine({ scene: 'empty', seed: 0xf053 });
+  const world = engine.inspect();
+  const rect = (x0, y0, x1, y1, m) => {
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) world.setc(x, y, m, ((x * 7 + y * 11) % 9) - 4);
+  };
+  // Three supported fuses. Cut a gap, light either end, or start on a different tier.
+  for (const y of [94, 152, 211]) {
+    rect(208, y, 316, y + 3, BRICK);
+    rect(212, y - 3, 312, y - 1, POWDER);
+  }
+  rect(209, 90, 211, 151, WOOD);
+  rect(313, 90, 315, 151, WOOD);
+  rect(262, 148, 266, 210, WOOD);
+  const cask = (x, y) => {
+    rect(x - 5, y - 6, x + 5, y + 2, WOOD);
+    rect(x - 3, y - 5, x + 3, y + 1, TNT);
+  };
+  cask(216, 92); cask(304, 92);
+  cask(264, 150);
+  cask(226, 209); cask(300, 209);
+  // Loose sand catches the shock; the pool turns the falling embers into steam.
+  rect(198, 246, 326, 251, BRICK);
+  rect(198, 228, 202, 251, BRICK);
+  rect(322, 228, 326, 251, BRICK);
+  rect(203, 238, 321, 245, SAND);
+  rect(245, 238, 281, 245, WATER);
+  return engine.checkpoint();
+}
+
+export function fuseView(l) {
+  const zoom = Math.min(l.width / (l.worldWidth * 140 / 480), l.height / (l.worldHeight * 224 / 270));
+  return clampView(l, {
+    zoom,
+    panX: l.width / 2 - 262 / 480 * l.worldWidth * zoom,
     panY: l.height / 2 - 150 / 270 * l.worldHeight * zoom,
   });
 }

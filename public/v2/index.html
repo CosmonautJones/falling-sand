@@ -57,6 +57,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
 .phone-bar{display:flex;flex-direction:column-reverse;justify-content:flex-end;width:76px;padding:0}.phone-row{flex-direction:column}.pb-el{flex:0 0 auto;flex-direction:column;justify-content:center;gap:2px;height:76px;padding:4px}.pb-el .pb-txt{align-items:center}.pb-el .caret,.pb-sub{display:none}.pb-name{font-size:12px;max-width:68px}.phone-hud{white-space:normal;font-size:10px;margin-top:auto}
 .sheet{left:auto;top:0;width:min(380px,58vw);max-height:none;border-radius:18px 0 0 18px;border-top:none;border-left:1px solid rgba(196,154,74,.55);padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) 0}}
 @media(orientation:portrait) and (max-width:700px){.vessel-viewport[data-view="close"]{width:100%!important;height:100%!important;aspect-ratio:auto!important}.phone-status{display:flex;align-items:center;gap:8px}.phone-hud{flex:1;min-width:0}.view-toggle{display:flex}.rotate-hint{display:none}}
+@media(max-width:700px){.play-caption{display:none}}
 </style>
 </helmet>
 <div ref="{{ rootRef }}" class="root" style="height:100dvh; display:flex; flex-direction:column; align-items:center; gap:8px; padding:max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); overflow:hidden; color:#f0e2c4; font:15px/1.5 Palatino,'Palatino Linotype','Book Antiqua','EB Garamond',Georgia,serif; -webkit-font-smoothing:antialiased; background:radial-gradient(70% 45% at 50% -8%, rgba(176,137,72,.16), transparent 55%), #100c09;">
@@ -82,10 +83,11 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
   <div class="play-bar" aria-label="Quick play">
     <sc-if value="{{ notPlaying }}" hint-placeholder-val="{{ true }}">
       <button class="play-primary" data-play="start" onClick="{{ onPlayDam }}" disabled="{{ playBusy }}">▶ Pop the dam</button>
-      <span class="play-caption">A little hole. A lot of water.</span>
+      <button class="play-primary" data-play="fuse" onClick="{{ onPlayFuse }}" disabled="{{ playBusy }}">✦ Light the fuse</button>
+      <span class="play-caption">Pick a spark. Make a mess.</span>
     </sc-if>
     <sc-if value="{{ playing }}" hint-placeholder-val="{{ false }}">
-      <span class="play-name">Pop the dam</span>
+      <span class="play-name">{{ playName }}</span>
       <button class="play-primary" data-play="again" onClick="{{ onAgainDam }}" disabled="{{ playBusy }}">↻ Again</button>
       <button data-play="back" onClick="{{ onLeaveDam }}" disabled="{{ playBusy }}">Back to vessel</button>
     </sc-if>
@@ -101,7 +103,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid #e8c97a;outline-off
       <div class="flask-status" role="status" aria-live="polite" aria-atomic="true" style="color:#d4b56a; font-size:13px; max-width:100%;">{{ flaskStatus }}</div>
       <canvas ref="{{ cvRef }}" style="position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none;"></canvas>
       <sc-if value="{{ playHint }}" hint-placeholder-val="{{ false }}">
-        <div ref="{{ playHintRef }}" class="play-hint" style="left:{{ playHintX }}px;top:{{ playHintY }}px;">Erase the wooden seam</div>
+        <div ref="{{ playHintRef }}" class="play-hint" style="left:{{ playHintX }}px;top:{{ playHintY }}px;">{{ playHintText }}</div>
       </sc-if>
       <div style="position:absolute; inset:0; pointer-events:none; background:linear-gradient(112deg, rgba(255,236,200,.06) 0%, rgba(255,236,200,0) 18%, rgba(255,236,200,0) 74%, rgba(255,236,200,.035) 100%); box-shadow:inset 0 0 0 1px rgba(232,201,122,.14), inset 0 0 60px rgba(0,0,0,.45);"></div>
 
@@ -676,7 +678,11 @@ class Component extends DCLogic {
     this.raf = requestAnimationFrame(this.frame);
     this.curtainT = setTimeout(() => this.liftCurtain(), 2200);
     this.loadFromHash();
-    if (new URLSearchParams(location.search).get('play') === 'dam' && !location.hash) this.enterDam();
+    const play = new URLSearchParams(location.search).get('play');
+    if (!location.hash) {
+      if (play === 'dam') this.enterDam();
+      if (play === 'fuse') this.enterFuse();
+    }
   }
   componentWillUnmount() {
     this.alive = false;
@@ -713,7 +719,7 @@ class Component extends DCLogic {
     const n = this.M.N * 4; this.bufs = [new ArrayBuffer(n), new ArrayBuffer(n), new ArrayBuffer(n)]; this.have = true;
   }
   send() {
-    const msg = { type: 'tick', dt: this.pendingDt, speed: this.state.speed, paused: this.state.paused || !!this.toyBusy, still: this.still, ops: this.ops };
+    const msg = { type: 'tick', dt: this.pendingDt, speed: this.state.speed, paused: this.state.paused || !!this.toyBusy || !!this.toyRecovery, still: this.still, ops: this.toyRecovery ? [] : this.ops };
     this.ops = []; this.pendingDt = 0; this.have = false;
     const requests = this.checkpointRequests; this.checkpointRequests = [];
     if (this.mode === 'worker') {
@@ -984,7 +990,7 @@ class Component extends DCLogic {
     const before = this.layout, close = matchMedia('(orientation:portrait) and (max-width:700px)').matches && !this.state.portraitOverview;
     this.vw = r.width; this.vh = r.height; this.layout = this.camera.layout(r.width, r.height);
     const next = !before || close !== this.portraitClose
-      ? (this.state.playing && !this.state.portraitOverview ? this.playMod.damView(this.layout) : close ? this.camera.closeView(this.layout) : { zoom: 1, panX: 0, panY: 0 })
+      ? (this.state.playing && !this.state.portraitOverview ? this.playView() : close ? this.camera.closeView(this.layout) : { zoom: 1, panX: 0, panY: 0 })
       : this.camera.reframe(before, this.layout, this.view);
     this.portraitClose = close;
     this.setView(next, false);
@@ -1076,7 +1082,7 @@ class Component extends DCLogic {
     return { vx: v.x, vy: v.y };
   }
   toolTick() {
-    if (this.toyBusy) return;
+    if (this.toyBusy || this.toyRecovery) return;
     if (!this.painting || !this.curCell) return;
     const s = this.state, c = this.curCell;
     if (s.tool === 'pour') { if (this.flingV) { this.flingV.x *= 0.85; this.flingV.y *= 0.85; } this.ops.push({ t: 'p', x: c.x, y: c.y, r: s.radius, m: s.brush, ...this.flingFields() }); }
@@ -1161,7 +1167,7 @@ class Component extends DCLogic {
   syncViewUI() {
     const v = this.view; if (!v) return;
     const hint = this.playHintRef.current;
-    if (hint && this.layout) { const p = this.cellToPx({ x: 264, y: 118 }); hint.style.left = p.x + 'px'; hint.style.top = p.y + 'px'; }
+    if (hint && this.layout) { const p = this.cellToPx(this.playHintCell()); hint.style.left = p.x + 'px'; hint.style.top = p.y + 'px'; }
     if (this.ctx2d) {
       const cv = this.cvRef.current;
       cv.style.width = this.layout.worldWidth * v.zoom + 'px'; cv.style.height = this.layout.worldHeight * v.zoom + 'px';
@@ -1202,8 +1208,10 @@ class Component extends DCLogic {
     const rel = e => { try { vp.releasePointerCapture(e.pointerId); } catch (_) {} };
     const pour = (x, y) => {
       const s = this.state;
-      if (this.toyBusy) return;
-      if (s.playHint && s.brush === M.AIR && x >= 216 && x <= 312 && y >= 106 && y <= 124) this.setState({ playHint: false });
+      if (this.toyBusy || this.toyRecovery) return;
+      if (s.playHint && (s.playKind === 'fuse'
+        ? s.brush === M.FIRE && x >= 208 && x <= 316 && y >= 70 && y <= 215
+        : s.brush === M.AIR && x >= 216 && x <= 312 && y >= 106 && y <= 124)) this.setState({ playHint: false });
       if (s.pourHint) { this.setState({ pourHint: false }); try { localStorage.setItem(PKEY, '1'); } catch (e) {} }
       this.impactSound(s.brush);
       const lc = this.lastCell;
@@ -1242,7 +1250,7 @@ class Component extends DCLogic {
     }, { passive: false });
     on(vp, 'dblclick', e => { if (e.button === 0 && !isUi(e)) this.fitWorld(); });
     on(vp, 'pointerdown', e => {
-      if (this.toyBusy) return;
+      if (this.toyBusy || this.toyRecovery) return;
       if (isUi(e)) return;
       this.ensureAudio();
       ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -1405,13 +1413,17 @@ class Component extends DCLogic {
     } catch (e) { this.setState({ flaskStatus: 'Scene stamp link failed to load.' }); }
   }
   // A scoped play session: one start checkpoint and one return checkpoint, no flask slots.
-  enterDam() {
+  enterDam() { this.enterPlay('dam'); }
+  enterFuse() { this.enterPlay('fuse'); }
+  playView() { return this.toySession?.scene === 'fuse' ? this.playMod.fuseView(this.layout) : this.playMod.damView(this.layout); }
+  playHintCell() { return this.state.playKind === 'fuse' ? { x: 260, y: 92 } : { x: 264, y: 118 }; }
+  enterPlay(scene) {
     if (!this.state.ready || !this.playMod || this.toySession || this.checkpointJobs.size) return;
     const ui = {};
     for (const key of ['brush', 'radius', 'tool', 'paused', 'speed', 'portraitOverview', 'whisper', 'pourHint', 'suggest', 'opus']) ui[key] = this.state[key];
-    const start = this.playMod.createDamCheckpoint();
+    const start = scene === 'fuse' ? this.playMod.createFuseCheckpoint() : this.playMod.createDamCheckpoint();
     this.toyBusy = true; this.cancelPlayInput?.();
-    this.requestCheckpoint('checkpoint', {}, { kind: 'toy-enter', start, ui, view: { ...this.view }, layout: this.layout });
+    this.requestCheckpoint('checkpoint', {}, { kind: 'toy-enter', scene, start, ui, view: { ...this.view }, layout: this.layout });
     this.setState({ sheet: '', folio: false });
   }
   againDam() {
@@ -1434,17 +1446,20 @@ class Component extends DCLogic {
   onToyReply(reply, job) {
     if (!reply.ok) {
       this.toyBusy = false;
-      this.setState({ playing: !!this.toySession, flaskStatus: 'Could not switch play scenes: ' + (reply.error || 'Please retry.') });
+      this.toyRecovery = !!this.toySession;
+      this.clearPlayFrame();
+      this.setState({ playing: !!this.toySession, playKind: this.toySession?.scene, playHint: false,
+        flaskStatus: 'Could not switch play scenes: ' + (reply.error || 'Please retry.') + (this.toySession ? ' Choose Again or Back to vessel.' : '') });
       return;
     }
     if (job.kind === 'toy-enter') {
-      this.toySession = { back: reply.checkpoint, start: job.start, ui: job.ui, view: job.view, layout: job.layout,
+      this.toySession = { scene: job.scene, back: reply.checkpoint, start: job.start, ui: job.ui, view: job.view, layout: job.layout,
         openingPending: this.openingPending, openingMs: Math.max(0, this.openingUntil - performance.now()), seenOnce: this.seenOnce };
       this.clearPlayFrame();
       this.requestCheckpoint('restore', { checkpoint: job.start }, { kind: 'toy-start' });
       return;
     }
-    this.clearPlayFrame(); this.toyBusy = false;
+    this.clearPlayFrame(); this.toyBusy = false; this.toyRecovery = false;
     if (job.kind === 'toy-back') {
       const back = this.toySession;
       this.toySession = null; this.seenOnce = back.seenOnce;
@@ -1456,9 +1471,11 @@ class Component extends DCLogic {
       return;
     }
     this.openingPending = false; this.seenOnce = true;
-    this.setState({ playing: true, playHint: true, brush: this.M.AIR, tool: 'pour', radius: 6, paused: false, speed: 1,
-      portraitOverview: false, pourHint: false, suggest: -1, opus: false, folio: false, sheet: '', whisper: '', flaskStatus: '' }, () => {
-      this.resize(); this.setView(this.playMod.damView(this.layout), false);
+    const fuse = this.toySession.scene === 'fuse';
+    this.setState({ playing: true, playKind: this.toySession.scene, playHint: true, brush: fuse ? this.M.FIRE : this.M.AIR, tool: 'pour', radius: fuse ? 3 : 6, paused: false, speed: 1,
+      portraitOverview: false, pourHint: false, suggest: -1, opus: false, folio: false, sheet: '',
+      whisper: fuse ? 'Light a fuse. Or cut a gap and spare a cask.' : '', flaskStatus: '' }, () => {
+      this.resize(); this.setView(this.playView(), false);
     });
   }
   requestCheckpoint(operation, payload, job) {
@@ -1627,7 +1644,7 @@ class Component extends DCLogic {
 
   renderVals() {
     const s = this.state, M = this.M, t = s.toast;
-    const playHintPoint = this.layout ? this.cellToPx({ x: 264, y: 118 }) : { x: 0, y: 0 };
+    const playHintPoint = this.layout ? this.cellToPx(this.playHintCell()) : { x: 0, y: 0 };
     const fmt = ts => { const d = new Date(ts); return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' · ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }); };
     const base = {
       toolLabel: s.tool, radius: s.radius, cycleBrush: () => { const sizes = this.M.BRUSH_SIZES; this.selectRadius(sizes[(sizes.indexOf(s.radius) + 1) % sizes.length]); }, rootRef: this.rootRef, toggleScreen: () => this.goFullscreen(), vpRef: this.vpRef, cvRef: this.cvRef, retRef: this.retRef, hudRef: this.hudRef, boxRef: this.boxRef, lineRef: this.lineRef,
@@ -1637,9 +1654,11 @@ class Component extends DCLogic {
       viewToggleLabel: s.portraitOverview ? 'close view' : 'overview', viewToggleAria: s.portraitOverview ? 'Return to close view' : 'Show whole vessel', togglePortraitView: () => this.togglePortraitView(),
       phoneHudRef: this.phoneHudRef,
       playing: s.playing, notPlaying: !s.playing, playBusy: !s.ready || s.flaskBusy || !!this.toyBusy,
+      playName: s.playKind === 'fuse' ? 'Light the fuse' : 'Pop the dam',
+      playHintText: s.playKind === 'fuse' ? 'Touch a dark fuse with fire' : 'Erase the wooden seam',
       playHint: s.playing && s.playHint && !s.curtainMounted, playHintRef: this.playHintRef,
       playHintX: playHintPoint.x, playHintY: playHintPoint.y,
-      onPlayDam: () => this.enterDam(), onAgainDam: () => this.againDam(), onLeaveDam: () => this.leaveDam(),
+      onPlayDam: () => this.enterDam(), onPlayFuse: () => this.enterFuse(), onAgainDam: () => this.againDam(), onLeaveDam: () => this.leaveDam(),
       sheetOpen: !!s.sheet, elementsOpen: s.sheet === 'elements', optionsOpen: s.sheet === 'options',
       openElements: () => this.setState({ sheet: s.sheet === 'elements' ? '' : 'elements' }),
       openOptions: () => this.setState({ sheet: s.sheet === 'options' ? '' : 'options' }),
@@ -1654,7 +1673,7 @@ class Component extends DCLogic {
       paused: s.paused, folio: s.folio, probe: s.probe, recording: s.recording,
       curtainMounted: s.curtainMounted, curtainOpacity: s.curtainOpacity, liftCurtain: () => this.liftCurtain(),
       titleColor: s.opus ? '#e8b86a' : '#c49a4a', titleGlow: s.opus ? 22 : 0,
-      line: s.playing ? 'Cut a small notch. Or let it all go.' : s.opus ? 'The Magnum Opus is in the glass. Lead kneels.' : (s.whisper || (this.coarse ? 'Drag to pour. Hold still to name a grain. Pinch to zoom.' : 'Hold to pour. Right-click names a grain; hold right-click to pan when zoomed. Scroll zooms. Casks remember fire. Space pauses; [ ] the brush.')),
+      line: s.playing ? (s.playKind === 'fuse' ? 'Light a fuse. Or cut a gap and spare a cask.' : 'Cut a small notch. Or let it all go.') : s.opus ? 'The Magnum Opus is in the glass. Lead kneels.' : (s.whisper || (this.coarse ? 'Drag to pour. Hold still to name a grain. Pinch to zoom.' : 'Hold to pour. Right-click names a grain; hold right-click to pan when zoomed. Scroll zooms. Casks remember fire. Space pauses; [ ] the brush.')),
       lineColor: s.opus || s.whisper ? '#d4b56a' : '#cbb89a',
       onTitle: () => { this.rite.title++; if (this.rite.title >= 7) { this.rite.title = 0; this.enact('aether-rain'); } },
       openCodex: () => this.setState({ folio: true, tab: 'codex', sheet: '' }), openRites: () => this.setState({ folio: true, tab: 'rites', sheet: '' }), openFlasks: () => this.setState({ folio: true, tab: 'flasks', sheet: '' }),

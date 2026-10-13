@@ -1,0 +1,56 @@
+[
+  {
+    "name": "portrait",
+    "mode": "worker",
+    "firstBlastMs": 658,
+    "ready": 245,
+    "remaining": 98,
+    "restored": true,
+    "errors": []
+  },
+  {
+    "name": "small",
+    "mode": "worker",
+    "firstBlastMs": 658,
+    "ready": 245,
+    "remaining": 98,
+    "restored": true,
+    "errors": []
+  },
+  {
+    "name": "landscape",
+    "mode": "worker",
+    "firstBlastMs": 658,
+    "ready": 245,
+    "remaining": 98,
+    "restored": true,
+    "errors": []
+  },
+  {
+    "name": "desktop",
+    "mode": "worker",
+    "firstBlastMs": 638,
+    "ready": 245,
+    "remaining": 98,
+    "restored": true,
+    "errors": []
+  },
+  {
+    "name": "local-2d",
+    "mode": "local",
+    "firstBlastMs": 659,
+    "ready": 245,
+    "remaining": 98,
+    "restored": true,
+    "errors": []
+  },
+  {
+    "name": "animated-direct",
+    "mode": "worker",
+    "firstBlastMs": 695,
+    "ready": 245,
+    "remaining": 98,
+    "restored": true,
+    "errors": []
+  }
+]

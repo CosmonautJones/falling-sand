@@ -35,6 +35,12 @@ upscale — heat haze, water caustics, gold spark, blast shake, Magnum Opus auro
   The temporary return checkpoint stays in this tab and uses no flask slot.
   Stopper a flask to keep either world across a reload. A direct local preview
   is available at `/v2/index.html?play=dam`.
+- **Light the fuse** adds a three-tier powder-and-cask toy. Tap a fuse with the
+  selected fire brush, start on another tier, or erase a gap to interrupt the
+  chain. Burning supports throw embers toward a sand-and-water catch basin.
+  **Again** restores the setup; **Back to vessel** restores your full original
+  experiment and controls. Open `/v2/index.html?play=fuse` for a direct preview.
+  [Verification and screenshots](docs/performance/2026-10-12-light-the-fuse.md).
 - Rotate for a wider vessel. **Fullscreen** expands the canvas with an overlay
   toolbar; browsers without native fullscreen use the same immersive layout.
   Tap **exit screen** to return. The world and discoveries survive rotation.

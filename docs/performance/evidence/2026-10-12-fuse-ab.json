@@ -1,0 +1,32 @@
+{
+  "benchmark": "alembic-v2-ab",
+  "rounds": 5,
+  "rootA": "../qa-fuse-base",
+  "rootB": ".",
+  "rows": [
+    {
+      "scene": "settled",
+      "A_p50_ms": 1.046,
+      "B_p50_ms": 1.066,
+      "ratio": 1.019
+    },
+    {
+      "scene": "falling",
+      "A_p50_ms": 2.792,
+      "B_p50_ms": 2.582,
+      "ratio": 0.925
+    },
+    {
+      "scene": "wet",
+      "A_p50_ms": 2.751,
+      "B_p50_ms": 2.825,
+      "ratio": 1.027
+    },
+    {
+      "scene": "storm",
+      "A_p50_ms": 9.083,
+      "B_p50_ms": 9.269,
+      "ratio": 1.02
+    }
+  ]
+}

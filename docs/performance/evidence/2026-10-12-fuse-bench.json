@@ -1,0 +1,25 @@
+{
+  "benchmark": "alembic-fuse-v1",
+  "node": "v22.19.0",
+  "platform": "win32",
+  "arch": "x64",
+  "rounds": 5,
+  "warmupTicks": 120,
+  "measuredTicks": 360,
+  "rows": [
+    {
+      "scene": "ready",
+      "p50_ms": 1.087,
+      "p95_ms": 1.144,
+      "firstBlastTick": null,
+      "blasts": 0
+    },
+    {
+      "scene": "chain",
+      "p50_ms": 3.263,
+      "p95_ms": 5.76,
+      "firstBlastTick": 37,
+      "blasts": 133
+    }
+  ]
+}
