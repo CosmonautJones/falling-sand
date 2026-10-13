@@ -868,7 +868,7 @@ class Component extends DCLogic {
           this.thunder(); if (!this.still) this.shake = Math.min(1, this.shake + 0.35);
           break;
         }
-        case 'gust': this.gustDir = e.dir; this.gustUntil = performance.now() + 2500; break;
+        case 'gust': this.gustDir = e.dir; this.gustUntil = performance.now() + 2500 / Math.max(0.25, this.state.speed || 1); break;
         case 'climate': this.setState({ whisper: CLIMATE_WHISPER[e.v] || CLIMATE_WHISPER[0] }); break;
         case 'storm': this.setState({ whisper: 'The ceiling darkens. The steam remembers weather.' }); if (!this.state.tempest) { this.setState({ tempest: true }); try { localStorage.setItem(TKEY, '1'); } catch (er) {} } break;
         case 'fulgurite': this.unlock('fulgurite'); break;

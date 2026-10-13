@@ -158,3 +158,39 @@ test('storms gust sideways after they build, and the page draws the gust', () =>
   assert.match(html, /case 'climate': this\.setState\(\{ whisper: CLIMATE_WHISPER\[e\.v\]/);
   assert.match(html, /climateLabel\(this\.climate\)/);
 });
+
+test('warmed or chilled things settle back to their resting heat', () => {
+  const { s, box, run } = basin();
+  box(101, 220, 299, 259, E.WATER);
+  for (let y = 220; y < 260; y++) for (let x = 101; x < 300; x++) s.heat[y * E.W + x] = 60;
+  box(350, 230, 400, 259, E.STONE);
+  for (let y = 230; y < 260; y++) for (let x = 350; x <= 400; x++) s.heat[y * E.W + x] = (x * 13 + y * 7) % 41;
+  run(60);
+  const water = s.heat[240 * E.W + 200], stone = s.heat[245 * E.W + 375];
+  assert.ok(water >= 30 && water <= 38, `warm water cools back toward 34 (${water})`);
+  assert.ok(stone >= 14 && stone <= 22, `stone settles near 18 (${stone})`);
+});
+
+test('a cold snap reaches a pool that has already settled and gone to sleep', () => {
+  const k = findSpell(3, -1);
+  const e = engineAt(3, 200), w = e.inspect();
+  for (let x = 0; x < 480; x++) for (let y = 260; y < 270; y++) w.setc(x, y, E.STONE, 0);
+  for (let y = 220; y < 260; y++) for (let x = 101; x < 300; x++) w.setc(x, y, E.WATER, 0);
+  e.advanceTicks(60 * 20);
+  const cp = e.checkpoint(); cp.tick = cp.state.tickIndex = k * E.CLIMATE.spell + 1400;
+  e.restore(cp); e.advanceTicks(60 * 10);
+  for (let y = 0; y < 260; y++) for (let x = 0; x < 480; x++) if (w.cells[y * E.W + x] === E.ICE) w.setc(x, y, E.WATER, 0);
+  e.advanceTicks(60 * 40);
+  let ice = 0; for (const c of w.cells) if (c === E.ICE) ice++;
+  assert.ok(ice > 10, `the sleeping pool still skins over (${ice} ice)`);
+});
+
+test('Living Valley keeps its own weather: the climate is off there', () => {
+  const k = findSpell(3, -1);
+  const e = E.createEngine({ seed: 3, scene: 'empty', weather: false });
+  const cp = e.checkpoint(); cp.tick = cp.state.tickIndex = k * E.CLIMATE.spell + 1400; e.restore(cp);
+  const buf = () => new Uint8Array(E.N * 4);
+  const frame = e.tick({ dt: 1000 / 60, speed: 1 }, buf(), buf(), buf());
+  assert.equal(frame.climate, 0);
+  assert.match(readFileSync(new URL('../public/v3/valley.js', import.meta.url), 'utf8'), /ambientEmbers: false, weather: false/);
+});
