@@ -1,0 +1,113 @@
+{
+  "browser": "145.0.7632.6",
+  "reports": [
+    {
+      "name": "desktop",
+      "width": 1440,
+      "height": 900,
+      "touch": false,
+      "checks": [
+        "invalid input preserves world",
+        "repeat and uint32 boundary seeds",
+        "keyboard painting",
+        "browser save/load",
+        "invalid import recovery",
+        "v1 import and exact original reset",
+        "different seed selects new terrain",
+        "repeated random draw yields different seed",
+        "live flood and growth",
+        "no viewport overflow"
+      ],
+      "wet": 49,
+      "growth": 610,
+      "tick": 644,
+      "overflow": {
+        "x": 0,
+        "y": 0
+      },
+      "errors": []
+    },
+    {
+      "name": "portrait",
+      "width": 390,
+      "height": 844,
+      "touch": true,
+      "checks": [
+        "invalid input preserves world",
+        "repeat and uint32 boundary seeds",
+        "keyboard painting",
+        "browser save/load",
+        "invalid import recovery",
+        "v1 import and exact original reset",
+        "different seed selects new terrain",
+        "pinch and rotation preserve world",
+        "repeated random draw yields different seed",
+        "live flood and growth",
+        "no viewport overflow"
+      ],
+      "wet": 49,
+      "growth": 610,
+      "tick": 636,
+      "overflow": {
+        "x": 0,
+        "y": 0
+      },
+      "errors": []
+    },
+    {
+      "name": "small",
+      "width": 320,
+      "height": 680,
+      "touch": true,
+      "checks": [
+        "invalid input preserves world",
+        "repeat and uint32 boundary seeds",
+        "keyboard painting",
+        "browser save/load",
+        "invalid import recovery",
+        "v1 import and exact original reset",
+        "different seed selects new terrain",
+        "pinch and rotation preserve world",
+        "repeated random draw yields different seed",
+        "live flood and growth",
+        "no viewport overflow"
+      ],
+      "wet": 49,
+      "growth": 610,
+      "tick": 636,
+      "overflow": {
+        "x": 0,
+        "y": 0
+      },
+      "errors": []
+    },
+    {
+      "name": "landscape",
+      "width": 844,
+      "height": 390,
+      "touch": true,
+      "checks": [
+        "invalid input preserves world",
+        "repeat and uint32 boundary seeds",
+        "keyboard painting",
+        "browser save/load",
+        "invalid import recovery",
+        "v1 import and exact original reset",
+        "different seed selects new terrain",
+        "pinch and rotation preserve world",
+        "repeated random draw yields different seed",
+        "live flood and growth",
+        "no viewport overflow"
+      ],
+      "wet": 49,
+      "growth": 610,
+      "tick": 641,
+      "overflow": {
+        "x": 0,
+        "y": 0
+      },
+      "errors": []
+    }
+  ],
+  "legacyLink": "pass"
+}

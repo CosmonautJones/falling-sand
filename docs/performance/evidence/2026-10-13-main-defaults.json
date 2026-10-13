@@ -1,0 +1,116 @@
+{
+  "equivalent": true,
+  "results": [
+    {
+      "scene": "settled",
+      "seed": 1,
+      "ticks": 240,
+      "hash": "6cdeb9cdce5ec06572b1359ae9b576cbded2a67007a2904d130d3a6577f4d832",
+      "thermalWork": {}
+    },
+    {
+      "scene": "falling",
+      "seed": 1,
+      "ticks": 240,
+      "hash": "5e1babdd9d4dc459a22ff29c1e718a0074c641bed53ed08558914671e542b856",
+      "thermalWork": {}
+    },
+    {
+      "scene": "wet",
+      "seed": 1,
+      "ticks": 240,
+      "hash": "bb2d795503cab8a87fee644537a1ebad313617cad6ad3693e9d0b76b8ba71594",
+      "thermalWork": {}
+    },
+    {
+      "scene": "storm",
+      "seed": 1,
+      "ticks": 240,
+      "hash": "7fd07fc1ffa138ccb6d220645cfc3550103ecfa7c96159d9c20b0f5880905c24",
+      "thermalWork": {}
+    },
+    {
+      "scene": "vessel",
+      "seed": 1,
+      "ticks": 240,
+      "hash": "b51a6aabd603876d502185f54508427e596c02e2bff772a472c6046168ebf968",
+      "thermalWork": {}
+    },
+    {
+      "scene": "settled",
+      "seed": 73,
+      "ticks": 240,
+      "hash": "1d3d0b46a539ea03c6f4a55199459647d5f63b3f38d5a0ae1b906682887a3584",
+      "thermalWork": {}
+    },
+    {
+      "scene": "falling",
+      "seed": 73,
+      "ticks": 240,
+      "hash": "a6ed2177bf5b952bc3f1f14e587271d5423ac34f54f833730066da5ea65181ed",
+      "thermalWork": {}
+    },
+    {
+      "scene": "wet",
+      "seed": 73,
+      "ticks": 240,
+      "hash": "e2c44bbde73f1192af7a0f260d966bf406985ef5b91be2ea984a6a2a3468b3e2",
+      "thermalWork": {}
+    },
+    {
+      "scene": "storm",
+      "seed": 73,
+      "ticks": 240,
+      "hash": "911fa2d10173b3bbe80662b1b45a760abd112767f2a746ffd81fcbd0c3deeefa",
+      "thermalWork": {}
+    },
+    {
+      "scene": "vessel",
+      "seed": 73,
+      "ticks": 240,
+      "hash": "e58b667ff8cc03a76bc4b0a9d025b6f120964662866c037249fa4367db1385eb",
+      "thermalWork": {}
+    },
+    {
+      "scene": "settled",
+      "seed": 2738958700,
+      "ticks": 240,
+      "hash": "60832cd1ab741d8e4f642e2d3ec43b01a8c0db215a56f428c4388ad0d71a28bc",
+      "thermalWork": {}
+    },
+    {
+      "scene": "falling",
+      "seed": 2738958700,
+      "ticks": 240,
+      "hash": "705b0517f029183d75abf33d0ad83cacdd0c1df72172eaecb9171cfaf4fa17f4",
+      "thermalWork": {}
+    },
+    {
+      "scene": "wet",
+      "seed": 2738958700,
+      "ticks": 240,
+      "hash": "85ac1c5b53403c4fae4d9372a8238e315b32a83eb699542112c1b77984b736e4",
+      "thermalWork": {}
+    },
+    {
+      "scene": "storm",
+      "seed": 2738958700,
+      "ticks": 240,
+      "hash": "04d76fca8d4f55b26d6e69824a55bcc93aaa81ad3c1cf31cf18f8cce8dfb28ec",
+      "thermalWork": {}
+    },
+    {
+      "scene": "vessel",
+      "seed": 2738958700,
+      "ticks": 240,
+      "hash": "fd05bfc6eada5a0c303ddc547610a6cc579997291e520552fd7992e6e4942727",
+      "thermalWork": {}
+    },
+    {
+      "scene": "edit-load-wipe",
+      "seed": 21,
+      "ticks": 240,
+      "hash": "0b315824b7387d1909a4ebc469b039f63a2919bcd70a6059d3886d5dceadd5a5"
+    }
+  ]
+}
