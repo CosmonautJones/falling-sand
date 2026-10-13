@@ -1,0 +1,27 @@
+{
+  "browser": "145.0.7632.6",
+  "rows": [
+    {
+      "name": "desktop",
+      "keyboardGrainChange": true
+    },
+    {
+      "name": "portrait",
+      "keyboardGrainChange": true,
+      "pinchIncreasesRenderedWorldWidth": true,
+      "noGesturePainting": true
+    },
+    {
+      "name": "small",
+      "keyboardGrainChange": true,
+      "pinchIncreasesRenderedWorldWidth": true,
+      "noGesturePainting": true
+    },
+    {
+      "name": "landscape",
+      "keyboardGrainChange": true,
+      "pinchIncreasesRenderedWorldWidth": true,
+      "noGesturePainting": true
+    }
+  ]
+}

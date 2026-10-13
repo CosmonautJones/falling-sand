@@ -10,9 +10,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:v2": "node --test tests-v2/*.test.js",
+    "test:v3": "node --test tests-v3/*.test.js",
     "bench:v2": "node scripts/bench-v2.mjs",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src --max-warnings 0",
+    "lint": "eslint src public/v3 tests-v3 --max-warnings 0",
     "format": "prettier --write src",
     "prepare": "husky"
   },

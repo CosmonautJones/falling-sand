@@ -1,0 +1,26 @@
+{
+  "browser": "145.0.7632.6",
+  "note": "One 179-frame real-time RAF interval sample per case on the Windows host, no CPU throttle. Includes current simulation/rendering and host/browser scheduling. This is not engine step timing or physical-phone evidence.",
+  "rows": [
+    {
+      "lane": "candidate",
+      "width": 1440,
+      "height": 900,
+      "frames": 179,
+      "p50_ms": 16.699999999999818,
+      "p95_ms": 16.700000000000728,
+      "p99_ms": 16.800000000000182,
+      "duration_ms": 2985.40000000298
+    },
+    {
+      "lane": "candidate",
+      "width": 390,
+      "height": 844,
+      "frames": 179,
+      "p50_ms": 16.699999999999818,
+      "p95_ms": 16.700000000000273,
+      "p99_ms": 16.800000000000182,
+      "duration_ms": 2989.1000000089407
+    }
+  ]
+}
