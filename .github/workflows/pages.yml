@@ -24,6 +24,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm test
+      - run: npm run test:v2
       - run: npm run build -- --base=/falling-sand/
       - uses: actions/upload-pages-artifact@v3
         with:

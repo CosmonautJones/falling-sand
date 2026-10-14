@@ -694,7 +694,7 @@ class Component extends DCLogic {
     const n = this.M.N * 4; this.bufs = [new ArrayBuffer(n), new ArrayBuffer(n), new ArrayBuffer(n)]; this.have = true;
   }
   send() {
-    const msg = { type: 'tick', dt: this.pendingDt, speed: this.state.speed, paused: this.state.paused, step: this.state.paused ? this.stepQ : 0, still: this.still, ops: this.ops };
+    const msg = { type: 'tick', dt: this.pendingDt, speed: this.state.speed, paused: this.state.paused, step: this.state.paused ? this.stepQ : 0, still: this.still, ops: this.ops, held: this.toolTick() };
     this.ops = []; this.pendingDt = 0; this.stepQ = 0; this.have = false;
     const requests = this.checkpointRequests; this.checkpointRequests = [];
     if (this.mode === 'worker') {
@@ -711,6 +711,7 @@ class Component extends DCLogic {
     }
   }
   onFrame(r) {
+    if (this.flingV && r.steps) { const decay = 0.85 ** r.steps; this.flingV.x *= decay; this.flingV.y *= decay; }
     const c = new Uint8Array(this.bufs[0]), e = new Uint8Array(this.bufs[1]), fx = new Uint8Array(this.bufs[2]);
     this.lastColor.set(c);
     this.upload(c, e, fx);
@@ -1023,11 +1024,10 @@ class Component extends DCLogic {
   frame(now) {
     if (!this.alive) return;
     this.raf = requestAnimationFrame(this.frame);
-    const dt = Math.min(48, now - this.last); this.last = now; this.pendingDt += dt;
-    this.toolTick();
+    const dt = Math.max(0, now - this.last); this.last = now; this.pendingDt += dt;
     if (this.pending.length) { this.ops.push(...this.pending); this.pending = []; }
     if (this.have) this.send();
-    this.stepParticles(dt / 1000);
+    this.stepParticles(Math.min(48, dt) / 1000);
     this.draw(now);
     this.shake *= 0.8; if (this.shake < 0.012) this.shake = 0;
     this.punch = (this.punch || 0) * 0.86; if (this.punch < 0.01) this.punch = 0;
@@ -1047,9 +1047,10 @@ class Component extends DCLogic {
       }
     }
   }
-  trackFling(dx, dy) {
+  trackFling(dx, dy, elapsedMs = 1000 / 60) {
     const v = this.flingV || (this.flingV = { x: 0, y: 0 }), cl = n => Math.max(-6, Math.min(6, n));
-    v.x = cl(v.x * 0.5 + dx * 0.5); v.y = cl(v.y * 0.5 + dy * 0.5);
+    const ticks = Math.max(0.001, elapsedMs / (1000 / 60)), blend = 1 - 0.5 ** ticks;
+    v.x = cl(v.x * (1 - blend) + cl(dx / ticks) * blend); v.y = cl(v.y * (1 - blend) + cl(dy / ticks) * blend);
   }
   flingFields() {
     const v = this.flingV;
@@ -1057,12 +1058,13 @@ class Component extends DCLogic {
     return { vx: v.x, vy: v.y };
   }
   toolTick() {
-    if (!this.painting || !this.curCell) return;
+    if (!this.painting || !this.curCell) return null;
     const s = this.state, c = this.curCell;
-    if (s.tool === 'pour') { if (this.flingV) { this.flingV.x *= 0.85; this.flingV.y *= 0.85; } this.ops.push({ t: 'p', x: c.x, y: c.y, r: s.radius, m: s.brush, ...this.flingFields() }); }
-    else if (s.tool === 'spray') this.ops.push({ t: 'spray', x: c.x, y: c.y, r: Math.max(2, s.radius * 1.6), m: s.brush, n: 3 + s.radius * 2 });
-    else if (s.tool === 'heat') this.ops.push({ t: 'heat', x: c.x, y: c.y, r: s.radius });
-    else if (s.tool === 'cool') this.ops.push({ t: 'cool', x: c.x, y: c.y, r: s.radius });
+    if (s.tool === 'pour') return { t: 'p', x: c.x, y: c.y, r: s.radius, m: s.brush, ...this.flingFields() };
+    if (s.tool === 'spray') return { t: 'spray', x: c.x, y: c.y, r: Math.max(2, s.radius * 1.6), m: s.brush, n: 3 + s.radius * 2 };
+    if (s.tool === 'heat') return { t: 'heat', x: c.x, y: c.y, r: s.radius };
+    if (s.tool === 'cool') return { t: 'cool', x: c.x, y: c.y, r: s.radius };
+    return null;
   }
 
   // ---------- view / input ----------
@@ -1185,15 +1187,17 @@ class Component extends DCLogic {
     const on = (el, ev, fn, opt) => { el.addEventListener(ev, fn, opt); offs.push(() => el.removeEventListener(ev, fn, opt)); };
     const cap = e => { try { vp.setPointerCapture(e.pointerId); } catch (_) {} };
     const rel = e => { try { vp.releasePointerCapture(e.pointerId); } catch (_) {} };
-    const pour = (x, y) => {
+    const pour = (x, y, px, py) => {
       const s = this.state;
       if (s.pourHint) { this.setState({ pourHint: false }); try { localStorage.setItem(PKEY, '1'); } catch (e) {} }
       this.impactSound(s.brush);
       const lc = this.lastCell;
-      if (lc) this.trackFling(x - lc.x, y - lc.y); else this.flingV = { x: 0, y: 0 };
+      const now = performance.now();
+      if (lc) this.trackFling((px - lc.px) * M.W / (this.vw * this.view.zoom), (py - lc.py) * M.H / (this.vh * this.view.zoom), now - lc.time);
+      else this.flingV = { x: 0, y: 0 };
       if (lc) this.ops.push({ t: 'l', x0: lc.x, y0: lc.y, x1: x, y1: y, r: s.radius, m: s.brush, ...this.flingFields() });
       else this.ops.push({ t: 'p', x, y, r: s.radius, m: s.brush, ...this.flingFields() });
-      this.lastCell = { x, y };
+      this.lastCell = { x, y, px, py, time: now };
     };
     on(vp, 'contextmenu', e => e.preventDefault());
     let lpTimer = 0;
@@ -1206,8 +1210,10 @@ class Component extends DCLogic {
         const c = this.cellAt(px, py), tool = this.state.tool;
         this.curCell = c;
         if (tool === 'line' || tool === 'box') { if (!this.dragStart) this.dragStart = c; this.drawPreview(); return; }
+        const starting = !this.painting;
         this.painting = true;
-        if (tool === 'pour') pour(c.x, c.y);
+        if (tool === 'pour') pour(c.x, c.y, px, py);
+        else if (starting || this.state.paused) { const op = this.toolTick(); if (op) this.ops.push(op); }
       },
       probe: (px, py) => { const c = this.cellAt(px, py); this.showProbe(c.x, c.y, px, py); },
       end: () => {},
@@ -1256,7 +1262,8 @@ class Component extends DCLogic {
       const tool = this.state.tool;
       if (tool === 'line' || tool === 'box') { this.gesture = 'drag'; this.dragStart = { x, y }; this.drawPreview(); return; }
       this.gesture = 'paint'; this.painting = true; this.lastCell = null;
-      if (tool === 'pour') pour(x, y);
+      if (tool === 'pour') pour(x, y, e.clientX, e.clientY);
+      else { const op = this.toolTick(); if (op) this.ops.push(op); }
     });
     on(vp, 'pointermove', e => {
       const r = vp.getBoundingClientRect(), ret = this.retRef.current;
@@ -1285,7 +1292,11 @@ class Component extends DCLogic {
       }
       const c = this.cellAt(e.clientX, e.clientY);
       if (this.gesture === 'drag') { this.curCell = c; this.drawPreview(); return; }
-      if (this.painting) { this.curCell = c; if (this.state.tool === 'pour') pour(c.x, c.y); }
+      if (this.painting) {
+        this.curCell = c;
+        if (this.state.tool === 'pour') pour(c.x, c.y, e.clientX, e.clientY);
+        else if (this.state.paused) { const op = this.toolTick(); if (op) this.ops.push(op); }
+      }
     });
     const end = e => {
       if (this.gesture === 'touch') { if (e.type === 'pointercancel') touch.cancel(); touch.up(); }
@@ -1305,6 +1316,8 @@ class Component extends DCLogic {
       this.gesture = 'none'; this.painting = false; this.lastCell = null; rel(e);
     };
     on(vp, 'pointerup', end); on(vp, 'pointercancel', end);
+    on(window, 'pointerup', e => { if (this.painting) end(e); });
+    on(window, 'blur', () => { touch.cancel(); cancelLongPress(); ptrs.clear(); this.painting = false; this.lastCell = null; this.gesture = 'none'; });
     on(vp, 'pointerleave', () => { const ret = this.retRef.current; if (ret) ret.style.opacity = '0'; if (this.gesture === 'none' && this.state.probe.on) this.setState({ probe: { on: false } }); });
     on(window, 'keydown', e => {
       const t = e.target;

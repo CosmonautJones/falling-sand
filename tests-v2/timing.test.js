@@ -115,14 +115,14 @@ test('reset_cancels_old_scheduled_events', () => {
 });
 
 // Catches unlimited catch-up or host overload altering deterministic world state.
-test('legacy_catch_up_is_bounded_and_discarded_time_is_telemetry', () => {
+test('catch_up_is_bounded_and_discarded_time_is_telemetry', () => {
   const a = E.createEngine({ seed: 1, scene: 'empty' });
   const b = E.createEngine({ seed: 1, scene: 'empty' });
   assert.equal(typeof b.advanceTicks, 'function');
   const result = a.tick({ dt: 200, speed: 10, ops: [{ t: 'tempest' }] }, ...buffers());
-  const expected = b.advanceTicks(3, [scheduled(1, 0, { t: 'tempest' })]);
-  assert.equal(a.captureState().tickIndex, 3);
-  assert.equal(result.discardedMs, 1950, 'input clipping and abandoned backlog are reported');
+  const expected = b.advanceTicks(8, [scheduled(1, 0, { t: 'tempest' })]);
+  assert.equal(a.captureState().tickIndex, 8);
+  assert.equal(result.discardedMs, 1750, 'time beyond the 250 simulated ms backlog is reported');
   assert.deepEqual(result.events, expected);
   sameState(a.captureState(), b.captureState(), 'discarded time never advances environmental clocks');
 });
@@ -156,7 +156,7 @@ test('paused_edit_reconciles_next_tick_commands_before_new_edits_without_advanci
   assert.equal(frame.snap.cells[50 * E.W + 100], E.GLASS);
   sameState(engine.captureState(), expected.captureState(), 'edits retain order without a physics or environment tick');
   assert.deepEqual(engine.captureState().commands, [later], 'later-tick input remains scheduled');
-  engine.tick({ dt: 9, speed: 1 }, ...buffers()); expected.advanceTicks(1);
+  engine.tick({ dt: 1000 / 60, speed: 1 }, ...buffers()); expected.advanceTicks(1);
   assert.equal(engine.inspect().get(100, 50), E.GLASS, 'resume cannot replay the older edit');
   sameState(engine.captureState(), expected.captureState());
 });
