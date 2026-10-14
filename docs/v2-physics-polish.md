@@ -13,6 +13,8 @@ This patch ports demonstrated fixes from the independent native Godot V2 engine 
 
 Explicit click/drag operations still preserve V2's responsive drawing and paused editing. Continuous touch spray/heat/cool adds an initial dab, then uses tick input; paused dragging still edits. Moving pours retain explicit connected line strokes. Therefore arbitrary pointer-event histories are not claimed to produce identical paintings. Batched worker input uses the latest held position; it does not reconstruct a historical pointer trajectory for every missed tick.
 
+The small-fling cutoff is applied after decay on each individual tick, including inside a catch-up batch. A follow-up regression checks that the same stationary, fading fling produces identical complete checkpoints at15/30/60/144 Hz; applying the cutoff only once per message failed this check.
+
 Godot's Compatibility-specific manual frame limiter is not applicable to the browser and was not ported. The browser remains on requestAnimationFrame with its worker/local fallback.
 
 ## Evidence and reproduction
