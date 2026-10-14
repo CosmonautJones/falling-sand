@@ -40,28 +40,35 @@ export function createEngine(options = {}) {
     tick(msg, color, emis, fxb) {
       const t0 = performance.now();
       const ops = validateOperations(msg.ops ?? [], { legacyVelocity: true });
-      let snap = null, steps = 0, discardedMs = 0, nextAcc = acc;
+      const held = validateOperations(msg.held == null ? [] : [msg.held], { legacyVelocity: true });
+      if (held.some(op => !['p', 'spray', 'heat', 'cool'].includes(op.t))) throw new Error('Invalid held tool');
+      let snap = null, steps = 0, discardedMs = 0, nextAcc = 0;
       if (!msg.paused) {
         const dt = Number.isFinite(msg.dt) ? Math.max(0, msg.dt) : 0;
         const speed = Number.isFinite(msg.speed) ? Math.max(0, msg.speed) : 1;
-        discardedMs = Math.max(0, dt - 48) * speed;
-        nextAcc += Math.min(48, dt) * speed;
-        while (nextAcc >= STEP_MS && steps < 3) { nextAcc -= STEP_MS; steps++; }
-        if (nextAcc > STEP_MS * 3) { discardedMs += nextAcc; nextAcc = 0; }
+        nextAcc = acc + dt * speed;
+        discardedMs = Math.max(0, nextAcc - 250);
+        nextAcc = Math.min(250, nextAcc);
+        steps = Math.min(8, Math.floor(nextAcc / STEP_MS + 1e-9));
+        nextAcc = Math.max(0, nextAcc - steps * STEP_MS);
       }
       // While paused, `step` commits exactly that many fixed ticks (capped), so stepping is deterministic.
       const stepN = msg.paused && Number.isFinite(msg.step) ? Math.min(MAX_STEP, Math.max(0, Math.floor(msg.step))) : 0;
       if (stepN) steps = stepN;
+      const inputs = held.length ? Array.from({ length: steps }, (_, i) => held.map(op => ({ ...op,
+        ...(op.vx === undefined ? {} : { vx: op.vx * 0.85 ** (i + 1) }),
+        ...(op.vy === undefined ? {} : { vy: op.vy * 0.85 ** (i + 1) }),
+      }))) : [];
       const observeOperation = (op, result) => { if (op.t === 'snap') snap = result; };
       const events = msg.paused && !stepN
         ? world.applyOperations(ops, observeOperation, true)
-        : world.advanceTicks(steps, world.commandsForNextTick(ops), observeOperation);
+        : world.advanceTicks(steps, world.commandsForNextTick(ops), observeOperation, inputs);
       acc = nextAcc;
       if (!msg.still) tickN++;
       world.render(color, emis, fxb, msg.still ? 0 : tickN);
       frames++;
       const kick = events.reduce((max, event) => event.t === 'blast' ? Math.max(max, event.r) : max, 0);
-      return { ...world.finishFrame(frames % 6 === 0), events, kick, discardedMs, ms: performance.now() - t0, snap };
+      return { ...world.finishFrame(frames % 6 === 0), events, kick, discardedMs, steps, ms: performance.now() - t0, snap };
     },
   };
 }

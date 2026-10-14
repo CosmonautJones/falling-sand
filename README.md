@@ -30,6 +30,13 @@ upscale — heat haze, water caustics, gold spark, blast shake, Magnum Opus auro
   toolbar; browsers without native fullscreen use the same immersive layout.
   Tap **exit screen** to return. The world and discoveries survive rotation.
 
+V2's [physics/timing update](docs/v2-physics-polish.md) ports tested fixes from
+the independent [Godot V2 project](https://github.com/CosmonautJones/alembic-godot-v2)
+(currently private): cell-resolution high-speed collisions, bounded velocity
+restoration, fixed 60 Hz catch-up, simulation-timed held tools and elapsed-time
+fling response. Current browser weather and creature behavior stays intact.
+The two runtimes have different save formats; this is not Godot running in the browser.
+
 To run it locally:
 
 ```bash

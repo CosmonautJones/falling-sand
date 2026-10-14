@@ -1,5 +1,5 @@
 import { createRandom, createRandomStreams } from './random.js';
-import { validateWorldState, validateCommands, validateOperations, validateCheckpointSize } from './checkpoint.js';
+import { validateWorldState, validateCommands, validateOperations, validateCheckpointSize, SAFE_VELOCITY } from './checkpoint.js';
 
 // Alembic engine v2 — port of CosmonautJones/falling-sand sim, plus per-grain velocity, liquid dispersion,
 // a coarse convection field, storms, visitors, tools, wipes, and snapshots.
@@ -325,7 +325,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
   // ---------- motion ----------
   const isCritter = n => n === MITE || n === MINNOW || n === VISITOR || n === FIREFLY;
   function canMove(sx, sy, nx, ny) {
-    if (!inb(nx, ny)) return false;
+    if (!inb(sx, sy) || !inb(nx, ny)) return false;
     const d = cells[ny * W + nx];
     if (isCritter(d) || !MOV[d]) return false;
     return DENS[cells[sy * W + sx]] > DENS[d];
@@ -362,11 +362,15 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
   }
   // Ray-step a grain along its velocity; displaces lighter movables, scatters on impact.
   function ballistic(x, y, vx, vy, liq) {
-    const steps = Math.min(8, Math.ceil(Math.max(Math.abs(vx), Math.abs(vy))));
+    if (!Number.isFinite(vx) || !Number.isFinite(vy)) return false;
+    vx = Math.max(-SAFE_VELOCITY, Math.min(SAFE_VELOCITY, vx));
+    vy = Math.max(-SAFE_VELOCITY, Math.min(SAFE_VELOCITY, vy));
+    // At most one cell per axis/sample, including blast impulses; bound hostile work.
+    const steps = Math.ceil(Math.max(Math.abs(vx), Math.abs(vy)));
     if (steps <= 0) return false;
     const sx = vx / steps, sy = vy / steps;
     let fx = x + 0.5, fy = y + 0.5, cx = x, cy = y, moved = false;
-    for (let s = 0; s < steps; s++) {
+    for (let s = 0; s < steps && s < 2 * (W + H); s++) {
       fx += sx; fy += sy;
       const nx = Math.floor(fx), ny = Math.floor(fy);
       if (nx === cx && ny === cy) continue;
@@ -1564,8 +1568,14 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
   }
   // One-based command ticks: capture is after tickIndex commits and before its successor.
   // Validate and detach the complete incoming batch before replacing the owned queue.
-  function advanceTicks(count, incoming = [], onOperation) {
+  function advanceTicks(count, incoming = [], onOperation, inputs = []) {
     if (!Number.isSafeInteger(count) || count < 0 || !Number.isSafeInteger(tickIndex + count)) throw new Error('Invalid tick count');
+    if (!Array.isArray(inputs) || inputs.length && inputs.length !== count || inputs.length > 60) throw new Error('Invalid tick inputs');
+    const tickInputs = Array.from(inputs, batch => {
+      const ops = validateOperations(batch);
+      if (ops.length > 1 || ops.some(op => !['p', 'spray', 'heat', 'cool'].includes(op.t))) throw new Error('Invalid held tool');
+      return ops;
+    });
     const detached = validateCommands(incoming, tickIndex);
     const keys = new Set(commands.map(command => `${command.tick}:${command.sequence}`));
     for (const command of detached) {
@@ -1588,6 +1598,10 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
         const command = commands.shift();
         const result = applyOperation(command.op);
         onOperation?.(command.op, result);
+      }
+      for (const op of tickInputs[i] ?? []) {
+        const result = applyOperation(op);
+        onOperation?.(op, result);
       }
       simulate();
       advanceWipe();
