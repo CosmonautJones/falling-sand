@@ -55,10 +55,13 @@ export function createEngine(options = {}) {
       // While paused, `step` commits exactly that many fixed ticks (capped), so stepping is deterministic.
       const stepN = msg.paused && Number.isFinite(msg.step) ? Math.min(MAX_STEP, Math.max(0, Math.floor(msg.step))) : 0;
       if (stepN) steps = stepN;
-      const inputs = held.length ? Array.from({ length: steps }, (_, i) => held.map(op => ({ ...op,
-        ...(op.vx === undefined ? {} : { vx: op.vx * 0.85 ** (i + 1) }),
-        ...(op.vy === undefined ? {} : { vy: op.vy * 0.85 ** (i + 1) }),
-      }))) : [];
+      const inputs = held.length ? Array.from({ length: steps }, (_, i) => held.map(op => {
+        const next = { ...op };
+        if (next.vx !== undefined) next.vx *= 0.85 ** (i + 1);
+        if (next.vy !== undefined) next.vy *= 0.85 ** (i + 1);
+        if (Math.hypot(next.vx ?? 0, next.vy ?? 0) < 0.5) { delete next.vx; delete next.vy; }
+        return next;
+      })) : [];
       const observeOperation = (op, result) => { if (op.t === 'snap') snap = result; };
       const events = msg.paused && !stepN
         ? world.applyOperations(ops, observeOperation, true)

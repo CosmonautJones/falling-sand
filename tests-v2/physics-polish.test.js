@@ -73,6 +73,22 @@ test('held tools produce the same full state at equal simulation time across fra
   }
 });
 
+test('held fling decay crosses its cutoff on the same tick in every frame schedule', () => {
+  const states = [];
+  for (const hz of [15, 30, 60, 144]) {
+    const engine = E.createEngine({ seed: 73, scene: 'empty', weather: false, ambientEmbers: false });
+    const planes = buffers(); let vx = 2;
+    for (let frame = 0; frame < hz; frame++) {
+      const held = { t: 'p', x: 100, y: 50, r: 2, m: E.SAND, ...(Math.abs(vx) >= 0.5 ? { vx } : {}) };
+      const result = engine.tick({ dt: 1000 / hz, held }, ...planes);
+      vx *= 0.85 ** result.steps;
+    }
+    assert.equal(engine.captureState().tickIndex, 60);
+    states.push(fingerprint(engine.captureState()));
+  }
+  assert.ok(states.every(state => state === states[0]), 'same fading fling yields an identical complete checkpoint');
+});
+
 test('held-tool validation precedes all edits, advancement and random consumption', () => {
   const engine = E.createEngine({ seed: 73, scene: 'empty', weather: false });
   const before = fingerprint(engine.captureState());
