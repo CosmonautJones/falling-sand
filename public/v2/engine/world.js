@@ -39,7 +39,7 @@ export const BRUSH_SIZES = [1, 3, 6, 12, 22];
 // The cold side of the vessel. Heat values are the engine's 0-255 scale; still water rests at 34.
 export const COLD = Object.freeze({
   iceRest: 14,         // ice rests a little under still water instead of acting as a refrigerator (was 3)
-  freezeBelow: 12,     // water next to ice freezes only below this heat (water usually sits near 18)
+  freezeBelow: 12,     // water next to ice freezes only below this heat (still water rests at 34)
   thawAbove: 24,       // ice touching water at least this warm slowly melts back
   thawOdds: 900,       // 1 in N per tick for that thaw (~15 s per edge grain)
   freezeOdds: 10,      // 1 in N per tick for cold water beside ice
@@ -121,7 +121,7 @@ export const PAGES = [
   {w:'Ash slakes. The floor remembers rain.', l:'Fire remembers it as brick. A seed will sprout on it. Wet, against plant, it hatches mites.'},
   {w:'Sand looks upon fire and learns to see.', l:'It will not fall. Heat crawls through it slowly. Cups are made of this so lava can be kept.'},
   {w:'Wet stone grows a quiet pelt.', l:'Creeps along stone that drinks. Mites will graze it. Acid and fire do not suffer it.'},
-  {w:'Water, stopped.', l:'Freezes neighboring water. Fire and ember thaw it; heat soaks through a wall, then it runs. Steam that kisses it falls as water. Crystal hanging beside it drips.'},
+  {w:'Water, stopped.', l:'Freezes neighboring water only when it is already cold. Cold snaps help; the cool wand freezes water directly. Warm water, fire and ember thaw it. Brine resists passive freezing. Steam that kisses it falls as water. Crystal hanging beside it drips.'},
   {w:'A standing fuel.', l:'Fire throws ember from it. It will not slide. The opening casks sit by a little of this.'},
   {w:'A white thirst.', l:'Drinks and becomes brine. With ash, a short black fuse. Acid tamed by it is only water again.'},
   {w:'Water climbs as a ghost.', l:'Rises through air and water. Ice knocks it down. Crystal with it forgets to fall and becomes aether. A cloud against the ceiling rains as dew.'},
