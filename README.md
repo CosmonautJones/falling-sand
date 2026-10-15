@@ -30,6 +30,8 @@ upscale — heat haze, water caustics, gold spark, blast shake, Magnum Opus auro
   toolbar; browsers without native fullscreen use the same immersive layout.
   Tap **exit screen** to return. The world and discoveries survive rotation.
 
+Read the [V2 release log](CHANGELOG.md) or [GitHub releases](https://github.com/CosmonautJones/falling-sand/releases) for additions, fixes and known limits. The log also explains why ice now freezes only already-cold water.
+
 V2's [physics/timing update](docs/v2-physics-polish.md) ports tested fixes from
 the independent [Godot V2 project](https://github.com/CosmonautJones/alembic-godot-v2)
 (currently private): cell-resolution high-speed collisions, bounded velocity

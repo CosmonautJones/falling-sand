@@ -8,7 +8,7 @@ Some ideas from the original research turned out to exist already. They are list
 
 | Area | Already in v2 | Where |
 |---|---|---|
-| Fixed timestep | 60 Hz ticks from an accumulator, max 3 ticks per frame, overflow discarded | `alembic-engine-v2.js` `tick()` |
+| Fixed timestep | 60 Hz ticks from an accumulator, max 8 ticks per engine call, up to 250 simulated ms of backlog; excess time reported and discarded | `alembic-engine-v2.js` `tick()` |
 | Worker transport | Colour, emissive and fx buffers are transferred (ping-pong), not copied | `alembic-engine-v2.js` worker block, `index.html` `send()` |
 | Shader renderer | WebGL pass with per-material shade, bevels, liquid refraction, gas and smoke, multi-level emissive bloom, shake, flash | `index.html` fragment shader |
 | Per-grain variation | `SHADE` table per material | `engine/world.js` |
