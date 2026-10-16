@@ -4,6 +4,43 @@
 
 This log covers the browser V2. The [Godot V2 project](https://github.com/CosmonautJones/alembic-godot-v2) has its own builds and releases; its saves and feature set differ. Dates below are in America/New_York.
 
+## 2026-10-16 — Native growth cycle and explorer fixes
+
+- Added the native browser V2 water → plants → mites → decay → new growth
+  cycle. Plant moisture requires adjacent water, or mud that itself touches
+  water; dry ash no longer irrigates.
+- Dry and wet plant/bloom decay, mud-to-seed growth, food-backed mud-to-mite
+  births, and the native three-mite neighborhood cap use probability averages
+  from the `ECOLOGY` table. Existing seed-by-mud germination, ash-plus-water
+  mud, feeding, cargo spill, heat, ice and timing behavior remain intact.
+- Managed V3 vegetation keeps its existing behavior, and the native cycle adds
+  no material IDs, checkpoint arrays, save-format changes or physics framework.
+- Legacy pond coverage now spans seeds `4`, `9` and `17`, with per-seed plant
+  and water-retention bounds plus an aggregate `80..125` plant band. Three
+  fixed-seed, ten-minute shore runs ended with plants and mites and 86–96% of
+  starting water; this is finite-window evidence, not guaranteed equilibrium.
+- The explorer now falls when its support disappears. Invalid tool batches
+  leave it unchanged, drop coordinates stay finite and inside the vessel, and
+  a poke moves only one cell along one axis.
+- Same-host A/B measurements pass the 10% median-step regression gate in all
+  four stress scenes; the largest increase was 3.6%. See the evidence note for
+  tail timings, population curves and limits.
+
+See the [V2 growth-cycle note](docs/v2-growth-cycle.md) for finite-scene limits,
+same-runtime replay scope and the profile command.
+
+## 2026-10-15 — Tiny explorer and close-up grains
+
+Shipped in [#33](https://github.com/CosmonautJones/falling-sand/pull/33).
+
+- Press **I** to enter or leave the tiny explorer. Walk with arrows or WASD,
+  hop with **X**, switch hand with **H**, switch weapon with **Q**, and use
+  the current one-cell tool with **E**. It is a session helper and is not saved
+  in flasks.
+- Sharper grain shading at close zoom, with small animated creature shapes.
+- Added beetles and newts as material IDs 53 and 54; existing IDs 0–52 remain
+  unchanged. Beetles graze fungus; newts swim and move on land.
+
 ## 2026-10-14 — Physics, input and clearer ice rules
 
 ### Improved

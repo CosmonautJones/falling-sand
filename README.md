@@ -39,6 +39,12 @@ restoration, fixed 60 Hz catch-up, simulation-timed held tools and elapsed-time
 fling response. Current browser weather and creature behavior stays intact.
 The two runtimes have different save formats; this is not Godot running in the browser.
 
+V2 also has a native growth cycle: supported plants and blooms can decay to ash,
+freshwater-fed mud can seed new growth or hatch mites near food, and local mite
+births are capped. Material IDs, checkpoint arrays, save format and the physics
+framework remain unchanged. See the [growth-cycle note](docs/v2-growth-cycle.md)
+for the probability averages, finite-scene checks and long-run profile.
+
 To run it locally:
 
 ```bash
@@ -72,10 +78,12 @@ The v2 world owns its arrays, random streams and committed simulation ticks.
 Rendering and worker polling do not advance weather or ambient ember rain.
 New flask saves and exported JSON checkpoints preserve the complete world,
 including velocities, heat, wind, weather, visitors, random streams and queued
-commands. Exact continuation is scoped to the same engine version and runtime.
+commands. The tiny explorer is session-only and is not saved in flasks. Exact
+simulation continuation is scoped to the same engine version and runtime.
 Older flask saves and existing share URLs remain readable as **scene stamps**:
-they carry material cells only. World dimensions (480×270) and material IDs are
-unchanged. This foundation does not add the later water, soil or ecology solvers.
+they carry material cells only. World dimensions stay 480×270; the explorer
+update appended beetle and newt IDs without renumbering existing materials.
+This foundation does not add the later water or soil solvers.
 
 Run the release checks and deterministic host benchmark:
 

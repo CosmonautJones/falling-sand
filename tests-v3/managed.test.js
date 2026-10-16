@@ -11,6 +11,7 @@ import {
   WOOD,
   MITE,
   FUNGUS,
+  ECOLOGY,
 } from '../public/v2/engine/world.js';
 import { createRandom } from '../public/v2/engine/random.js';
 function fixture(vegetation) {
@@ -46,15 +47,15 @@ test('managed wood does not enter native fungus propagation', () => {
     assert.equal(sim.cells.includes(FUNGUS), mode === 'native');
   }
 });
-test('managed wet mud and plants do not hatch native unfunded mites', () => {
+test('managed wet mud stays managed while native hatching spends its mud grain', () => {
   for (const mode of ['native', 'managed']) {
     const { world, sim } = fixture(mode);
     sim.setc(100, 198, MUD, 0);
     sim.setc(101, 198, PLANT, 0);
     sim.setc(100, 197, WATER, 0);
-    firstZero(world, 8);
+    firstZero(world, ECOLOGY.mudHatch);
     world.advanceTicks(1);
     assert.equal(sim.cells.includes(MITE), mode === 'native');
-    assert.equal(sim.cells[198 * W + 100], MUD);
+    assert.equal(sim.cells[198 * W + 100], mode === 'native' ? MITE : MUD);
   }
 });

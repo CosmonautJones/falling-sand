@@ -1,0 +1,2819 @@
+{
+  "date": "2026-10-16",
+  "timezone": "America/New_York",
+  "baselineCommit": "c67a4a199f46e9454161e6191f486f349dcf6dec",
+  "scope": "Native browser V2; finite-scene measurements, not scientific accuracy or permanent equilibrium",
+  "performanceMethod": "Five alternating A/B rounds, four fixture-v1 scenes, same seed, 120 warmup ticks and 600 timed ticks each. Nearest-rank percentiles per trial, then median across five trials. Timing excludes setup, rendering, transport and hashing. Population evolution differs between engines.",
+  "profileTimingNote": "Population profiles ran alongside other checks; their step timings are omitted from this report and are not used for performance claims.",
+  "benchmark": {
+    "benchmark": "alembic-v2-integrated-ab",
+    "rounds": 5,
+    "warmupTicks": 120,
+    "measuredTicks": 600,
+    "seed": 2738958700,
+    "fixtureVersion": 1,
+    "runtime": {
+      "node": "v22.16.0",
+      "v8": "12.4.254.21-node.26",
+      "platform": "win32",
+      "arch": "x64",
+      "cpu": "AMD Ryzen 7 5800X 8-Core Processor             "
+    },
+    "sources": [
+      {
+        "label": "main c67a4a1",
+        "worldSha256": "ef852cd0243ce8d70b8cf0cbdd8de4cc7aaabb3f0e4975b692a948dc1add1f4c"
+      },
+      {
+        "label": "growth-cycle candidate",
+        "worldSha256": "ef5cd57bef6eee098f835a33b04d1bdb9afc17edff9283881c6133223e798a78"
+      }
+    ],
+    "rows": [
+      {
+        "scene": "settled",
+        "baseline": {
+          "p50": 2.2695000000021537,
+          "p95": 3.7321000000010827,
+          "p99": 4.280800000000454,
+          "ticksPerSecond": 401.9727482574944
+        },
+        "candidate": {
+          "p50": 2.3241000000016356,
+          "p95": 3.5695999999989,
+          "p99": 3.9081999999907566,
+          "ticksPerSecond": 404.3609519950681
+        },
+        "p50Ratio": 1.024058162590628,
+        "trials": [
+          [
+            {
+              "p50": 1.5078000000000884,
+              "p95": 2.3945999999999685,
+              "p99": 2.7426000000000386,
+              "ticksPerSecond": 624.811450128019
+            },
+            {
+              "p50": 2.7119000000020606,
+              "p95": 4.5305999999982305,
+              "p99": 5.882200000000012,
+              "ticksPerSecond": 343.58997118138296
+            },
+            {
+              "p50": 2.2695000000021537,
+              "p95": 3.7321000000010827,
+              "p99": 4.280800000000454,
+              "ticksPerSecond": 401.9727482574944
+            },
+            {
+              "p50": 2.7774000000063097,
+              "p95": 4.301800000001094,
+              "p99": 5.723900000011781,
+              "ticksPerSecond": 344.5257301863655
+            },
+            {
+              "p50": 2.2633999999961816,
+              "p95": 3.5090000000054715,
+              "p99": 3.9600999999966007,
+              "ticksPerSecond": 411.2027529749847
+            }
+          ],
+          [
+            {
+              "p50": 1.6322000000000116,
+              "p95": 2.66379999999981,
+              "p99": 3.0756000000001222,
+              "ticksPerSecond": 566.5600400671278
+            },
+            {
+              "p50": 2.3241000000016356,
+              "p95": 3.5695999999989,
+              "p99": 3.834999999999127,
+              "ticksPerSecond": 404.3609519950681
+            },
+            {
+              "p50": 2.7842000000018743,
+              "p95": 3.871099999996659,
+              "p99": 4.088900000002468,
+              "ticksPerSecond": 354.9912509448137
+            },
+            {
+              "p50": 2.4622999999992317,
+              "p95": 3.561600000000908,
+              "p99": 3.9081999999907566,
+              "ticksPerSecond": 389.9031967837994
+            },
+            {
+              "p50": 2.2325000000128057,
+              "p95": 3.6186000000016065,
+              "p99": 3.9333000000042375,
+              "ticksPerSecond": 412.37311794623827
+            }
+          ]
+        ]
+      },
+      {
+        "scene": "falling",
+        "baseline": {
+          "p50": 4.067599999994854,
+          "p95": 5.871799999993527,
+          "p99": 6.596100000009756,
+          "ticksPerSecond": 233.72707385741185
+        },
+        "candidate": {
+          "p50": 3.9842999999964377,
+          "p95": 6.102200000001176,
+          "p99": 7.221199999999953,
+          "ticksPerSecond": 232.98241134233623
+        },
+        "p50Ratio": 0.9795210935198835,
+        "trials": [
+          [
+            {
+              "p50": 3.4364999999997963,
+              "p95": 5.250100000000202,
+              "p99": 6.314400000000205,
+              "ticksPerSecond": 274.275106891866
+            },
+            {
+              "p50": 3.6917000000030384,
+              "p95": 5.306400000001304,
+              "p99": 6.066399999996065,
+              "ticksPerSecond": 261.0051744275756
+            },
+            {
+              "p50": 5.053999999996449,
+              "p95": 10.768599999995786,
+              "p99": 17.784200000001874,
+              "ticksPerSecond": 174.54127063252142
+            },
+            {
+              "p50": 4.067599999994854,
+              "p95": 5.871799999993527,
+              "p99": 6.596100000009756,
+              "ticksPerSecond": 233.72707385741185
+            },
+            {
+              "p50": 4.122099999993225,
+              "p95": 6.120000000009895,
+              "p99": 7.2924999999959255,
+              "ticksPerSecond": 230.08640511467763
+            }
+          ],
+          [
+            {
+              "p50": 3.4773999999997613,
+              "p95": 4.707500000000437,
+              "p99": 5.627700000000004,
+              "ticksPerSecond": 280.3547309720656
+            },
+            {
+              "p50": 3.8963000000003376,
+              "p95": 5.75170000000071,
+              "p99": 6.558600000000297,
+              "ticksPerSecond": 245.95384405567424
+            },
+            {
+              "p50": 4.141300000002957,
+              "p95": 6.102200000001176,
+              "p99": 7.368399999999383,
+              "ticksPerSecond": 228.0214495216995
+            },
+            {
+              "p50": 3.9842999999964377,
+              "p95": 6.373200000001816,
+              "p99": 7.221199999999953,
+              "ticksPerSecond": 232.98241134233623
+            },
+            {
+              "p50": 5.622600000002421,
+              "p95": 11.861600000003818,
+              "p99": 17.312900000019,
+              "ticksPerSecond": 156.7633796564792
+            }
+          ]
+        ]
+      },
+      {
+        "scene": "wet",
+        "baseline": {
+          "p50": 3.689199999993434,
+          "p95": 6.166100000002189,
+          "p99": 7.3038999999989755,
+          "ticksPerSecond": 252.4082799843554
+        },
+        "candidate": {
+          "p50": 3.724400000006426,
+          "p95": 6.088000000017928,
+          "p99": 7.447099999990314,
+          "ticksPerSecond": 250.30512194364195
+        },
+        "p50Ratio": 1.0095413639848896,
+        "trials": [
+          [
+            {
+              "p50": 3.3651000000008935,
+              "p95": 5.126599999999598,
+              "p99": 6.516400000000431,
+              "ticksPerSecond": 285.3532052037177
+            },
+            {
+              "p50": 3.7541000000055647,
+              "p95": 6.452199999999721,
+              "p99": 9.262299999994866,
+              "ticksPerSecond": 245.33211692217753
+            },
+            {
+              "p50": 3.5953999999910593,
+              "p95": 5.51919999999518,
+              "p99": 6.141900000002352,
+              "ticksPerSecond": 264.8453662809046
+            },
+            {
+              "p50": 3.8755999999993946,
+              "p95": 6.377900000006775,
+              "p99": 9.23739999999816,
+              "ticksPerSecond": 240.7812291448505
+            },
+            {
+              "p50": 3.689199999993434,
+              "p95": 6.166100000002189,
+              "p99": 7.3038999999989755,
+              "ticksPerSecond": 252.4082799843554
+            }
+          ],
+          [
+            {
+              "p50": 3.6182000000007974,
+              "p95": 5.099799999999959,
+              "p99": 6.212400000000343,
+              "ticksPerSecond": 272.2918903714728
+            },
+            {
+              "p50": 3.3377000000036787,
+              "p95": 4.395200000006298,
+              "p99": 5.310100000002421,
+              "ticksPerSecond": 301.54883017899687
+            },
+            {
+              "p50": 3.753900000010617,
+              "p95": 6.532900000005611,
+              "p99": 7.737699999997858,
+              "ticksPerSecond": 239.4908807061626
+            },
+            {
+              "p50": 4.35910000000149,
+              "p95": 6.940700000006473,
+              "p99": 8.74659999999858,
+              "ticksPerSecond": 217.61407493018294
+            },
+            {
+              "p50": 3.724400000006426,
+              "p95": 6.088000000017928,
+              "p99": 7.447099999990314,
+              "ticksPerSecond": 250.30512194364195
+            }
+          ]
+        ]
+      },
+      {
+        "scene": "storm",
+        "baseline": {
+          "p50": 10.119599999990896,
+          "p95": 14.170899999997346,
+          "p99": 16.724999999998545,
+          "ticksPerSecond": 96.64657330715266
+        },
+        "candidate": {
+          "p50": 10.47950000000128,
+          "p95": 14.36069999999745,
+          "p99": 16.16889999999694,
+          "ticksPerSecond": 94.83176970496838
+        },
+        "p50Ratio": 1.0355646468250432,
+        "trials": [
+          [
+            {
+              "p50": 8.466700000000856,
+              "p95": 11.785400000000664,
+              "p99": 14.554700000000594,
+              "ticksPerSecond": 113.06594593910006
+            },
+            {
+              "p50": 10.33690000000206,
+              "p95": 14.341800000001967,
+              "p99": 16.724999999998545,
+              "ticksPerSecond": 93.86331942560597
+            },
+            {
+              "p50": 10.119599999990896,
+              "p95": 14.170899999997346,
+              "p99": 15.960299999991548,
+              "ticksPerSecond": 96.64657330715266
+            },
+            {
+              "p50": 10.553299999999581,
+              "p95": 15.085299999991548,
+              "p99": 16.883199999996577,
+              "ticksPerSecond": 91.49875184265332
+            },
+            {
+              "p50": 9.856399999989662,
+              "p95": 14.03080000000773,
+              "p99": 17.264999999984866,
+              "ticksPerSecond": 97.13176848766392
+            }
+          ],
+          [
+            {
+              "p50": 8.477100000000064,
+              "p95": 12.543100000002596,
+              "p99": 14.744999999998981,
+              "ticksPerSecond": 112.30208091825352
+            },
+            {
+              "p50": 10.47950000000128,
+              "p95": 14.36069999999745,
+              "p99": 16.16889999999694,
+              "ticksPerSecond": 94.83176970496838
+            },
+            {
+              "p50": 11.755499999999302,
+              "p95": 18.136800000007497,
+              "p99": 20.847200000003795,
+              "ticksPerSecond": 80.29244542699803
+            },
+            {
+              "p50": 13.159799999993993,
+              "p95": 21.79099999999744,
+              "p99": 27.56369999999879,
+              "ticksPerSecond": 71.65354907134166
+            },
+            {
+              "p50": 9.513600000005681,
+              "p95": 14.308099999994738,
+              "p99": 16.153599999990547,
+              "ticksPerSecond": 99.61292409953079
+            }
+          ]
+        ]
+      }
+    ]
+  },
+  "profiles": [
+    {
+      "artifact": "main-baseline-120s-dry-v3.json",
+      "profile": "alembic-v2-growth-cycle",
+      "fixtureVersion": 3,
+      "sources": {
+        "fixture": {
+          "path": "tests-v2/growth-fixtures.js",
+          "algorithm": "sha256",
+          "value": "5868969657ddaa304ee4acf9e5760a0e257c3485d893f445aca595a8aefc014d"
+        },
+        "engine": [
+          {
+            "path": "qa-shots\\growth\\main-baseline\\public\\v2\\alembic-engine-v2.js",
+            "algorithm": "sha256",
+            "value": "c5a37c35b7125fa31c8e078f768db26d010e4c8a26fe19e12d2a16493e92df2d"
+          },
+          {
+            "path": "qa-shots\\growth\\main-baseline\\public\\v2\\engine\\checkpoint.js",
+            "algorithm": "sha256",
+            "value": "64d5467c1dfdc8526eb9a51e3eb329d5221e22c8eb1aadd084cd5c149caff964"
+          },
+          {
+            "path": "qa-shots\\growth\\main-baseline\\public\\v2\\engine\\flask-storage.js",
+            "algorithm": "sha256",
+            "value": "50c9853924065d197771a8504d53dd65d3aa802e2264e45fe77469106f0f890d"
+          },
+          {
+            "path": "qa-shots\\growth\\main-baseline\\public\\v2\\engine\\random.js",
+            "algorithm": "sha256",
+            "value": "519b344679ef9de8626825b56d4bdabae93ef86a589f60bbf8c3ea2e4ebfd0d3"
+          },
+          {
+            "path": "qa-shots\\growth\\main-baseline\\public\\v2\\engine\\walker.js",
+            "algorithm": "sha256",
+            "value": "1ef538e6bfe0f055598ed433a8956f011cf78fa8ba8c4317a9ae05d4a64f4640"
+          },
+          {
+            "path": "qa-shots\\growth\\main-baseline\\public\\v2\\engine\\world.js",
+            "algorithm": "sha256",
+            "value": "ef852cd0243ce8d70b8cf0cbdd8de4cc7aaabb3f0e4975b692a948dc1add1f4c"
+          }
+        ]
+      },
+      "runtime": {
+        "node": "v22.16.0",
+        "v8": "12.4.254.21-node.26",
+        "platform": "win32",
+        "arch": "x64"
+      },
+      "options": {
+        "seeds": [
+          73,
+          991,
+          2026
+        ],
+        "seconds": 120,
+        "sampleSeconds": 30,
+        "scene": "dry",
+        "engine": "qa-shots/growth/main-baseline/public/v2/alembic-engine-v2.js"
+      },
+      "results": [
+        {
+          "seed": 73,
+          "scene": "dry",
+          "horizonSeconds": 120,
+          "sampleIntervalSeconds": 30,
+          "initialCounts": {
+            "water": 0,
+            "plant": 346,
+            "bloom": 242,
+            "seed": 0,
+            "mite": 0,
+            "ash": 0,
+            "mud": 0,
+            "gold": 0,
+            "goldCarried": 0,
+            "goldTotal": 0,
+            "beetle": 0,
+            "newt": 0,
+            "occupied": 8896
+          },
+          "samples": [
+            {
+              "seconds": 30,
+              "ticks": 1800,
+              "counts": {
+                "water": 0,
+                "plant": 346,
+                "bloom": 242,
+                "seed": 0,
+                "mite": 0,
+                "ash": 0,
+                "mud": 0,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 0,
+                "occupied": 8896
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "a9d8e32e76a4064a45cc614b23cd7f21c05f1882cef3276b9521cd1a7e1e189d"
+              }
+            },
+            {
+              "seconds": 60,
+              "ticks": 3600,
+              "counts": {
+                "water": 0,
+                "plant": 346,
+                "bloom": 242,
+                "seed": 0,
+                "mite": 0,
+                "ash": 0,
+                "mud": 0,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 0,
+                "occupied": 8896
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "20901c7b34695c44b23abc8addfc09d5830bcc3e57caf5f9f931c1f42b103366"
+              }
+            },
+            {
+              "seconds": 90,
+              "ticks": 5400,
+              "counts": {
+                "water": 0,
+                "plant": 346,
+                "bloom": 242,
+                "seed": 0,
+                "mite": 0,
+                "ash": 0,
+                "mud": 0,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 0,
+                "occupied": 8896
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "2491404826f36060045bd204485462bde7ff4727233e60fea2f8bbd2a79d40f3"
+              }
+            },
+            {
+              "seconds": 120,
+              "ticks": 7200,
+              "counts": {
+                "water": 0,
+                "plant": 346,
+                "bloom": 242,
+                "seed": 0,
+                "mite": 0,
+                "ash": 0,
+                "mud": 0,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 0,
+                "occupied": 8896
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "f6f91695477fe1f8c0a08ecf8585f8fb93b28d3febecaeb8e8780018b460f5c6"
+              }
+            }
+          ]
+        },
+        {
+          "seed": 991,
+          "scene": "dry",
+          "horizonSeconds": 120,
+          "sampleIntervalSeconds": 30,
+          "initialCounts": {
+            "water": 0,
+            "plant": 346,
+            "bloom": 242,
+            "seed": 0,
+            "mite": 0,
+            "ash": 0,
+            "mud": 0,
+            "gold": 0,
+            "goldCarried": 0,
+            "goldTotal": 0,
+            "beetle": 0,
+            "newt": 0,
+            "occupied": 8896
+          },
+          "samples": [
+            {
+              "seconds": 30,
+              "ticks": 1800,
+              "counts": {
+                "water": 0,
+                "plant": 346,
+                "bloom": 242,
+                "seed": 0,
+                "mite": 0,
+                "ash": 0,
+                "mud": 0,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 0,
+                "occupied": 8896
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "e1720b708ed02b838add0e11f68e3ddc4f071ab91f4b492d8191421b5d295874"
+              }
+            },
+            {
+              "seconds": 60,
+              "ticks": 3600,
+              "counts": {
+                "water": 0,
+                "plant": 346,
+                "bloom": 242,
+                "seed": 0,
+                "mite": 0,
+                "ash": 0,
+                "mud": 0,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 0,
+                "occupied": 8896
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "741dfd5d7566e2dc2cd4d31678276507e8367b14fb3b5c497b0f0723339e8bca"
+              }
+            },
+            {
+              "seconds": 90,
+              "ticks": 5400,
+              "counts": {
+                "water": 0,
+                "plant": 346,
+                "bloom": 242,
+                "seed": 0,
+                "mite": 0,
+                "ash": 0,
+                "mud": 0,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 0,
+                "occupied": 8896
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "a1106ae077a17f68538a962ce8c52dd3ec53a6b51f9020fbc39fbe6a7492e94e"
+              }
+            },
+            {
+              "seconds": 120,
+              "ticks": 7200,
+              "counts": {
+                "water": 0,
+                "plant": 346,
+                "bloom": 242,
+                "seed": 0,
+                "mite": 0,
+                "ash": 0,
+                "mud": 0,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 0,
+                "occupied": 8896
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "8ac72f42412c760acad7ca3207269f5bed19dddffcc2337a328078589d7efaf4"
+              }
+            }
+          ]
+        },
+        {
+          "seed": 2026,
+          "scene": "dry",
+          "horizonSeconds": 120,
+          "sampleIntervalSeconds": 30,
+          "initialCounts": {
+            "water": 0,
+            "plant": 346,
+            "bloom": 242,
+            "seed": 0,
+            "mite": 0,
+            "ash": 0,
+            "mud": 0,
+            "gold": 0,
+            "goldCarried": 0,
+            "goldTotal": 0,
+            "beetle": 0,
+            "newt": 0,
+            "occupied": 8896
+          },
+          "samples": [
+            {
+              "seconds": 30,
+              "ticks": 1800,
+              "counts": {
+                "water": 0,
+                "plant": 346,
+                "bloom": 242,
+                "seed": 0,
+                "mite": 0,
+                "ash": 0,
+                "mud": 0,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 0,
+                "occupied": 8896
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "459dce8f5a310833e8f7b73aabe6b4451a423baf52a20930fe593450863d9b05"
+              }
+            },
+            {
+              "seconds": 60,
+              "ticks": 3600,
+              "counts": {
+                "water": 0,
+                "plant": 346,
+                "bloom": 242,
+                "seed": 0,
+                "mite": 0,
+                "ash": 0,
+                "mud": 0,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 0,
+                "occupied": 8896
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "c2a7e8742380a0446a05a5f82e94531f8f37b3cdd821d06240d1bdd46685566a"
+              }
+            },
+            {
+              "seconds": 90,
+              "ticks": 5400,
+              "counts": {
+                "water": 0,
+                "plant": 346,
+                "bloom": 242,
+                "seed": 0,
+                "mite": 0,
+                "ash": 0,
+                "mud": 0,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 0,
+                "occupied": 8896
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "fc1e8b6692a89848613b33ac99cb715c246bec3180a1161baa6a0ada05803481"
+              }
+            },
+            {
+              "seconds": 120,
+              "ticks": 7200,
+              "counts": {
+                "water": 0,
+                "plant": 346,
+                "bloom": 242,
+                "seed": 0,
+                "mite": 0,
+                "ash": 0,
+                "mud": 0,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 0,
+                "occupied": 8896
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "20929d5556f87fcd601516e7c632b9bc9404c30cc0dbff32214a1d2fbe3cf877"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "artifact": "main-baseline-120s-shore-v3.json",
+      "profile": "alembic-v2-growth-cycle",
+      "fixtureVersion": 3,
+      "sources": {
+        "fixture": {
+          "path": "tests-v2/growth-fixtures.js",
+          "algorithm": "sha256",
+          "value": "5868969657ddaa304ee4acf9e5760a0e257c3485d893f445aca595a8aefc014d"
+        },
+        "engine": [
+          {
+            "path": "qa-shots\\growth\\main-baseline\\public\\v2\\alembic-engine-v2.js",
+            "algorithm": "sha256",
+            "value": "c5a37c35b7125fa31c8e078f768db26d010e4c8a26fe19e12d2a16493e92df2d"
+          },
+          {
+            "path": "qa-shots\\growth\\main-baseline\\public\\v2\\engine\\checkpoint.js",
+            "algorithm": "sha256",
+            "value": "64d5467c1dfdc8526eb9a51e3eb329d5221e22c8eb1aadd084cd5c149caff964"
+          },
+          {
+            "path": "qa-shots\\growth\\main-baseline\\public\\v2\\engine\\flask-storage.js",
+            "algorithm": "sha256",
+            "value": "50c9853924065d197771a8504d53dd65d3aa802e2264e45fe77469106f0f890d"
+          },
+          {
+            "path": "qa-shots\\growth\\main-baseline\\public\\v2\\engine\\random.js",
+            "algorithm": "sha256",
+            "value": "519b344679ef9de8626825b56d4bdabae93ef86a589f60bbf8c3ea2e4ebfd0d3"
+          },
+          {
+            "path": "qa-shots\\growth\\main-baseline\\public\\v2\\engine\\walker.js",
+            "algorithm": "sha256",
+            "value": "1ef538e6bfe0f055598ed433a8956f011cf78fa8ba8c4317a9ae05d4a64f4640"
+          },
+          {
+            "path": "qa-shots\\growth\\main-baseline\\public\\v2\\engine\\world.js",
+            "algorithm": "sha256",
+            "value": "ef852cd0243ce8d70b8cf0cbdd8de4cc7aaabb3f0e4975b692a948dc1add1f4c"
+          }
+        ]
+      },
+      "runtime": {
+        "node": "v22.16.0",
+        "v8": "12.4.254.21-node.26",
+        "platform": "win32",
+        "arch": "x64"
+      },
+      "options": {
+        "seeds": [
+          73,
+          991,
+          2026
+        ],
+        "seconds": 120,
+        "sampleSeconds": 30,
+        "scene": "shore",
+        "engine": "qa-shots/growth/main-baseline/public/v2/alembic-engine-v2.js"
+      },
+      "results": [
+        {
+          "seed": 73,
+          "scene": "shore",
+          "horizonSeconds": 120,
+          "sampleIntervalSeconds": 30,
+          "initialCounts": {
+            "water": 6118,
+            "plant": 0,
+            "bloom": 0,
+            "seed": 0,
+            "mite": 0,
+            "ash": 0,
+            "mud": 8,
+            "gold": 0,
+            "goldCarried": 0,
+            "goldTotal": 0,
+            "beetle": 0,
+            "newt": 0,
+            "occupied": 12041
+          },
+          "samples": [
+            {
+              "seconds": 30,
+              "ticks": 1800,
+              "counts": {
+                "water": 6118,
+                "plant": 0,
+                "bloom": 0,
+                "seed": 0,
+                "mite": 0,
+                "ash": 0,
+                "mud": 8,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 8,
+                "occupied": 12049
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "b8a467bc50c008d43da5b279e4a477ecbe19796fb72c8c15611693098fd16c35"
+              }
+            },
+            {
+              "seconds": 60,
+              "ticks": 3600,
+              "counts": {
+                "water": 6118,
+                "plant": 0,
+                "bloom": 0,
+                "seed": 0,
+                "mite": 0,
+                "ash": 0,
+                "mud": 8,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 8,
+                "occupied": 12049
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "f69d0c6780d1fede1ef2d6d403376a5266ac00624838f000a3c38976c17e7019"
+              }
+            },
+            {
+              "seconds": 90,
+              "ticks": 5400,
+              "counts": {
+                "water": 6118,
+                "plant": 0,
+                "bloom": 0,
+                "seed": 0,
+                "mite": 0,
+                "ash": 0,
+                "mud": 8,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 15,
+                "occupied": 12056
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "506bd54fbe22f634d13349eaae76c7d822f17302ad2d703ab369d8d8fca62113"
+              }
+            },
+            {
+              "seconds": 120,
+              "ticks": 7200,
+              "counts": {
+                "water": 6118,
+                "plant": 0,
+                "bloom": 0,
+                "seed": 0,
+                "mite": 0,
+                "ash": 0,
+                "mud": 8,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 15,
+                "occupied": 12056
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "c596b69216edc460393772253b8cfb210cdd4d8bee9d76db316e03763128cf58"
+              }
+            }
+          ]
+        },
+        {
+          "seed": 991,
+          "scene": "shore",
+          "horizonSeconds": 120,
+          "sampleIntervalSeconds": 30,
+          "initialCounts": {
+            "water": 6118,
+            "plant": 0,
+            "bloom": 0,
+            "seed": 0,
+            "mite": 0,
+            "ash": 0,
+            "mud": 8,
+            "gold": 0,
+            "goldCarried": 0,
+            "goldTotal": 0,
+            "beetle": 0,
+            "newt": 0,
+            "occupied": 12041
+          },
+          "samples": [
+            {
+              "seconds": 30,
+              "ticks": 1800,
+              "counts": {
+                "water": 6118,
+                "plant": 0,
+                "bloom": 0,
+                "seed": 0,
+                "mite": 0,
+                "ash": 0,
+                "mud": 8,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 8,
+                "occupied": 12049
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "bd708af257c7c6ed28d5cd3ee431907e747cd60925fe20b0aa99771f0e8928c2"
+              }
+            },
+            {
+              "seconds": 60,
+              "ticks": 3600,
+              "counts": {
+                "water": 6118,
+                "plant": 0,
+                "bloom": 0,
+                "seed": 0,
+                "mite": 0,
+                "ash": 0,
+                "mud": 8,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 8,
+                "occupied": 12049
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "92904efd6d0e9e36f4843032987c427dad4b0c2dd1b6ee1f4fe3807f062c0025"
+              }
+            },
+            {
+              "seconds": 90,
+              "ticks": 5400,
+              "counts": {
+                "water": 6118,
+                "plant": 0,
+                "bloom": 0,
+                "seed": 0,
+                "mite": 0,
+                "ash": 0,
+                "mud": 8,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 16,
+                "occupied": 12057
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "aa52848b7282ab72f537f38079f976e9d9d50516f5692b83f434eaa9d63f3098"
+              }
+            },
+            {
+              "seconds": 120,
+              "ticks": 7200,
+              "counts": {
+                "water": 6118,
+                "plant": 0,
+                "bloom": 0,
+                "seed": 0,
+                "mite": 0,
+                "ash": 0,
+                "mud": 8,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 16,
+                "occupied": 12057
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "61f6d80bae0c72d1f4d811e605dcf29afb562bcbb80d0e41990c35c45a6253e0"
+              }
+            }
+          ]
+        },
+        {
+          "seed": 2026,
+          "scene": "shore",
+          "horizonSeconds": 120,
+          "sampleIntervalSeconds": 30,
+          "initialCounts": {
+            "water": 6118,
+            "plant": 0,
+            "bloom": 0,
+            "seed": 0,
+            "mite": 0,
+            "ash": 0,
+            "mud": 8,
+            "gold": 0,
+            "goldCarried": 0,
+            "goldTotal": 0,
+            "beetle": 0,
+            "newt": 0,
+            "occupied": 12041
+          },
+          "samples": [
+            {
+              "seconds": 30,
+              "ticks": 1800,
+              "counts": {
+                "water": 6118,
+                "plant": 0,
+                "bloom": 0,
+                "seed": 0,
+                "mite": 0,
+                "ash": 0,
+                "mud": 8,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 7,
+                "occupied": 12048
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "acedc39ceb5f7b688433daec21852f3df304f6af26f8b9793bc5c1dfb696d136"
+              }
+            },
+            {
+              "seconds": 60,
+              "ticks": 3600,
+              "counts": {
+                "water": 6118,
+                "plant": 0,
+                "bloom": 0,
+                "seed": 0,
+                "mite": 0,
+                "ash": 0,
+                "mud": 8,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 7,
+                "occupied": 12048
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "7b23b08048224e896fc71ec5abfd246cbd25afc1493e5b13219cca17b624f7b3"
+              }
+            },
+            {
+              "seconds": 90,
+              "ticks": 5400,
+              "counts": {
+                "water": 6118,
+                "plant": 0,
+                "bloom": 0,
+                "seed": 0,
+                "mite": 0,
+                "ash": 0,
+                "mud": 8,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 14,
+                "occupied": 12055
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "570520d64acc37097076bff8c14e20c172aade09698923ed2f66966dbbda89ee"
+              }
+            },
+            {
+              "seconds": 120,
+              "ticks": 7200,
+              "counts": {
+                "water": 6118,
+                "plant": 0,
+                "bloom": 0,
+                "seed": 0,
+                "mite": 0,
+                "ash": 0,
+                "mud": 8,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 14,
+                "occupied": 12055
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "ee3aa24f1ff3fab0060623a17fd31c62a44cde60807314e24a48104c65cf06b1"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "artifact": "candidate-120s-dry-v3.json",
+      "profile": "alembic-v2-growth-cycle",
+      "fixtureVersion": 3,
+      "sources": {
+        "fixture": {
+          "path": "tests-v2/growth-fixtures.js",
+          "algorithm": "sha256",
+          "value": "5868969657ddaa304ee4acf9e5760a0e257c3485d893f445aca595a8aefc014d"
+        },
+        "engine": [
+          {
+            "path": "public\\v2\\alembic-engine-v2.js",
+            "algorithm": "sha256",
+            "value": "ee8ea7a79587978d3f9ed2824f735c103f874645ce41f9944b54b160fd8a4e94"
+          },
+          {
+            "path": "public\\v2\\engine\\checkpoint.js",
+            "algorithm": "sha256",
+            "value": "798ce574bfe7a1509890b96e6423a4ec715c0e0739e1a726d9dbe2dbc37bda2c"
+          },
+          {
+            "path": "public\\v2\\engine\\flask-storage.js",
+            "algorithm": "sha256",
+            "value": "50c9853924065d197771a8504d53dd65d3aa802e2264e45fe77469106f0f890d"
+          },
+          {
+            "path": "public\\v2\\engine\\random.js",
+            "algorithm": "sha256",
+            "value": "519b344679ef9de8626825b56d4bdabae93ef86a589f60bbf8c3ea2e4ebfd0d3"
+          },
+          {
+            "path": "public\\v2\\engine\\walker.js",
+            "algorithm": "sha256",
+            "value": "abde320ea915cd5d1720522a14817c5aafebe66dcf48a2e8d391a5f9cdc1d4cf"
+          },
+          {
+            "path": "public\\v2\\engine\\world.js",
+            "algorithm": "sha256",
+            "value": "ef5cd57bef6eee098f835a33b04d1bdb9afc17edff9283881c6133223e798a78"
+          }
+        ]
+      },
+      "runtime": {
+        "node": "v22.16.0",
+        "v8": "12.4.254.21-node.26",
+        "platform": "win32",
+        "arch": "x64"
+      },
+      "options": {
+        "seeds": [
+          73,
+          991,
+          2026
+        ],
+        "seconds": 120,
+        "sampleSeconds": 30,
+        "scene": "dry",
+        "engine": "candidate"
+      },
+      "results": [
+        {
+          "seed": 73,
+          "scene": "dry",
+          "horizonSeconds": 120,
+          "sampleIntervalSeconds": 30,
+          "initialCounts": {
+            "water": 0,
+            "plant": 346,
+            "bloom": 242,
+            "seed": 0,
+            "mite": 0,
+            "ash": 0,
+            "mud": 0,
+            "gold": 0,
+            "goldCarried": 0,
+            "goldTotal": 0,
+            "beetle": 0,
+            "newt": 0,
+            "occupied": 8896
+          },
+          "samples": [
+            {
+              "seconds": 30,
+              "ticks": 1800,
+              "counts": {
+                "water": 0,
+                "plant": 201,
+                "bloom": 149,
+                "seed": 0,
+                "mite": 0,
+                "ash": 238,
+                "mud": 0,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 0,
+                "occupied": 8896
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "c31849644dfa2403d3c448a8bedf18519255987cd591da2bfc3ffd6373d28f1f"
+              }
+            },
+            {
+              "seconds": 60,
+              "ticks": 3600,
+              "counts": {
+                "water": 0,
+                "plant": 105,
+                "bloom": 100,
+                "seed": 0,
+                "mite": 0,
+                "ash": 383,
+                "mud": 0,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 0,
+                "occupied": 8896
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "a65532cf93545d9319cf469ba68cbbc43d0130ffc5d99d302898d356c4d2b22b"
+              }
+            },
+            {
+              "seconds": 90,
+              "ticks": 5400,
+              "counts": {
+                "water": 0,
+                "plant": 69,
+                "bloom": 67,
+                "seed": 0,
+                "mite": 0,
+                "ash": 452,
+                "mud": 0,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 0,
+                "occupied": 8896
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "28836422859683550e5422bdcc7d018483f6137c25cd83d56bd68198f41e967b"
+              }
+            },
+            {
+              "seconds": 120,
+              "ticks": 7200,
+              "counts": {
+                "water": 0,
+                "plant": 47,
+                "bloom": 41,
+                "seed": 0,
+                "mite": 0,
+                "ash": 500,
+                "mud": 0,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 0,
+                "occupied": 8896
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "1a20304737fd696f85966a16d81ca509aaa620bab58324f4d3ed4ebe4727e7be"
+              }
+            }
+          ]
+        },
+        {
+          "seed": 991,
+          "scene": "dry",
+          "horizonSeconds": 120,
+          "sampleIntervalSeconds": 30,
+          "initialCounts": {
+            "water": 0,
+            "plant": 346,
+            "bloom": 242,
+            "seed": 0,
+            "mite": 0,
+            "ash": 0,
+            "mud": 0,
+            "gold": 0,
+            "goldCarried": 0,
+            "goldTotal": 0,
+            "beetle": 0,
+            "newt": 0,
+            "occupied": 8896
+          },
+          "samples": [
+            {
+              "seconds": 30,
+              "ticks": 1800,
+              "counts": {
+                "water": 0,
+                "plant": 191,
+                "bloom": 149,
+                "seed": 0,
+                "mite": 0,
+                "ash": 248,
+                "mud": 0,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 0,
+                "occupied": 8896
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "53f8b8112c70fa48ccfb6ff649618fb976980176edc53f4a737e192032e3d6a9"
+              }
+            },
+            {
+              "seconds": 60,
+              "ticks": 3600,
+              "counts": {
+                "water": 0,
+                "plant": 118,
+                "bloom": 92,
+                "seed": 0,
+                "mite": 0,
+                "ash": 378,
+                "mud": 0,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 0,
+                "occupied": 8896
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "745e1d5218ef315ff119f128d2a7a9b48df0bdd6c2316443812ff67286e35ae4"
+              }
+            },
+            {
+              "seconds": 90,
+              "ticks": 5400,
+              "counts": {
+                "water": 0,
+                "plant": 73,
+                "bloom": 56,
+                "seed": 0,
+                "mite": 0,
+                "ash": 459,
+                "mud": 0,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 0,
+                "occupied": 8896
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "e120a2ccafbfbdf69bfca2f647ee74902bb007f4d5ffbde6bc4b39d364794f76"
+              }
+            },
+            {
+              "seconds": 120,
+              "ticks": 7200,
+              "counts": {
+                "water": 0,
+                "plant": 44,
+                "bloom": 35,
+                "seed": 0,
+                "mite": 0,
+                "ash": 509,
+                "mud": 0,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 0,
+                "occupied": 8896
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "7af708c820ac05433e2a4b0b6d14c36ce036ac558bc4623ee39ab988d7bf0c3a"
+              }
+            }
+          ]
+        },
+        {
+          "seed": 2026,
+          "scene": "dry",
+          "horizonSeconds": 120,
+          "sampleIntervalSeconds": 30,
+          "initialCounts": {
+            "water": 0,
+            "plant": 346,
+            "bloom": 242,
+            "seed": 0,
+            "mite": 0,
+            "ash": 0,
+            "mud": 0,
+            "gold": 0,
+            "goldCarried": 0,
+            "goldTotal": 0,
+            "beetle": 0,
+            "newt": 0,
+            "occupied": 8896
+          },
+          "samples": [
+            {
+              "seconds": 30,
+              "ticks": 1800,
+              "counts": {
+                "water": 0,
+                "plant": 209,
+                "bloom": 157,
+                "seed": 0,
+                "mite": 0,
+                "ash": 222,
+                "mud": 0,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 0,
+                "occupied": 8896
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "e2eafd702b44223199dbc270369bbc6748c5f9c9e3978e2900064fee2a0ee951"
+              }
+            },
+            {
+              "seconds": 60,
+              "ticks": 3600,
+              "counts": {
+                "water": 0,
+                "plant": 136,
+                "bloom": 77,
+                "seed": 0,
+                "mite": 0,
+                "ash": 375,
+                "mud": 0,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 0,
+                "occupied": 8896
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "0501568a6b0bf7671ea4534a7fc4846ca4ee90fb676aab5fa32c1c7052d126a6"
+              }
+            },
+            {
+              "seconds": 90,
+              "ticks": 5400,
+              "counts": {
+                "water": 0,
+                "plant": 82,
+                "bloom": 43,
+                "seed": 0,
+                "mite": 0,
+                "ash": 463,
+                "mud": 0,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 0,
+                "occupied": 8896
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "7dd5770c8057ab86b4b2175c8c84aea000ff5dd6557566a6602b2d09540208e1"
+              }
+            },
+            {
+              "seconds": 120,
+              "ticks": 7200,
+              "counts": {
+                "water": 0,
+                "plant": 46,
+                "bloom": 31,
+                "seed": 0,
+                "mite": 0,
+                "ash": 511,
+                "mud": 0,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 0,
+                "occupied": 8896
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "82fb221cf378fc74d68a832f1ae3187486923151d9c38ce281292499f1773254"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "artifact": "candidate-120s-shore-v3.json",
+      "profile": "alembic-v2-growth-cycle",
+      "fixtureVersion": 3,
+      "sources": {
+        "fixture": {
+          "path": "tests-v2/growth-fixtures.js",
+          "algorithm": "sha256",
+          "value": "5868969657ddaa304ee4acf9e5760a0e257c3485d893f445aca595a8aefc014d"
+        },
+        "engine": [
+          {
+            "path": "public\\v2\\alembic-engine-v2.js",
+            "algorithm": "sha256",
+            "value": "ee8ea7a79587978d3f9ed2824f735c103f874645ce41f9944b54b160fd8a4e94"
+          },
+          {
+            "path": "public\\v2\\engine\\checkpoint.js",
+            "algorithm": "sha256",
+            "value": "798ce574bfe7a1509890b96e6423a4ec715c0e0739e1a726d9dbe2dbc37bda2c"
+          },
+          {
+            "path": "public\\v2\\engine\\flask-storage.js",
+            "algorithm": "sha256",
+            "value": "50c9853924065d197771a8504d53dd65d3aa802e2264e45fe77469106f0f890d"
+          },
+          {
+            "path": "public\\v2\\engine\\random.js",
+            "algorithm": "sha256",
+            "value": "519b344679ef9de8626825b56d4bdabae93ef86a589f60bbf8c3ea2e4ebfd0d3"
+          },
+          {
+            "path": "public\\v2\\engine\\walker.js",
+            "algorithm": "sha256",
+            "value": "abde320ea915cd5d1720522a14817c5aafebe66dcf48a2e8d391a5f9cdc1d4cf"
+          },
+          {
+            "path": "public\\v2\\engine\\world.js",
+            "algorithm": "sha256",
+            "value": "ef5cd57bef6eee098f835a33b04d1bdb9afc17edff9283881c6133223e798a78"
+          }
+        ]
+      },
+      "runtime": {
+        "node": "v22.16.0",
+        "v8": "12.4.254.21-node.26",
+        "platform": "win32",
+        "arch": "x64"
+      },
+      "options": {
+        "seeds": [
+          73,
+          991,
+          2026
+        ],
+        "seconds": 120,
+        "sampleSeconds": 30,
+        "scene": "shore",
+        "engine": "candidate"
+      },
+      "results": [
+        {
+          "seed": 73,
+          "scene": "shore",
+          "horizonSeconds": 120,
+          "sampleIntervalSeconds": 30,
+          "initialCounts": {
+            "water": 6118,
+            "plant": 0,
+            "bloom": 0,
+            "seed": 0,
+            "mite": 0,
+            "ash": 0,
+            "mud": 8,
+            "gold": 0,
+            "goldCarried": 0,
+            "goldTotal": 0,
+            "beetle": 0,
+            "newt": 0,
+            "occupied": 12041
+          },
+          "samples": [
+            {
+              "seconds": 30,
+              "ticks": 1800,
+              "counts": {
+                "water": 6099,
+                "plant": 100,
+                "bloom": 16,
+                "seed": 6,
+                "mite": 0,
+                "ash": 29,
+                "mud": 11,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 8,
+                "occupied": 12184
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "15bc2f3cad1bafc0e3f180c5a1fd5600fcb2a9860b752de6ef1b0e041e7f523a"
+              }
+            },
+            {
+              "seconds": 60,
+              "ticks": 3600,
+              "counts": {
+                "water": 6097,
+                "plant": 104,
+                "bloom": 23,
+                "seed": 4,
+                "mite": 0,
+                "ash": 48,
+                "mud": 15,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 8,
+                "occupied": 12214
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "7a8a5c31ae5b63d73ba0d816472f3d196a71885de09f683cbb968d0a9421bbc6"
+              }
+            },
+            {
+              "seconds": 90,
+              "ticks": 5400,
+              "counts": {
+                "water": 6096,
+                "plant": 93,
+                "bloom": 18,
+                "seed": 4,
+                "mite": 0,
+                "ash": 62,
+                "mud": 23,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 8,
+                "occupied": 12219
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "49afc404cd22d84c98584e545bb8cf0eeec83fc64e50e2851a756ce1e4a1c8f2"
+              }
+            },
+            {
+              "seconds": 120,
+              "ticks": 7200,
+              "counts": {
+                "water": 6094,
+                "plant": 91,
+                "bloom": 21,
+                "seed": 5,
+                "mite": 0,
+                "ash": 68,
+                "mud": 34,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 8,
+                "occupied": 12236
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "adc8766d8e94120086af9308525e8aef6951a8506718f8e553bd0d45d21dd2df"
+              }
+            }
+          ]
+        },
+        {
+          "seed": 991,
+          "scene": "shore",
+          "horizonSeconds": 120,
+          "sampleIntervalSeconds": 30,
+          "initialCounts": {
+            "water": 6118,
+            "plant": 0,
+            "bloom": 0,
+            "seed": 0,
+            "mite": 0,
+            "ash": 0,
+            "mud": 8,
+            "gold": 0,
+            "goldCarried": 0,
+            "goldTotal": 0,
+            "beetle": 0,
+            "newt": 0,
+            "occupied": 12041
+          },
+          "samples": [
+            {
+              "seconds": 30,
+              "ticks": 1800,
+              "counts": {
+                "water": 6096,
+                "plant": 127,
+                "bloom": 22,
+                "seed": 9,
+                "mite": 0,
+                "ash": 25,
+                "mud": 13,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 7,
+                "occupied": 12214
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "71ccf07200718e08315bdd6e69110ee9a37bb1b93cb2618b095d9f84b6fd1dbd"
+              }
+            },
+            {
+              "seconds": 60,
+              "ticks": 3600,
+              "counts": {
+                "water": 6096,
+                "plant": 110,
+                "bloom": 17,
+                "seed": 8,
+                "mite": 0,
+                "ash": 49,
+                "mud": 16,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 7,
+                "occupied": 12218
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "0bf06bb2e8a80d6372a0760f5af990a06f065ded39d90326b931a0ac41e8e6c5"
+              }
+            },
+            {
+              "seconds": 90,
+              "ticks": 5400,
+              "counts": {
+                "water": 6096,
+                "plant": 102,
+                "bloom": 17,
+                "seed": 8,
+                "mite": 0,
+                "ash": 58,
+                "mud": 23,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 7,
+                "occupied": 12226
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "cfbb2fb23164bc3c1c12174bbaa155158b8838b212d03b9a8b63cff18f7227bd"
+              }
+            },
+            {
+              "seconds": 120,
+              "ticks": 7200,
+              "counts": {
+                "water": 6043,
+                "plant": 147,
+                "bloom": 22,
+                "seed": 4,
+                "mite": 12,
+                "ash": 55,
+                "mud": 74,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 7,
+                "occupied": 12283
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "67eca67ebbe85274b6fa7d3a86205607df2306ad0ab9ec83d32e9495457c5786"
+              }
+            }
+          ]
+        },
+        {
+          "seed": 2026,
+          "scene": "shore",
+          "horizonSeconds": 120,
+          "sampleIntervalSeconds": 30,
+          "initialCounts": {
+            "water": 6118,
+            "plant": 0,
+            "bloom": 0,
+            "seed": 0,
+            "mite": 0,
+            "ash": 0,
+            "mud": 8,
+            "gold": 0,
+            "goldCarried": 0,
+            "goldTotal": 0,
+            "beetle": 0,
+            "newt": 0,
+            "occupied": 12041
+          },
+          "samples": [
+            {
+              "seconds": 30,
+              "ticks": 1800,
+              "counts": {
+                "water": 6109,
+                "plant": 128,
+                "bloom": 16,
+                "seed": 9,
+                "mite": 0,
+                "ash": 15,
+                "mud": 16,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 2,
+                "occupied": 12210
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "3fcc8092ad0ba2b1aba4ec71d94b25dd6606f4cd1cb19bfdbc9d3243dbba920c"
+              }
+            },
+            {
+              "seconds": 60,
+              "ticks": 3600,
+              "counts": {
+                "water": 6108,
+                "plant": 115,
+                "bloom": 11,
+                "seed": 8,
+                "mite": 0,
+                "ash": 36,
+                "mud": 20,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 2,
+                "occupied": 12215
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "e9c71b2d5179d5f56df9721a2a8e8d69e77bc6979584f68e6e49eddefa8e1f8a"
+              }
+            },
+            {
+              "seconds": 90,
+              "ticks": 5400,
+              "counts": {
+                "water": 6093,
+                "plant": 188,
+                "bloom": 23,
+                "seed": 12,
+                "mite": 0,
+                "ash": 61,
+                "mud": 26,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 2,
+                "occupied": 12320
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "d53c7f6d32d79160029293a47d04f659a824663c524a8abe57612ce24b825ff1"
+              }
+            },
+            {
+              "seconds": 120,
+              "ticks": 7200,
+              "counts": {
+                "water": 6089,
+                "plant": 185,
+                "bloom": 20,
+                "seed": 11,
+                "mite": 0,
+                "ash": 91,
+                "mud": 33,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 2,
+                "occupied": 12346
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "0250dc0b681c8ee7e1d1643cea235f4dbb255452b19da80988796ab72243152b"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "artifact": "candidate-600s-shore-v3.json",
+      "profile": "alembic-v2-growth-cycle",
+      "fixtureVersion": 3,
+      "sources": {
+        "fixture": {
+          "path": "tests-v2/growth-fixtures.js",
+          "algorithm": "sha256",
+          "value": "5868969657ddaa304ee4acf9e5760a0e257c3485d893f445aca595a8aefc014d"
+        },
+        "engine": [
+          {
+            "path": "public\\v2\\alembic-engine-v2.js",
+            "algorithm": "sha256",
+            "value": "ee8ea7a79587978d3f9ed2824f735c103f874645ce41f9944b54b160fd8a4e94"
+          },
+          {
+            "path": "public\\v2\\engine\\checkpoint.js",
+            "algorithm": "sha256",
+            "value": "798ce574bfe7a1509890b96e6423a4ec715c0e0739e1a726d9dbe2dbc37bda2c"
+          },
+          {
+            "path": "public\\v2\\engine\\flask-storage.js",
+            "algorithm": "sha256",
+            "value": "50c9853924065d197771a8504d53dd65d3aa802e2264e45fe77469106f0f890d"
+          },
+          {
+            "path": "public\\v2\\engine\\random.js",
+            "algorithm": "sha256",
+            "value": "519b344679ef9de8626825b56d4bdabae93ef86a589f60bbf8c3ea2e4ebfd0d3"
+          },
+          {
+            "path": "public\\v2\\engine\\walker.js",
+            "algorithm": "sha256",
+            "value": "abde320ea915cd5d1720522a14817c5aafebe66dcf48a2e8d391a5f9cdc1d4cf"
+          },
+          {
+            "path": "public\\v2\\engine\\world.js",
+            "algorithm": "sha256",
+            "value": "ef5cd57bef6eee098f835a33b04d1bdb9afc17edff9283881c6133223e798a78"
+          }
+        ]
+      },
+      "runtime": {
+        "node": "v22.16.0",
+        "v8": "12.4.254.21-node.26",
+        "platform": "win32",
+        "arch": "x64"
+      },
+      "options": {
+        "seeds": [
+          73,
+          991,
+          2026
+        ],
+        "seconds": 600,
+        "sampleSeconds": 60,
+        "scene": "shore",
+        "engine": "candidate"
+      },
+      "results": [
+        {
+          "seed": 73,
+          "scene": "shore",
+          "horizonSeconds": 600,
+          "sampleIntervalSeconds": 60,
+          "initialCounts": {
+            "water": 6118,
+            "plant": 0,
+            "bloom": 0,
+            "seed": 0,
+            "mite": 0,
+            "ash": 0,
+            "mud": 8,
+            "gold": 0,
+            "goldCarried": 0,
+            "goldTotal": 0,
+            "beetle": 0,
+            "newt": 0,
+            "occupied": 12041
+          },
+          "samples": [
+            {
+              "seconds": 60,
+              "ticks": 3600,
+              "counts": {
+                "water": 6097,
+                "plant": 104,
+                "bloom": 23,
+                "seed": 4,
+                "mite": 0,
+                "ash": 48,
+                "mud": 15,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 8,
+                "occupied": 12214
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "7a8a5c31ae5b63d73ba0d816472f3d196a71885de09f683cbb968d0a9421bbc6"
+              }
+            },
+            {
+              "seconds": 120,
+              "ticks": 7200,
+              "counts": {
+                "water": 6094,
+                "plant": 91,
+                "bloom": 21,
+                "seed": 5,
+                "mite": 0,
+                "ash": 68,
+                "mud": 34,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 8,
+                "occupied": 12236
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "adc8766d8e94120086af9308525e8aef6951a8506718f8e553bd0d45d21dd2df"
+              }
+            },
+            {
+              "seconds": 180,
+              "ticks": 10800,
+              "counts": {
+                "water": 6070,
+                "plant": 86,
+                "bloom": 18,
+                "seed": 2,
+                "mite": 1,
+                "ash": 84,
+                "mud": 55,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 8,
+                "occupied": 12244
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "e34be799871cb93ff28915c368add132c5776f4a1726e3b767506cc035fcd0d2"
+              }
+            },
+            {
+              "seconds": 240,
+              "ticks": 14400,
+              "counts": {
+                "water": 5983,
+                "plant": 125,
+                "bloom": 15,
+                "seed": 2,
+                "mite": 16,
+                "ash": 85,
+                "mud": 119,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 8,
+                "occupied": 12277
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "0cffc851e7b1a97f604713c6e838ea607783ad9d2baeb7addbb9be5099a7040f"
+              }
+            },
+            {
+              "seconds": 300,
+              "ticks": 18000,
+              "counts": {
+                "water": 5925,
+                "plant": 134,
+                "bloom": 16,
+                "seed": 2,
+                "mite": 19,
+                "ash": 87,
+                "mud": 194,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 9,
+                "occupied": 12311
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "8b41cb410a24a226eadf4f6ec59e6d74aa26aee06b40d9586f241fd7e3e49f0c"
+              }
+            },
+            {
+              "seconds": 360,
+              "ticks": 21600,
+              "counts": {
+                "water": 5817,
+                "plant": 139,
+                "bloom": 18,
+                "seed": 3,
+                "mite": 24,
+                "ash": 109,
+                "mud": 280,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 9,
+                "occupied": 12339
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "0e2627d9e1cb8e0663767e78b91d2a5071482ba9bc170a44e6eb32e4175846b7"
+              }
+            },
+            {
+              "seconds": 420,
+              "ticks": 25200,
+              "counts": {
+                "water": 5686,
+                "plant": 185,
+                "bloom": 23,
+                "seed": 7,
+                "mite": 43,
+                "ash": 101,
+                "mud": 382,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 9,
+                "occupied": 12380
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "d880ae78051f23a1edccebacb33d556e87e3efcd801400c54921597e6fbacb4c"
+              }
+            },
+            {
+              "seconds": 480,
+              "ticks": 28800,
+              "counts": {
+                "water": 5549,
+                "plant": 202,
+                "bloom": 20,
+                "seed": 11,
+                "mite": 49,
+                "ash": 128,
+                "mud": 502,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 9,
+                "occupied": 12416
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "dbb0a2c1fa463fd134b67ee4399ea5ab71f57823da01a3af7b790aebc2359b9c"
+              }
+            },
+            {
+              "seconds": 540,
+              "ticks": 32400,
+              "counts": {
+                "water": 5424,
+                "plant": 220,
+                "bloom": 23,
+                "seed": 11,
+                "mite": 37,
+                "ash": 161,
+                "mud": 626,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 9,
+                "occupied": 12460
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "9b8975e7fa1c32420877c8f7e6696ae3f29bd2411bb69cf52684b93e9697c0b4"
+              }
+            },
+            {
+              "seconds": 600,
+              "ticks": 36000,
+              "counts": {
+                "water": 5263,
+                "plant": 274,
+                "bloom": 28,
+                "seed": 8,
+                "mite": 36,
+                "ash": 174,
+                "mud": 739,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 9,
+                "occupied": 12481
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "dddcf5eac7e61bfdad99f71883b233ca301152ecf626fc438cc00f2329e3a4e9"
+              }
+            }
+          ]
+        },
+        {
+          "seed": 991,
+          "scene": "shore",
+          "horizonSeconds": 600,
+          "sampleIntervalSeconds": 60,
+          "initialCounts": {
+            "water": 6118,
+            "plant": 0,
+            "bloom": 0,
+            "seed": 0,
+            "mite": 0,
+            "ash": 0,
+            "mud": 8,
+            "gold": 0,
+            "goldCarried": 0,
+            "goldTotal": 0,
+            "beetle": 0,
+            "newt": 0,
+            "occupied": 12041
+          },
+          "samples": [
+            {
+              "seconds": 60,
+              "ticks": 3600,
+              "counts": {
+                "water": 6096,
+                "plant": 110,
+                "bloom": 17,
+                "seed": 8,
+                "mite": 0,
+                "ash": 49,
+                "mud": 16,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 7,
+                "occupied": 12218
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "0bf06bb2e8a80d6372a0760f5af990a06f065ded39d90326b931a0ac41e8e6c5"
+              }
+            },
+            {
+              "seconds": 120,
+              "ticks": 7200,
+              "counts": {
+                "water": 6043,
+                "plant": 147,
+                "bloom": 22,
+                "seed": 4,
+                "mite": 12,
+                "ash": 55,
+                "mud": 74,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 7,
+                "occupied": 12283
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "67eca67ebbe85274b6fa7d3a86205607df2306ad0ab9ec83d32e9495457c5786"
+              }
+            },
+            {
+              "seconds": 180,
+              "ticks": 10800,
+              "counts": {
+                "water": 5868,
+                "plant": 162,
+                "bloom": 24,
+                "seed": 4,
+                "mite": 22,
+                "ash": 92,
+                "mud": 201,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 7,
+                "occupied": 12302
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "02c06f37036cc9cbb0db6a29e234e6112cf43159d6e389aba62fa1b1dd99eb06"
+              }
+            },
+            {
+              "seconds": 240,
+              "ticks": 14400,
+              "counts": {
+                "water": 5778,
+                "plant": 215,
+                "bloom": 28,
+                "seed": 8,
+                "mite": 12,
+                "ash": 142,
+                "mud": 271,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 7,
+                "occupied": 12383
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "6e361e9768bbd5da7f60d8e4d8ab20d5a3a72c794348513212bd78d67e617c5c"
+              }
+            },
+            {
+              "seconds": 300,
+              "ticks": 18000,
+              "counts": {
+                "water": 5773,
+                "plant": 219,
+                "bloom": 32,
+                "seed": 22,
+                "mite": 19,
+                "ash": 140,
+                "mud": 329,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 7,
+                "occupied": 12463
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "d8a33b9819aadbb390dd506b49ffc71d9d2eb4ab0e3c67cfa2d0a883a29405e4"
+              }
+            },
+            {
+              "seconds": 360,
+              "ticks": 21600,
+              "counts": {
+                "water": 5767,
+                "plant": 211,
+                "bloom": 39,
+                "seed": 21,
+                "mite": 28,
+                "ash": 150,
+                "mud": 379,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 8,
+                "occupied": 12524
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "57fc59f142551866605032369b9edf00618ab513e9ae5d3cd9ac7c328cc99bf4"
+              }
+            },
+            {
+              "seconds": 420,
+              "ticks": 25200,
+              "counts": {
+                "water": 5762,
+                "plant": 202,
+                "bloom": 35,
+                "seed": 17,
+                "mite": 23,
+                "ash": 169,
+                "mud": 415,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 8,
+                "occupied": 12552
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "515d8bff509b1dabd1d9749a1328e44caea77eaeb4ed055a526a91099a5d2561"
+              }
+            },
+            {
+              "seconds": 480,
+              "ticks": 28800,
+              "counts": {
+                "water": 5756,
+                "plant": 204,
+                "bloom": 37,
+                "seed": 14,
+                "mite": 26,
+                "ash": 193,
+                "mud": 432,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 8,
+                "occupied": 12592
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "9cfea249d29da7274590e6a2aaad5e4ba8ef56ab59ee43467e9793abfdd4c111"
+              }
+            },
+            {
+              "seconds": 540,
+              "ticks": 32400,
+              "counts": {
+                "water": 5735,
+                "plant": 269,
+                "bloom": 46,
+                "seed": 12,
+                "mite": 24,
+                "ash": 179,
+                "mud": 502,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 8,
+                "occupied": 12697
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "90ef1a6d31330b4fc65f19b934db3b3b589923b6e1edbe4f5859af7d423e3896"
+              }
+            },
+            {
+              "seconds": 600,
+              "ticks": 36000,
+              "counts": {
+                "water": 5725,
+                "plant": 284,
+                "bloom": 45,
+                "seed": 15,
+                "mite": 20,
+                "ash": 201,
+                "mud": 561,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 8,
+                "occupied": 12784
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "5a7c0d648c58e8e204e33c0886bd8d0ff96f303478fbb88ab6479f1ed3fdac06"
+              }
+            }
+          ]
+        },
+        {
+          "seed": 2026,
+          "scene": "shore",
+          "horizonSeconds": 600,
+          "sampleIntervalSeconds": 60,
+          "initialCounts": {
+            "water": 6118,
+            "plant": 0,
+            "bloom": 0,
+            "seed": 0,
+            "mite": 0,
+            "ash": 0,
+            "mud": 8,
+            "gold": 0,
+            "goldCarried": 0,
+            "goldTotal": 0,
+            "beetle": 0,
+            "newt": 0,
+            "occupied": 12041
+          },
+          "samples": [
+            {
+              "seconds": 60,
+              "ticks": 3600,
+              "counts": {
+                "water": 6108,
+                "plant": 115,
+                "bloom": 11,
+                "seed": 8,
+                "mite": 0,
+                "ash": 36,
+                "mud": 20,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 2,
+                "occupied": 12215
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "e9c71b2d5179d5f56df9721a2a8e8d69e77bc6979584f68e6e49eddefa8e1f8a"
+              }
+            },
+            {
+              "seconds": 120,
+              "ticks": 7200,
+              "counts": {
+                "water": 6089,
+                "plant": 185,
+                "bloom": 20,
+                "seed": 11,
+                "mite": 0,
+                "ash": 91,
+                "mud": 33,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 2,
+                "occupied": 12346
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "0250dc0b681c8ee7e1d1643cea235f4dbb255452b19da80988796ab72243152b"
+              }
+            },
+            {
+              "seconds": 180,
+              "ticks": 10800,
+              "counts": {
+                "water": 6066,
+                "plant": 193,
+                "bloom": 21,
+                "seed": 22,
+                "mite": 1,
+                "ash": 109,
+                "mud": 69,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 2,
+                "occupied": 12403
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "0336561ae90a5ab1e1e9a0139cee88f09800941fa27e0202d3c4f729c0a53c98"
+              }
+            },
+            {
+              "seconds": 240,
+              "ticks": 14400,
+              "counts": {
+                "water": 6066,
+                "plant": 173,
+                "bloom": 15,
+                "seed": 16,
+                "mite": 1,
+                "ash": 146,
+                "mud": 75,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 2,
+                "occupied": 12414
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "9dc5ea96c1ab728ad5d1ba99f87722d0c82116474b68a4040a7e0293159907fc"
+              }
+            },
+            {
+              "seconds": 300,
+              "ticks": 18000,
+              "counts": {
+                "water": 6030,
+                "plant": 297,
+                "bloom": 25,
+                "seed": 12,
+                "mite": 1,
+                "ash": 182,
+                "mud": 128,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 2,
+                "occupied": 12598
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "44bd950a95a4accbaa0e5af018f8c939f42381aded0f2caf80043dcceb566634"
+              }
+            },
+            {
+              "seconds": 360,
+              "ticks": 21600,
+              "counts": {
+                "water": 6003,
+                "plant": 411,
+                "bloom": 32,
+                "seed": 17,
+                "mite": 2,
+                "ash": 207,
+                "mud": 189,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 2,
+                "occupied": 12784
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "a9e2c70cfabbb3d7f6788865813dae4c1877b7a707fb07c0f5a32afafbcff4fa"
+              }
+            },
+            {
+              "seconds": 420,
+              "ticks": 25200,
+              "counts": {
+                "water": 5945,
+                "plant": 443,
+                "bloom": 42,
+                "seed": 18,
+                "mite": 16,
+                "ash": 222,
+                "mud": 330,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 3,
+                "occupied": 12943
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "8780a8c759e3862a64f6a3ee272170c707772c615b85a392cec447136fb25717"
+              }
+            },
+            {
+              "seconds": 480,
+              "ticks": 28800,
+              "counts": {
+                "water": 5920,
+                "plant": 430,
+                "bloom": 36,
+                "seed": 42,
+                "mite": 35,
+                "ash": 217,
+                "mud": 439,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 3,
+                "occupied": 13048
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "32603364e708e51a36c04df0b3c57e02089b6476321c738358f67ebc07fa44fd"
+              }
+            },
+            {
+              "seconds": 540,
+              "ticks": 32400,
+              "counts": {
+                "water": 5897,
+                "plant": 461,
+                "bloom": 30,
+                "seed": 52,
+                "mite": 42,
+                "ash": 230,
+                "mud": 539,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 3,
+                "occupied": 13183
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "dd407f3de8b6b95cce8eda64832024aafed90936deca59d3691f99b5b6397495"
+              }
+            },
+            {
+              "seconds": 600,
+              "ticks": 36000,
+              "counts": {
+                "water": 5886,
+                "plant": 462,
+                "bloom": 33,
+                "seed": 42,
+                "mite": 47,
+                "ash": 257,
+                "mud": 621,
+                "gold": 0,
+                "goldCarried": 0,
+                "goldTotal": 0,
+                "beetle": 0,
+                "newt": 3,
+                "occupied": 13279
+              },
+              "stateHash": {
+                "algorithm": "sha256",
+                "value": "9ed0e620eb092619a083fd46ab063a826b0880e8eb2538ecfafe485104432bee"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
