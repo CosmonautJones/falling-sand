@@ -9,8 +9,8 @@ This log covers the browser V2. The [Godot V2 project](https://github.com/Cosmon
 ### New
 
 - **A year of four seasons.** Every vessel opens in spring. Each season lasts three weather spells of 80 seconds, so a full year takes 16 minutes at 1×.
-  - Summer brings warm spells and never a cold snap.
-  - Winter brings cold snaps and never a warm spell.
+  - Summer brings warm spells and never starts a cold snap.
+  - Winter brings cold snaps and never starts a warm spell. (Weather eases from one spell to the next over about 20 seconds, so a warm end of autumn can linger briefly into winter.)
   - Spring and autumn are mostly calm, with autumn leaning cold.
 - **Seasons change living things.** Gardens grow fastest in spring and slowest in winter, and mites spend much more of the winter resting.
 - **Warnings before the weather turns.** About 40 seconds before a cold snap or warm spell:
@@ -27,6 +27,7 @@ This log covers the browser V2. The [Godot V2 project](https://github.com/Cosmon
 
 - Seasons, forecasts and omens come from the world seed and the tick, like the rest of the weather. They need no new saved state and replay exactly from checkpoints.
 - Living Valley (V3) keeps weather off, so it has no seasons.
+- Older saves keep their contents, but their weather from this point on differs from before this update, because spells are now 80 seconds and chosen by season.
 - Day and night are not part of this release.
 
 ## 2026-10-16 — Native growth cycle and explorer fixes

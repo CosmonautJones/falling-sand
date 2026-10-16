@@ -106,17 +106,27 @@ test('gardens grow fastest in spring and slowly in winter', () => {
 });
 
 test('mites slow down for winter', () => {
-  const src = readFileSync(new URL('../public/v2/engine/world.js', import.meta.url), 'utf8');
-  assert.match(src, /random\.ecology\.int\(\(sKin >= 2 \? 8 : 3\) \* SEASON_LIFE\.miteRest\[season\]\)/);
-  assert.equal(E.SEASON_LIFE.miteRest[3], 4, 'four times as idle in winter');
-  assert.equal(E.SEASON_LIFE.miteRest[0], 1, 'spring mites are as busy as ever');
+  const steps = tick => {
+    const e = engineAt(6, tick), w = e.inspect();
+    for (let x = 0; x < 480; x++) for (let y = 260; y < 270; y++) w.setc(x, y, E.STONE, 0);
+    for (let k = 0; k < 30; k++) w.setc(40 + k * 14, 259, E.MITE, 0);
+    const where = () => w.cells.reduce((acc, c, i) => (c === E.MITE ? acc.push(i) : 0, acc), []);
+    let moves = 0, last = where();
+    for (let t = 0; t < 600; t++) { e.advanceTicks(1); const now = where(); moves += now.filter(i => !last.includes(i)).length; last = now; }
+    return moves;
+  };
+  const spring = findSpell(6, 0, 0), winter = findSpell(6, 3, 0);
+  assert.ok(spring > 0 && winter > 0);
+  const sp = steps(spring * L + 100), wi = steps(winter * L + 100);
+  assert.ok(sp > wi * 2.5, `spring mites stepped ${sp} times, winter mites ${wi}`);
+  assert.deepEqual([...E.SEASON_LIFE.miteRest], [1, 1, 2, 4]);
 });
 
 // ---------- in the page ----------
 function pageFns() {
   const start = html.indexOf('const SEASON_NAME'), end = html.indexOf('\n}', html.indexOf('function almanacDial')) + 2;
   const ctx = {}; vm.createContext(ctx);
-  vm.runInContext(html.slice(start, end) + '\nthis.almanacText = almanacText; this.almanacDial = almanacDial;', ctx);
+  vm.runInContext(html.slice(start, end) + '\nthis.almanacText = almanacText; this.almanacDial = almanacDial; this.omenLevels = omenLevels;', ctx);
   return ctx;
 }
 
@@ -144,4 +154,22 @@ test('the page shows the almanac, whispers seasons and omens, and frosts or warm
 
 test('the status lines name the weather once: the almanac replaces the old weather label', () => {
   assert.equal((html.match(/\$\{this\.almanac \? '' : climateLabel\(this\.climate\)\}/g) || []).length, 2);
+});
+
+test('the frost holds through the moment a cold snap arrives instead of blinking out', () => {
+  const { omenLevels } = pageFns();
+  const k = (() => { for (let j = 2; j < 200; j++) if (E.climateLevel(4, j + 1) === -1 && E.climateLevel(4, j) === 0) return j; return -1; })();
+  assert.ok(k > 0);
+  const onset = (k + 1) * L, lead = E.CLIMATE.omenLead;
+  const frostAt = t => omenLevels(E.almanac(4, t), E.climateAt(4, t), lead).frost;
+  assert.equal(frostAt(onset - lead - 1), 0, 'no frost before the omen');
+  let prev = 0;
+  for (let t = onset - lead; t <= onset + L / 2; t += 30) {
+    const f = frostAt(t);
+    assert.ok(f >= prev - 1e-9 || t > onset, `frost only builds during the omen (${t - onset})`);
+    if (t >= onset - 600) assert.ok(f >= 0.55, `frost stays on the glass around the onset (${(t - onset)}: ${f.toFixed(2)})`);
+    prev = f;
+  }
+  assert.ok(frostAt(onset) >= 0.75 - 1e-9 && frostAt(onset) <= 0.75 + 1e-9, 'the spell holds the omen\'s level');
+  assert.equal(omenLevels(null, 0, lead).frost, 0, 'nothing without an almanac');
 });
