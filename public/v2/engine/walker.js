@@ -45,6 +45,11 @@ export function stepWalker(walker, input, ctx) {
   walker.frame = (walker.frame + 1) & 3;
   if (input?.facing) walker.facing = input.facing;
 
+  if (walker.phase === 'ground') {
+    const f = footCell(walker);
+    if (!supported(ctx, f.x, f.y)) walker.phase = 'drop';
+  }
+
   if (walker.phase === 'drop') {
     for (let n = 0; n < 2; n++) {
       const f = footCell(walker);
@@ -94,9 +99,10 @@ export function stepWalker(walker, input, ctx) {
 }
 
 export function dropWalkerIn(walker, x, y) {
+  if (!Number.isFinite(x) || !Number.isFinite(y)) throw new Error('Walker drop coordinates must be finite');
   walker.active = true;
   walker.x = Math.max(2, Math.min(W - 3, x));
-  walker.y = Math.max(4, y);
+  walker.y = Math.max(4, Math.min(H - 2, y));
   walker.vy = 0;
   walker.phase = 'drop';
   walker.facing = 1;

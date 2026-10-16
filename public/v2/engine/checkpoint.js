@@ -160,8 +160,10 @@ function operation(op, mode) {
     else if (key === 'm') out.m = integer(op.m, 0, MATERIALS - 1);
     else if (key === 'n') out.n = integer(op.n, 0, SIZE);
     else if (key === 'r') out.r = t === 'spray' ? finite(op.r, 0, WIDTH) : integer(op.r, 0, WIDTH);
+    else if (t === 'poke' && (key === 'dx' || key === 'dy')) out[key] = integer(op[key], -1, 1);
     else out[key] = key.startsWith('x') ? integer(op[key], -WIDTH, WIDTH * 2) : integer(op[key], -HEIGHT, HEIGHT * 2);
   }
+  if (t === 'poke' && Math.abs(out.dx) + Math.abs(out.dy) !== 1) fail('poke must move one cell on one axis');
   for (const key of ['vx', 'vy']) if (optional.includes(key) && Object.hasOwn(op, key)) {
     const value = op[key];
     // Only legacy host input normalizes nonfinite numeric fling hints; stored commands stay strict.

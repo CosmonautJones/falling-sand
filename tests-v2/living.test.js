@@ -10,8 +10,8 @@ const fingerprint = state => createHash('sha256').update(JSON.stringify(state, (
 )).digest('hex');
 
 // A walled basin on a stone floor, the same in every scene.
-function basin(seed = 1) {
-  const s = E.createTestWorld({ seed });
+function basin(seed = 1, options = {}) {
+  const s = E.createTestWorld({ seed, ...options });
   const box = (x0, y0, x1, y1, m) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) s.setc(x, y, m, 0); };
   box(0, 260, 479, 269, E.STONE); box(100, 200, 100, 259, E.STONE); box(300, 200, 300, 259, E.STONE);
   return { s, box, run: secs => { for (let i = 0; i < secs * 60; i++) s.step(); }, count: m => s.cells.reduce((n, c) => n + (c === m), 0) };
@@ -47,16 +47,22 @@ test('mites drown under water and freeze when sealed in ice', () => {
   assert.equal(ice.count(E.MITE), 0, 'mites sealed in ice die');
 });
 
-test('mites cut off from food die out; a fed colony keeps going', () => {
-  const dry = basin(); dry.box(101, 240, 299, 259, E.SAND);
+test('food supports an early colony boom and better survival through a finite garden', () => {
+  const calm = { weather: false, ambientEmbers: false };
+  const dry = basin(1, calm); dry.box(101, 240, 299, 259, E.SAND);
   for (let k = 0; k < 40; k++) dry.s.setc(110 + k * 4, 239, E.MITE, 0);
   dry.run(240);
   const starved = dry.count(E.MITE);
   assert.ok(starved < 30, `starving mites thin out (${starved} of 40 left)`);
-  const fed = basin(); fed.box(101, 240, 299, 259, E.MUD); fed.box(101, 235, 299, 239, E.PLANT);
+  const fed = basin(1, calm); fed.box(101, 240, 299, 259, E.MUD); fed.box(101, 235, 299, 239, E.PLANT);
+  fed.box(101, 234, 299, 234, E.WATER);
   for (let k = 0; k < 30; k++) fed.s.setc(110 + k * 6, 234, E.MITE, 0);
-  fed.run(240);
-  assert.ok(fed.count(E.MITE) > 30, 'a colony by its garden grows');
+  let peak = 30;
+  for (let i = 0; i < 8; i++) { fed.run(30); peak = Math.max(peak, fed.count(E.MITE)); }
+  const survivors = fed.count(E.MITE);
+  assert.ok(peak > 30, `the garden supports new mites (${peak})`);
+  assert.ok(survivors / 30 > starved / 40, `food improves survival (${survivors}/30 vs ${starved}/40)`);
+  assert.ok(survivors < peak, 'the finite garden limits the initial boom');
 });
 
 test('creature lifetimes are named in one table', () => {

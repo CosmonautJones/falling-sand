@@ -90,6 +90,14 @@ export const LIFE = Object.freeze({
   miteDrown: 240,    // a mite with no air and water around it: ~4 s
   miteFreeze: 300,   // a mite sealed in by ice: ~5 s
 });
+// Local V2 ecology. Odds are expected ticks per event, not fixed lifetimes.
+export const ECOLOGY = Object.freeze({
+  dryDecay: 3600,    // dry plant/bloom returns to ash in ~60 s on average
+  wetDecay: 36000,   // watered vegetation turns over more slowly (~10 min)
+  mudSeed: 600,      // exposed, freshwater-fed mud spends itself on a seed (~10 s)
+  mudHatch: 240,     // by food, one mud grain can become one mite (~4 s)
+  miteCrowd: 3,     // births stop with this many mites in the eight neighboring cells
+});
 const AMBIENT = new Uint8Array(256).fill(18), CONDUCT = new Uint8Array(256).fill(4), SOURCE = new Uint8Array(256), SEEDHEAT = new Uint8Array(256);
 Object.entries({[ICE]:COLD.iceRest,[WATER]:34,[BRINE]:32,[STEAM]:88,[FIRE]:220,[LAVA]:255,[EMBER]:200,[OIL]:22,[ACID]:28,[MERCURY]:24,[NITRO]:26,[AETHER]:40,[OBSIDIAN]:14,[GLASS]:16,[CRYSTAL]:12,[SMOKE]:40,[CLOUD]:16,[PLASMA]:255,[SNOW]:6}).forEach(([k,v])=>AMBIENT[k]=v);
 Object.entries({[AIR]:7,[STEAM]:7,[AETHER]:7,[SMOKE]:7,[CLOUD]:7,[WATER]:6,[BRINE]:6,[ACID]:6,[MERCURY]:8,[GOLD]:8,[LEAD]:8,[RELIC]:8,[ICE]:5,[GLASS]:2,[WOOD]:2,[PLANT]:3,[BLOOM]:3,[MOSS]:3,[OBSIDIAN]:1,[FIRE]:6,[LAVA]:6,[EMBER]:6,[PLASMA]:6}).forEach(([k,v])=>CONDUCT[k]=v);
@@ -115,11 +123,11 @@ export const PAGES = [
   {w:'The wet argument.', l:'Runs, pools, drowns fire as steam. Ice drinks it. Heat soaks; hot water rises. Seeds and ash wait for it.'},
   {w:'The floor that will not move.', l:'Acid prospects it for lead, rarely gold. Fire licks it toward lava. Moss wants it wet. It conducts heat slowly.'},
   {w:'A short life, hungry.', l:'Eats plant, oil, wood, powder, bloom. Without fuel it keeps ash. Water makes steam. Boxed in eight obsidian it becomes a black sun. An obsidian frame lit with it is a door.'},
-  {w:'Seed drinks. The garden answers.', l:'Grows while wet. A thicket drops seed, then opens bloom. Ash is bone-meal. Fire takes it. Mites graze it.'},
+  {w:'Seed drinks. The garden answers.', l:'Grows beside fresh water or mud fed by it. A thicket drops seed, then opens bloom. Dry leaves fade to ash; watered ones last longer. Fire takes it. Mites graze it.'},
   {w:'A dark float.', l:'Rides water. Burns. With powder it waits as nitro. Minnows die in it.'},
   {w:'A promise with mass.', l:'Drinks water or mud and stands as plant. Fire eats the unpromised.'},
-  {w:'Fire without fuel keeps a grey secret.', l:'Slakes in water as mud. A dry plant still grows if ash is near. With salt it makes a fuse.'},
-  {w:'Ash slakes. The floor remembers rain.', l:'Fire remembers it as brick. A seed will sprout on it. Wet, against plant, it hatches mites.'},
+  {w:'Fire without fuel keeps a grey secret.', l:'Fire, fallen leaves and dead mites leave it. Water slakes it to mud for new growth. It cannot water a dry garden. With salt it makes a fuse.'},
+  {w:'Ash slakes. The floor remembers rain.', l:'Fire remembers it as brick. A seed will sprout on it. Exposed beside fresh water, a grain spends itself as a seed, or as one mite when plant or bloom is near.'},
   {w:'Sand looks upon fire and learns to see.', l:'It will not fall. Heat crawls through it slowly. Cups are made of this so lava can be kept.'},
   {w:'Wet stone grows a quiet pelt.', l:'Creeps along stone that drinks. Mites will graze it. Acid and fire do not suffer it.'},
   {w:'Water, stopped.', l:'Freezes neighboring water only when it is already cold. Cold snaps help; the cool wand freezes water directly. Warm water, fire and ember thaw it. Brine resists passive freezing. Steam that kisses it falls as water. Crystal hanging beside it drips.'},
@@ -143,9 +151,9 @@ export const PAGES = [
   {w:'A door of night. What falls in forgets its name.', l:'An obsidian frame, inner hole at least two by two, lit with fire. What touches it becomes aether. Gold, crystal, stone, and pearl it will not drink.'},
   {w:'A red cask. Do not sneeze.', l:'Fire, ember, lava, or a burning fuse. Neighbors chain. Sand is thrown. Water boils. Obsidian, azoth, and rifts hold.'},
   {w:'Oil drinks powder and waits for a spark.', l:'A meaner hole than the red cask. Same spark. Same things hold.'},
-  {w:'A grain with legs. It steals.', l:'Camouflaged in sand, it crawls, burrows, and will not swim if it can climb out. Bloom before plant before moss. Heat sends it running; if it dies laden, gold or mud spills. Minnows hunt it at the shore. Gold it only hoards beside more gold. Loose mud it will haul, and set down beside kin or more mud; a nest against plant it will not steal. A huddle mills instead of scattering. They lay a scent empty mites shun and laden mites follow home. Wet mud against plant hatches more.'},
+  {w:'A grain with legs. It steals.', l:'Camouflaged in sand, it crawls, burrows, and will not swim if it can climb out. Bloom before plant before moss. Heat sends it running; if it dies laden, gold or mud spills. Minnows hunt it at the shore. Gold it only hoards beside more gold. Loose mud it will haul, and set down beside kin or more mud; a nest against plant it will not steal. A huddle mills instead of scattering. They lay a scent empty mites shun and laden mites follow home. Wet mud spends itself to hatch more beside food. Crowded patches pause births; death returns ash.'},
   {w:'The trough keeps a silver thought.', l:'Schools, darts the meniscus, and swims off heat. Eats a mite — and any seed — that touches the pool; stolen gold is left behind. Oil, lava, fire, acid cook it to ash. Crystal nearby, it sometimes dreams a pearl.'},
-  {w:'The thicket shows its throat.', l:'A wet plant thicket opens this instead of another seed. Mites prefer it. Fire takes it like plant.'},
+  {w:'The thicket shows its throat.', l:'A wet plant thicket opens this instead of another seed. Mites prefer it. It fades to ash, sooner without water. Fire takes it like plant.'},
   {w:'A minnow dreamed of crystal and woke with a moon.', l:'It will not fall. A rift will not drink it. Keep it.'},
   {w:'Fire exhales.', l:'Heavier than steam, lighter than air. The heat carries it in plumes, the draft bends it, and it thins to nothing.'},
   {w:'The sky draws a line.', l:'A bolt lives a few ticks. It fuses sand into glass roots, boils water and everything swimming in it, lights casks, and prefers metal.'},
@@ -494,10 +502,11 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
   function growPlant(x, y) {
     // Plants are patient: one try in five, so a single seed greens a pond instead of paving it in two seconds.
     if (random.ecology.int(5) !== 0) return;
+    if (decayPlant(x, y, 5)) return true;
     let wet = false, plants = 0, ac = 0, gc = 0;
     for (let k = 0; k < 8; k++) {
       const nx = x + DX[k], ny = y + DY[k], n = get(nx, ny);
-      if (n === WATER || n === ASH) wet = true;
+      if (n === WATER || (n === MUD && hasN(nx, ny, WATER))) wet = true;
       if (n === PLANT) plants++;
       if (n === AIR) { AX[ac] = nx; AY[ac] = ny; ac++; }
       // Water is only claimed at the surface: a floating mat, not a pond turned solid.
@@ -510,6 +519,16 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     }
     if (!wet || gc === 0) return;
     const k = random.ecology.int(gc); transmute(BX[k], BY[k], PLANT);
+  }
+  function decayPlant(x, y, stride = 1) {
+    if (random.ecology.int(ECOLOGY.dryDecay / stride) !== 0) return false;
+    let wet = false;
+    for (let k = 0; k < 8; k++) {
+      const nx = x + DX[k], ny = y + DY[k], n = get(nx, ny);
+      if (n === WATER || (n === MUD && hasN(nx, ny, WATER))) { wet = true; break; }
+    }
+    if (wet && random.ecology.int(ECOLOGY.wetDecay / ECOLOGY.dryDecay) !== 0) return false;
+    transmute(x, y, ASH); return true;
   }
   function creepMoss(x, y) {
     if (!hasN(x, y, WATER) && !hasN(x, y, MUD)) return;
@@ -814,7 +833,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
         // Mites feeding at a bloom sometimes leave honey behind.
         transmute(fx, fy, ate === BLOOM && random.ecology.int(4) === 0 ? HONEY : AIR);
         const ac = gatherAir(x, y);
-        if ((ichor || kin > 0) && ac > 0 && random.ecology.int(ichor ? 2 : 5) === 0) { const k = random.ecology.int(ac); transmute(AX[k], AY[k], MITE); }
+        if ((vegetation !== 'native' || kin < ECOLOGY.miteCrowd) && (ichor || kin > 0) && ac > 0 && random.ecology.int(ichor ? 2 : 5) === 0) { const k = random.ecology.int(ac); transmute(AX[k], AY[k], MITE); }
         return true;
       }
     }
@@ -973,12 +992,16 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     if (gatherAir(x, y) && random.ecology.int(LIFE.minnowGasp * 2) === 0) { transmute(x, y, ASH); return true; }
     return false;
   }
-  function hatchMite(x, y) {
-    if (!hasN(x, y, PLANT) && !hasN(x, y, BLOOM)) return;
-    if (!wetN(x, y)) return;
-    if (random.ecology.int(8) !== 0) return;
-    const ac = gatherAir(x, y); if (!ac) return;
-    const k = random.ecology.int(ac); transmute(AX[k], AY[k], MITE);
+  function cycleMud(x, y) {
+    if (!hasN(x, y, WATER) || !gatherAir(x, y)) return false;
+    let kin = 0;
+    for (let k = 0; k < 8; k++) if (get(x + DX[k], y + DY[k]) === MITE) kin++;
+    // Both paths spend the mud itself: no inexhaustible soil hatchery.
+    if (kin < ECOLOGY.miteCrowd && (hasN(x, y, PLANT) || hasN(x, y, BLOOM)) && random.ecology.int(ECOLOGY.mudHatch) === 0) {
+      transmute(x, y, MITE); return true;
+    }
+    if (random.ecology.int(ECOLOGY.mudSeed) === 0) { transmute(x, y, SEED); return true; }
+    return false;
   }
   function dewSteam(x, y) {
     const above = y === 0 ? STONE : get(x, y - 1);
@@ -1176,7 +1199,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       case VISITOR: return visitorAct(x, y);
       case ICHOR: if (hasN(x, y, FIRE) || hasN(x, y, PLASMA)) { transmute(x, y, AETHER); return true; } return false;
       case MUD:
-        if (vegetation === 'native') hatchMite(x, y);
+        if (vegetation === 'native' && cycleMud(x, y)) return true;
         if (hasN(x, y, WATER) && ((x + y * 17 + tickIndex) % 4200) === 0) {
           const ac = gatherAir(x, y);
           if (ac) { const k = random.ecology.int(ac); transmute(AX[k], AY[k], NEWT); }
@@ -1238,7 +1261,8 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
         return false;
       case VOID: devour(x, y); return false;
       case ICE: freezeWater(x, y); return false;
-      case PLANT: if (vegetation === 'native') growPlant(x, y); return false;
+      case PLANT: return vegetation === 'native' && growPlant(x, y);
+      case BLOOM: return vegetation === 'native' && decayPlant(x, y);
       case MOSS:
         if (hasN(x, y, BRINE) && random.ecology.int(30) === 0) { transmute(x, y, CORAL); return true; }
         creepMoss(x, y); return false;
@@ -1304,7 +1328,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
           const v = next < 0 ? 0 : next > 255 ? 255 : next;
           heatOut[i] = v;
           hs += v;
-          if (ALIVE[m] || KIND[m] === K_GAS) lv = 1;
+          if (ALIVE[m] || KIND[m] === K_GAS || (m === BLOOM && vegetation === 'native')) lv = 1;
           if (m !== AIR && KIND[m] !== K_GAS && m !== FIRE && m !== PLASMA) sol++;
           if (m !== m0 || v !== AMBIENT[m]) quiet = 0;
           if (!born[i] && ((m === ICE && v >= COLD.meltAt) || (m === SNOW && v >= 40) || (m === WATER && v >= BOIL) || (FLAMMABLE[m] && v >= IGNITE))) meltList[melts++] = i;

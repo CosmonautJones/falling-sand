@@ -12,7 +12,7 @@ Some ideas from the original research turned out to exist already. They are list
 | Worker transport | Colour, emissive and fx buffers are transferred (ping-pong), not copied | `alembic-engine-v2.js` worker block, `index.html` `send()` |
 | Shader renderer | WebGL pass with per-material shade, bevels, liquid refraction, gas and smoke, multi-level emissive bloom, shake, flash | `index.html` fragment shader |
 | Per-grain variation | `SHADE` table per material | `engine/world.js` |
-| Material feel | `DENS`, `DISP`, `FRIC`, `VISC` tables; 53 materials incl. snow, honey, amber, fungus, firefly, coral, pumice | `engine/world.js` |
+| Material feel | `DENS`, `DISP`, `FRIC`, `VISC` tables; 55 materials incl. snow, honey, amber, fungus, firefly, coral, pumice, beetle and newt | `engine/world.js` |
 | Desktop zoom | Wheel zooms at the cursor; trackpad two-finger scroll pans; ctrl-wheel pinch; `+` `−` `F`; minimap | `index.html` |
 | Phone zoom | Two-finger pinch zooms and pans around the finger midpoint; a second finger cancels the pour | `index.html` pointer handlers |
 
@@ -42,6 +42,22 @@ The real gaps are pacing controls, phone zoom ergonomics, a single place to tune
 | 1b.7 | Open: real mite hives — a nest, kept-open tunnels, stored food | todo |
 
 The `LIFE`, `COLD` and `CLIMATE` tables move into `engine/rates.js` in Phase 2.
+
+## Phase 1c — Native growth cycle (implemented)
+
+The browser V2 native path now closes a local water-to-growth loop while
+preserving the existing materials and simulation framework.
+
+| # | Item | Status |
+|---|---|---|
+| 1c.1 | Dry and wet plant/bloom decay with probability-average ecology rates | done |
+| 1c.2 | Watered growth requires water directly or through freshwater-fed mud | done |
+| 1c.3 | Exposed freshwater mud spends itself on a seed or food-backed mite, with a three-mite local cap | done |
+| 1c.4 | Keep managed V3 vegetation outside the native cycle | done |
+
+Three fixed-seed ten-minute shore soaks now record population curves and water
+retention. Broader rates-table migration and longer/more varied population
+profiling remain Phase 2; see [the growth-cycle note](v2-growth-cycle.md).
 
 ## Phase 2 — One rates table (foundation for all content work)
 
