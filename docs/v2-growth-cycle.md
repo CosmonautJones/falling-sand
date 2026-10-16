@@ -35,8 +35,11 @@ nominal expected-tick averages while an event is eligible, not countdown timers:
 | Food-backed mud to mite | 240 | 4 s |
 | Native neighboring-mite birth threshold | 3 | source/parent neighborhood |
 
-Plant decay runs inside the existing one-in-five growth gate, with its odds
-divided by five to retain the nominal average. `BLOOM` decay is checked
+Plant decay runs inside the growth gate, with its odds divided by the gate to
+retain the nominal average. Since the seasons release the gate follows the
+season (`SEASON_LIFE.plantGate`: 5, 6, 10, 18 from spring to winter), and the
+mud-to-seed odds scale by the same ratio, so the table above holds in spring
+and seeds sprout more rarely later in the year. Decay stays at its nominal rate. `BLOOM` decay is checked
 tickwise and uses the native-only wake guard.
 
 Mud checks hatching before seeding, so a successful hatch preempts that seed

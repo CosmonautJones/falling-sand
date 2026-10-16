@@ -61,6 +61,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
     <div class="hd-tally" style="display:flex; flex-direction:column; gap:1px; font-size:13px; font-style:italic; color:#8f7d62; letter-spacing:.02em; white-space:nowrap;">
       <span>{{ tally }}</span>
       <span>{{ riteTally }}</span>
+      <span class="almanac" ref="{{ almanacRef }}" title="The almanac: the season, and what the weather is doing or about to do" style="font-style:normal; letter-spacing:.04em; color:#b8a483; font-variant-numeric:tabular-nums;"></span>
     </div>
     <div style="display:flex; flex-direction:column; align-items:center; gap:2px; text-align:center;">
       <div class="hd-title" onClick="{{ onTitle }}" tabIndex="0" style="font-size:30px; font-weight:600; letter-spacing:.24em; line-height:1.05; padding-left:.24em; color:{{ titleColor }}; text-shadow:0 1px 0 #3a2a10, 0 -1px 0 rgba(232,201,122,.55), 0 0 {{ titleGlow }}px rgba(232,184,106,.55); cursor:pointer; user-select:none; transition:color .6s, text-shadow .6s;">ALEMBIC</div>
@@ -84,6 +85,8 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
 
     <div ref="{{ vpRef }}" style="position:relative; overflow:hidden; width:min(100cqw, calc(100cqh * 480 / 270)); aspect-ratio:480 / 270; max-height:100%; background:#0b090e; touch-action:none; -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; cursor:none; border-radius:2px;">
       <canvas ref="{{ cvRef }}" style="position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none;"></canvas>
+      <div ref="{{ frostRef }}" class="omen-frost" aria-hidden="true" style="position:absolute; inset:0; pointer-events:none; opacity:0; transition:opacity 1.2s linear; box-shadow:inset 0 0 0 2px rgba(230,244,255,.5), inset 0 0 22px 6px rgba(205,232,255,.42), inset 0 0 110px 16px rgba(170,205,240,.22); background:radial-gradient(120% 90% at 50% 45%, rgba(0,0,0,0) 62%, rgba(205,230,255,.10) 100%);"></div>
+      <div ref="{{ warmRef }}" class="omen-warm" aria-hidden="true" style="position:absolute; inset:0; pointer-events:none; opacity:0; transition:opacity 1.2s linear; box-shadow:inset 0 -40px 70px -20px rgba(255,150,60,.26); background:linear-gradient(to top, rgba(255,140,50,.10), rgba(255,140,50,0) 38%);"></div>
       <div style="position:absolute; inset:0; pointer-events:none; background:linear-gradient(112deg, rgba(255,236,200,.06) 0%, rgba(255,236,200,0) 18%, rgba(255,236,200,0) 74%, rgba(255,236,200,.035) 100%); box-shadow:inset 0 0 0 1px rgba(232,201,122,.14), inset 0 0 60px rgba(0,0,0,.45);"></div>
 
       <sc-if value="{{ paused }}" hint-placeholder-val="{{ false }}">
@@ -426,6 +429,37 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
 const DKEY = 'alembic-discovered-v2', RKEY = 'alembic-rites-v2', FKEY = 'alembic-flasks-v2', SKEY = 'alembic-sound-v2', TKEY = 'alembic-tempest-v2', PKEY = 'alembic-poured-v2', AKEY = 'alembic-ambitions-v2', GKEY = 'alembic-gallery-v2', CKEY = 'alembic-speed-v2';
 const CLIMATE_WHISPER = { 1: 'A warm spell. Ice weeps; snow will not keep.', '-1': 'A cold snap. Still water skins over; the rain turns to snow.', 0: 'The air settles.' };
 const climateLabel = c => c >= 0.5 ? ' · warm spell' : c <= -0.5 ? ' · cold snap' : '';
+const SEASON_NAME = ['spring', 'summer', 'autumn', 'winter'];
+const SEASON_COLOR = ['#8fcf7a', '#e8c25a', '#d07a3a', '#a9cbe8'];
+const SEASON_WHISPER = ['Spring. The glass thaws and the garden wakes.', 'Summer. Warm spells come often; ice will not keep.', 'Autumn. Growth slows; the first frosts are near.', 'Winter. Cold snaps come often and the mites sleep.'];
+const OMEN_WHISPER = { '-1': 'Frost gathers at the rim. A cold snap is coming.', 1: 'The air shimmers over the floor. A warm spell is coming.' };
+// The almanac line: the season, then what the sky is doing or is about to do.
+function almanacText(a, speed) {
+  if (!a) return '';
+  const secs = Math.max(1, Math.round(a.spellLeft / 60 / Math.max(0.25, speed || 1)));
+  const sky = a.omen ? `${a.omen < 0 ? 'cold snap' : 'warm spell'} in ${secs} s` : a.now < 0 ? 'cold snap' : a.now > 0 ? 'warm spell' : 'calm';
+  return `${SEASON_NAME[a.season]} · ${sky}`;
+}
+// How strongly the glass shows frost and warmth. The omen builds to the same 0.75 the spell itself
+// shows, and the arriving spell holds it while the climate is still easing in, so there is no gap.
+function omenLevels(a, c, omenLead) {
+  let frost = c < 0 ? -c * 0.75 : 0, glow = c > 0 ? c * 0.75 : 0;
+  if (a) {
+    if (a.now < 0) frost = Math.max(frost, 0.75); else if (a.now > 0) glow = Math.max(glow, 0.75);
+    if (a.omen) { const k = 0.75 * Math.min(1, Math.max(0, 1 - a.spellLeft / omenLead)); if (a.omen < 0) frost = Math.max(frost, k); else glow = Math.max(glow, k); }
+  }
+  return { frost, glow };
+}
+// A small year dial: four season arcs and a bead at today's place in the year.
+function almanacDial(a) {
+  if (!a) return '';
+  const r = 7, c = 9, arcs = SEASON_COLOR.map((col, i) => {
+    const a0 = (i / 4) * 2 * Math.PI - Math.PI / 2 + 0.08, a1 = ((i + 1) / 4) * 2 * Math.PI - Math.PI / 2 - 0.08;
+    return `<path d="M${(c + r * Math.cos(a0)).toFixed(2)} ${(c + r * Math.sin(a0)).toFixed(2)} A${r} ${r} 0 0 1 ${(c + r * Math.cos(a1)).toFixed(2)} ${(c + r * Math.sin(a1)).toFixed(2)}" stroke="${col}" stroke-width="2.2" fill="none" opacity="${i === a.season ? 1 : 0.35}"/>`;
+  }).join('');
+  const t = a.yearPhase * 2 * Math.PI - Math.PI / 2;
+  return `<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" style="vertical-align:-4px">${arcs}<circle cx="${(c + r * Math.cos(t)).toFixed(2)}" cy="${(c + r * Math.sin(t)).toFixed(2)}" r="2.1" fill="#f0e2c4"/></svg>`;
+}
 const TAP_ZOOM = 3, SNAP_ZOOM = 0.12, ZOOM_STEPS = [2, 4];
 const CLOCKS = [0.25, 0.5, 1, 2], CLOCK_LABEL = { 0.25: '¼×', 0.5: '½×', 1: '1×', 2: '2×' };
 const SAVE_KEYS = [DKEY, RKEY, FKEY, SKEY, TKEY, PKEY, AKEY, GKEY];
@@ -629,7 +663,7 @@ const TOOLS = [['pour', 'Hold to pour'], ['spray', 'Scatter single grains'], ['l
 class Component extends DCLogic {
   constructor(props) {
     super(props);
-    ['rootRef', 'cvRef', 'vpRef', 'retRef', 'hudRef', 'phoneHudRef', 'boxRef', 'lineRef'].forEach(k => this[k] = React.createRef());
+    ['rootRef', 'cvRef', 'vpRef', 'retRef', 'hudRef', 'phoneHudRef', 'boxRef', 'lineRef', 'almanacRef', 'frostRef', 'warmRef'].forEach(k => this[k] = React.createRef());
     this.view = { zoom: 1, panX: 0, panY: 0 };
     this.ops = []; this.h = {}; this.shake = 0; this.wonder = 0; this.flash = 0; this.wipe = -1; this.ship = null; this.walker = null; this.walkerKeys = {}; this.walkerCmd = null; this.walkerJump = false; this.pendingDt = 0; this.simMs = 0; this.stepQ = 0;
     this.last = performance.now(); this.frames = 0; this.lastSample = performance.now(); this.fps = 0;
@@ -767,6 +801,8 @@ class Component extends DCLogic {
     this.windE = r.wind || 0;
     if (r.storm !== this.storming) this.storming = r.storm;
     this.climate = r.climate || 0;
+    this.almanac = r.almanac || null;
+    this.paintOmens();
     // Storm gusts: pale streaks race across the upper air in the gust's direction.
     if (this.gustDir && performance.now() < this.gustUntil && !this.still) for (let k = 0; k < 3; k++) {
       const d = this.gustDir; this.spawn(d > 0 ? Math.random() * this.M.W * 0.3 : this.M.W * (0.7 + Math.random() * 0.3), Math.random() * this.M.H * 0.55, d * (3 + Math.random() * 3), (Math.random() - 0.5) * 0.3, 0.78, 0.84, 0.95, 0.35 + Math.random() * 0.3, 0.8);
@@ -912,6 +948,8 @@ class Component extends DCLogic {
         }
         case 'gust': this.gustDir = e.dir; this.gustUntil = performance.now() + 2500 / Math.max(0.25, this.state.speed || 1); break;
         case 'climate': this.setState({ whisper: CLIMATE_WHISPER[e.v] || CLIMATE_WHISPER[0] }); break;
+        case 'season': this.setState({ whisper: SEASON_WHISPER[e.v] || SEASON_WHISPER[0] }); break;
+        case 'omen': this.setState({ whisper: OMEN_WHISPER[e.v] || '' }); break;
         case 'storm': this.setState({ whisper: 'The ceiling darkens. The steam remembers weather.' }); if (!this.state.tempest) { this.setState({ tempest: true }); try { localStorage.setItem(TKEY, '1'); } catch (er) {} } break;
         case 'fulgurite': this.unlock('fulgurite'); break;
         case 'shock': this.unlock('shock'); break;
@@ -940,6 +978,18 @@ class Component extends DCLogic {
   }
 
   // ---------- particles ----------
+  // Signs of the weather on the glass: frost creeps in before and during a cold snap, and a warm
+  // glow with rising shimmer comes before and during a warm spell.
+  paintOmens() {
+    const { frost, glow } = omenLevels(this.almanac, this.climate, this.M.CLIMATE ? this.M.CLIMATE.omenLead : 2400);
+    const fr = this.frostRef && this.frostRef.current, wr = this.warmRef && this.warmRef.current;
+    if (fr && Math.abs((this.frostShown || 0) - frost) > 0.01) { fr.style.opacity = frost.toFixed(2); this.frostShown = frost; }
+    if (wr && Math.abs((this.warmShown || 0) - glow) > 0.01) { wr.style.opacity = glow.toFixed(2); this.warmShown = glow; }
+    if (glow > 0.15 && !this.still && !this.state.paused && Math.random() < glow * 0.5) {
+      const x = Math.random() * this.M.W;
+      this.spawn(x, this.M.H - 2 - Math.random() * 8, (Math.random() - 0.5) * 0.2, -(0.4 + Math.random() * 0.6), 1, 0.7, 0.35, 0.6 + Math.random() * 0.6, 0.8);
+    }
+  }
   spawn(x, y, vx, vy, r, g, b, life, size) {
     if (this.pn >= PMAX) return;
     const P = this.P, o = this.pn * 10; this.pn++;
@@ -1081,11 +1131,16 @@ class Component extends DCLogic {
       const phoneHud = this.phoneHudRef.current;
       if (phoneHud) {
         const z = this.view.zoom;
-        phoneHud.textContent = `${this.fps.toFixed(0)} fps · sim ${this.simMs.toFixed(1)} ms${z === 1 ? '' : ` · ${z.toFixed(1)}×`}${this.storming ? ' · storm' : ''}${climateLabel(this.climate)}${this.ship ? ' · visitation' : ''}`;
+        phoneHud.textContent = `${this.almanac ? almanacText(this.almanac, this.state.speed) + ' · ' : ''}${this.fps.toFixed(0)} fps · sim ${this.simMs.toFixed(1)} ms${z === 1 ? '' : ` · ${z.toFixed(1)}×`}${this.storming ? ' · storm' : ''}${this.almanac ? '' : climateLabel(this.climate)}${this.ship ? ' · visitation' : ''}`;
+      }
+      const alm = this.almanacRef.current;
+      if (alm) {
+        const key = this.almanac ? `${almanacText(this.almanac, this.state.speed)}|${Math.round(this.almanac.yearPhase * 96)}` : '';
+        if (key !== this.almanacKey) { this.almanacKey = key; alm.innerHTML = this.almanac ? `${almanacDial(this.almanac)} ${almanacText(this.almanac, this.state.speed)}` : ''; }
       }
       if (hud) {
         const s = this.state, v = this.view;
-        hud.textContent = `${this.M.W}×${this.M.H} · ${this.fps.toFixed(0)} fps · sim ${this.simMs.toFixed(1)} ms${this.mode === 'worker' ? ' (worker)' : ''} · ${s.tool} · ${this.M.NAMES[s.brush]} · size ${s.radius}${s.speed === 1 ? '' : ` · ${s.speed}×`}${v.zoom === 1 ? '' : ` · ${v.zoom.toFixed(1)}×`}${this.storming ? ' · storm' : ''}${climateLabel(this.climate)}${this.ship ? ' · visitation' : ''}${s.paused ? ' · paused' : ''}`;
+        hud.textContent = `${this.M.W}×${this.M.H} · ${this.fps.toFixed(0)} fps · sim ${this.simMs.toFixed(1)} ms${this.mode === 'worker' ? ' (worker)' : ''} · ${s.tool} · ${this.M.NAMES[s.brush]} · size ${s.radius}${s.speed === 1 ? '' : ` · ${s.speed}×`}${v.zoom === 1 ? '' : ` · ${v.zoom.toFixed(1)}×`}${this.storming ? ' · storm' : ''}${this.almanac ? '' : climateLabel(this.climate)}${this.ship ? ' · visitation' : ''}${s.paused ? ' · paused' : ''}`;
       }
     }
   }
@@ -1695,7 +1750,7 @@ class Component extends DCLogic {
       toolLabel: s.tool, radius: s.radius, cycleBrush: () => { const sizes = this.M.BRUSH_SIZES; this.selectRadius(sizes[(sizes.indexOf(s.radius) + 1) % sizes.length]); }, rootRef: this.rootRef, toggleScreen: () => this.goFullscreen(), vpRef: this.vpRef, cvRef: this.cvRef, retRef: this.retRef, hudRef: this.hudRef, boxRef: this.boxRef, lineRef: this.lineRef,
       miniRef: this.miniRef || (this.miniRef = React.createRef()), miniRectRef: this.miniRectRef || (this.miniRectRef = React.createRef()), zoomLabRef: this.zoomLabRef || (this.zoomLabRef = React.createRef()), pbZoomRef: this.pbZoomRef || (this.pbZoomRef = React.createRef()), cycleZoom: this.hnd('cycleZoom', () => this.cycleZoom()),
       miniPoint: this.miniPoint, zoomIn: () => this.zoomBy(1.5), zoomOut: () => this.zoomBy(1 / 1.5), zoomFit: () => { this.setState({ sheet: '' }); this.setView({ zoom: 1, panX: 0, panY: 0 }, true); },
-      phoneHudRef: this.phoneHudRef,
+      phoneHudRef: this.phoneHudRef, almanacRef: this.almanacRef, frostRef: this.frostRef, warmRef: this.warmRef,
       sheetOpen: !!s.sheet, elementsOpen: s.sheet === 'elements', optionsOpen: s.sheet === 'options',
       openElements: () => this.setState({ sheet: s.sheet === 'elements' ? '' : 'elements' }),
       openOptions: () => this.setState({ sheet: s.sheet === 'options' ? '' : 'options' }),
