@@ -47,11 +47,14 @@ export const COLD = Object.freeze({
   meltAt: 50,          // ice turns to water at or above this heat (was 72)
   lavaCrustOnIce: 10,  // 1 in N: lava that melts an ice grain crusts to obsidian (was every time)
 });
-// Weather: the vessel drifts through calm, warm spells and cold snaps. Each spell is chosen from the
-// world seed and the tick, so it needs no saved state and replays exactly.
+// Weather: the vessel drifts through calm, warm spells and cold snaps, inside a year of four seasons.
+// Each spell is chosen from the world seed and the tick, so it needs no saved state, replays
+// exactly, and can be forecast: the almanac below knows what is coming.
 export const CLIMATE = Object.freeze({
-  spell: 5400,          // ticks per spell (90 s at 1x); the first quarter eases in from the last
-  calmSpells: 2,        // the first three minutes are always calm
+  spell: 4800,          // ticks per spell (80 s at 1x); the first quarter eases in from the last
+  seasonSpells: 3,      // spells per season; four seasons make the year (16 min at 1x). Change this to change the year
+  calmSpells: 2,        // the first two spells (~2.7 min) are always calm
+  omenLead: 2400,       // signs of a coming spell show this many ticks (40 s) before it begins
   coldFreezeBoost: 6,   // a full cold snap lets water this much warmer freeze beside ice
   surfaceFreeze: 2400,  // 1 in N per tick for open water under air to skin over in a full cold snap
   warmThaw: 1500,       // 1 in N per tick for ice or snow open to air to melt in a full warm spell
@@ -59,12 +62,22 @@ export const CLIMATE = Object.freeze({
   gustFor: 150,         // ... lasting 2.5 s
   gustPush: 0.16,       // sideways push added to the wind field each tick of a gust
 });
+export const SEASONS = Object.freeze(['spring', 'summer', 'autumn', 'winter']);
+// Out of 8, the chance that a spell in each season is a cold snap, and that it is a warm spell.
+// Summer never snaps cold and winter never turns warm; the rest is calm.
+export const SEASON_ODDS = Object.freeze([[1, 2], [0, 4], [2, 1], [4, 0]]);
+// What each season does to living things: plants try to grow one tick in N, and mites idle N times as often.
+export const SEASON_LIFE = Object.freeze({ plantGate: Object.freeze([5, 6, 10, 18]), miteRest: Object.freeze([1, 1, 2, 4]) });
+// Every year starts in spring, so a fresh vessel always opens in calm, growing weather.
+export const seasonOf = k => Math.floor(Math.max(0, k) / CLIMATE.seasonSpells) % 4;
+export const seasonAt = tick => seasonOf(Math.floor(Math.max(0, tick) / CLIMATE.spell));
 export function climateLevel(seed, k) {
   if (k < CLIMATE.calmSpells) return 0; // k may be -1 for the spell before the first
   let h = Math.imul((seed >>> 0) ^ Math.imul(k + 1, 0x9e3779b1), 0x85ebca6b) >>> 0;
-  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35) >>> 0; h ^= h >>> 16;
-  const r = h % 8;
-  return r < 2 ? -1 : r < 4 ? 1 : 0;
+  // Keep h unsigned: a signed h made r negative half the time, and every negative r read as a cold snap.
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35) >>> 0; h = (h ^ (h >>> 16)) >>> 0;
+  const r = h % 8, [cold, warm] = SEASON_ODDS[seasonOf(k)];
+  return r < cold ? -1 : r < cold + warm ? 1 : 0;
 }
 // -1 is a full cold snap, +1 a full warm spell, in steps of 1/20.
 export function climateAt(seed, tick) {
@@ -75,6 +88,18 @@ export function climateAt(seed, tick) {
   return Math.round((a + (b - a) * e) * 20) / 20 || 0; // || 0 folds -0 into 0
 }
 const climateKind = v => v >= 0.5 ? 1 : v <= -0.5 ? -1 : 0;
+// The almanac: where the year stands and what the next spell will be. `omen` is the coming spell's
+// level (-1 cold, 1 warm) once it is within omenLead ticks and differs from this one, else 0.
+export function almanac(seed, tick) {
+  tick = Math.max(0, tick);
+  const L = CLIMATE.spell, k = Math.floor(tick / L), seasonLen = L * CLIMATE.seasonSpells, year = seasonLen * 4;
+  const now = climateLevel(seed, k), next = climateLevel(seed, k + 1), spellLeft = (k + 1) * L - tick;
+  return {
+    season: seasonOf(k), seasonLeft: seasonLen - (tick % seasonLen), year: Math.floor(tick / year),
+    yearPhase: (tick % year) / year, now, next, spellLeft,
+    omen: next !== now && next !== 0 && spellLeft <= CLIMATE.omenLead ? next : 0,
+  };
+}
 export function gustAt(seed, stormT) {
   const n = Math.floor(stormT / CLIMATE.gustEvery), p = stormT - n * CLIMATE.gustEvery;
   if (n === 0 || p >= CLIMATE.gustFor) return 0; // the storm builds for a while before the first gust
@@ -277,7 +302,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
   // ---------- convection field (coarse stable-fluids lite) ----------
   const WU = new Float32Array(CNN), WV = new Float32Array(CNN), WU0 = new Float32Array(CNN), WV0 = new Float32Array(CNN);
   const WP = new Float32Array(CNN), WP2 = new Float32Array(CNN), WD = new Float32Array(CNN), HS = new Float32Array(CNN), SOL = new Uint16Array(CNN), WS = new Uint8Array(CNN);
-  let windEnergy = 0, climate = 0, cold = 0, warm = 0;
+  let windEnergy = 0, climate = 0, cold = 0, warm = 0, season = 0;
   function sampleField(F, px, py) {
     px = Math.max(0, Math.min(CW - 1.001, px)); py = Math.max(0, Math.min(CH - 1.001, py));
     const x0 = px | 0, y0 = py | 0, fx = px - x0, fy = py - y0, i = y0 * CW + x0;
@@ -500,9 +525,12 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
   }
 
   function growPlant(x, y) {
-    // Plants are patient: one try in five, so a single seed greens a pond instead of paving it in two seconds.
-    if (random.ecology.int(5) !== 0) return;
-    if (decayPlant(x, y, 5)) return true;
+    // Plants are patient: one try in five in spring, fewer as the year turns (SEASON_LIFE), so a single
+    // seed greens a pond instead of paving it in two seconds. Decay rides the same gate with its odds
+    // scaled by it, so dry plants still return to ash at the same rate in every season.
+    const gate = SEASON_LIFE.plantGate[season];
+    if (random.ecology.int(gate) !== 0) return;
+    if (decayPlant(x, y, gate)) return true;
     let wet = false, plants = 0, ac = 0, gc = 0;
     for (let k = 0; k < 8; k++) {
       const nx = x + DX[k], ny = y + DY[k], n = get(nx, ny);
@@ -847,7 +875,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     const below = get(x, y + 1);
     const hanging = below === AIR || below === STEAM || below === FIRE || below === AETHER || below === SMOKE;
     if (hanging && !miteCling(x, y)) return false;
-    if (random.ecology.int(sKin >= 2 ? 8 : 3) !== 0) return true;
+    if (random.ecology.int((sKin >= 2 ? 8 : 3) * SEASON_LIFE.miteRest[season]) !== 0) return true;
     miteWalk(x, y, cargo);
     return true;
   }
@@ -1417,6 +1445,13 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     const dir = scanDir; scanDir = -scanDir;
     born.fill(0);
     climate = weather ? climateAt(initialSeed, tickIndex) : 0; cold = climate < 0 ? -climate : 0; warm = climate > 0 ? climate : 0;
+    season = weather ? seasonAt(tickIndex) : 0;
+    if (weather && tickIndex > 0) {
+      const L = CLIMATE.spell;
+      if (tickIndex % (L * CLIMATE.seasonSpells) === 0) ev({ t: 'season', v: season });
+      const k = Math.floor(tickIndex / L), next = climateLevel(initialSeed, k + 1);
+      if ((k + 1) * L - tickIndex === CLIMATE.omenLead && next !== 0 && next !== climateLevel(initialSeed, k)) ev({ t: 'omen', v: next });
+    }
     const kind = climateKind(climate);
     if (weather && kind !== climateKind(climateAt(initialSeed, tickIndex - 1))) ev({ t: 'climate', v: kind });
     thermals();
@@ -1787,6 +1822,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       ship: ship.active ? { x: ship.x, y: ship.y, beam: ship.beam ? 1 : 0 } : null,
       walker: walker.active ? { x: walker.x, y: walker.y, facing: walker.facing, frame: walker.frame, phase: walker.phase } : null,
       flash, wipe, wind: windEnergy, storm: storm > 0, climate: weather ? climateAt(initialSeed, Math.max(0, tickIndex - 1)) : 0,
+      almanac: weather ? almanac(initialSeed, Math.max(0, tickIndex - 1)) : null,
     };
   }
   function reset({ seed: nextSeed = initialSeed, scene: nextScene = initialScene } = {}) {

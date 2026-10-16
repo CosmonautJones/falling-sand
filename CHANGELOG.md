@@ -4,6 +4,31 @@
 
 This log covers the browser V2. The [Godot V2 project](https://github.com/CosmonautJones/alembic-godot-v2) has its own builds and releases; its saves and feature set differ. Dates below are in America/New_York.
 
+## 2026-10-16 — Seasons and weather warnings
+
+### New
+
+- **A year of four seasons.** Every vessel opens in spring. Each season lasts three weather spells of 80 seconds, so a full year takes 16 minutes at 1×.
+  - Summer brings warm spells and never a cold snap.
+  - Winter brings cold snaps and never a warm spell.
+  - Spring and autumn are mostly calm, with autumn leaning cold.
+- **Seasons change living things.** Gardens grow fastest in spring and slowest in winter, and mites spend much more of the winter resting.
+- **Warnings before the weather turns.** About 40 seconds before a cold snap or warm spell:
+  - a whisper names what is coming;
+  - frost creeps in around the glass before a cold snap, or a warm glow with rising shimmer comes before a warm spell;
+  - the frost or glow stays while the spell lasts.
+- **The almanac.** A small year dial under the tallies (desktop) and a line in the phone status bar show the season and either the current weather or a countdown such as "winter · cold snap in 22 s". The countdown follows the current speed.
+
+### Fixed
+
+- Weather picked cold snaps far more often than intended. A signed number in the spell picker made half of all draws read as cold. Warm and calm spells now come at the rates above.
+
+### Notes
+
+- Seasons, forecasts and omens come from the world seed and the tick, like the rest of the weather. They need no new saved state and replay exactly from checkpoints.
+- Living Valley (V3) keeps weather off, so it has no seasons.
+- Day and night are not part of this release.
+
 ## 2026-10-16 — Native growth cycle and explorer fixes
 
 - Added the native browser V2 water → plants → mites → decay → new growth

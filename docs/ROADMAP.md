@@ -40,6 +40,9 @@ The real gaps are pacing controls, phone zoom ergonomics, a single place to tune
 | 1b.5 | Warm spells and cold snaps from seed and tick, storm gusts, HUD and whispers (`CLIMATE` table) | done |
 | 1b.6 | Open: lava slowly eats the stone floor in the untouched vessel (81 → ~900 grains in 4 min, also on main) | todo |
 | 1b.7 | Open: real mite hives — a nest, kept-open tunnels, stored food | todo |
+| 1b.8 | Seasons: a 16-minute year (spring, summer, autumn, winter) that sets which spells come; plants grow slower and mites rest more as the year turns (`SEASON_ODDS`, `SEASON_LIFE`) | done |
+| 1b.9 | Forecast: an almanac dial and countdown, omen whispers 40 s ahead, frost and warm glow on the glass | done |
+| 1b.10 | Open: day and night — a slow light cycle, cooler nights, fireflies that glow after dark | todo |
 
 The `LIFE`, `COLD` and `CLIMATE` tables move into `engine/rates.js` in Phase 2.
 
