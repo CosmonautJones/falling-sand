@@ -39,6 +39,9 @@ export function createEngine(options = {}) {
     reset(options) { world.reset(options); acc = 0; tickN = 0; frames = 0; },
     tick(msg, color, emis, fxb) {
       const t0 = performance.now();
+      if (msg.walkerCmd?.out) world.clearWalker();
+      else if (msg.walkerCmd?.drop) world.dropWalkerAt(msg.walkerCmd.drop.x, msg.walkerCmd.drop.y);
+      world.setWalkerInput(msg.walkerInput ?? null);
       const ops = validateOperations(msg.ops ?? [], { legacyVelocity: true });
       const held = validateOperations(msg.held == null ? [] : [msg.held], { legacyVelocity: true });
       if (held.some(op => !['p', 'spray', 'heat', 'cool'].includes(op.t))) throw new Error('Invalid held tool');

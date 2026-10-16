@@ -2,7 +2,7 @@
 // Float32 payloads use little-endian bytes. Exact continuation is same-version/runtime.
 export const MAX_CHECKPOINT_BYTES = 16 * 1024 * 1024;
 export const SAFE_VELOCITY = 1e6;
-const WIDTH = 480, HEIGHT = 270, SIZE = WIDTH * HEIGHT, FIELD_SIZE = 60 * 34, MATERIALS = 53;
+const WIDTH = 480, HEIGHT = 270, SIZE = WIDTH * HEIGHT, FIELD_SIZE = 60 * 34, MATERIALS = 55;
 // Every valid command serializes to more than 32 bytes, so this defensive list
 // bound cannot reject a command queue that fits the serialized byte ceiling.
 const MAX_COMMANDS = Math.floor(MAX_CHECKPOINT_BYTES / 32);
@@ -144,7 +144,7 @@ const OPS = {
   spray: ['x', 'y', 'r', 'm', 'n'], box: ['x0', 'y0', 'x1', 'y1', 'm'],
   heat: ['x', 'y', 'r'], cool: ['x', 'y', 'r'], rain: ['m', 'n'],
   tempest: [], clear: [], reset: [], snap: [], wipe: ['mode'], load: ['cells'],
-  spark: ['x', 'y'],
+  spark: ['x', 'y'], poke: ['x', 'y', 'dx', 'dy'],
 };
 function operation(op, mode) {
   // Check the discriminator descriptor before accessing it, then whitelist the variant.
