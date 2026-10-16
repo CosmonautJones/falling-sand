@@ -12,7 +12,7 @@ This log covers the browser V2. The [Godot V2 project](https://github.com/Cosmon
   - Summer brings warm spells and never starts a cold snap.
   - Winter brings cold snaps and never starts a warm spell. (Weather eases from one spell to the next over about 20 seconds, so a warm end of autumn can linger briefly into winter.)
   - Spring and autumn are mostly calm, with autumn leaning cold.
-- **Seasons change living things.** Gardens grow fastest in spring and slowest in winter, and mites spend much more of the winter resting.
+- **Seasons change living things.** Gardens grow fastest in spring and slowest in winter, wet mud sprouts seeds less often as the year turns, and mites spend much more of the winter resting. Spring keeps the growth-cycle rates from the native growth cycle unchanged, and dry plants decay at the same rate in every season.
 - **Warnings before the weather turns.** About 40 seconds before a cold snap or warm spell:
   - a whisper names what is coming;
   - frost creeps in around the glass before a cold snap, or a warm glow with rising shimmer comes before a warm spell;

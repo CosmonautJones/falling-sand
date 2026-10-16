@@ -1028,7 +1028,8 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     if (kin < ECOLOGY.miteCrowd && (hasN(x, y, PLANT) || hasN(x, y, BLOOM)) && random.ecology.int(ECOLOGY.mudHatch) === 0) {
       transmute(x, y, MITE); return true;
     }
-    if (random.ecology.int(ECOLOGY.mudSeed) === 0) { transmute(x, y, SEED); return true; }
+    // Wet mud sprouts seeds on the same seasonal clock as plants: as often as ever in spring, rarely in winter.
+    if (random.ecology.int(ECOLOGY.mudSeed * SEASON_LIFE.plantGate[season] / SEASON_LIFE.plantGate[0]) === 0) { transmute(x, y, SEED); return true; }
     return false;
   }
   function dewSteam(x, y) {

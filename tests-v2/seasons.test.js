@@ -89,19 +89,20 @@ test('seasons and omens replay exactly from a checkpoint and are off where weath
 
 // ---------- what the seasons do ----------
 test('gardens grow fastest in spring and slowly in winter', () => {
+  // Patches flower and cap their own edges within seconds, so compare how fast they green, not how big they end.
   const grow = tick => {
     const e = engineAt(5, tick), w = e.inspect();
     for (let x = 0; x < 480; x++) for (let y = 260; y < 270; y++) w.setc(x, y, E.STONE, 0);
-    for (let y = 250; y < 260; y++) for (let x = 100; x < 380; x++) w.setc(x, y, E.MUD, 0);
-    for (let y = 247; y < 250; y++) for (let x = 100; x < 380; x++) w.setc(x, y, E.WATER, 0);
+    for (let y = 240; y < 260; y++) { w.setc(99, y, E.STONE, 0); w.setc(380, y, E.STONE, 0); }
+    for (let y = 247; y < 260; y++) for (let x = 100; x < 380; x++) w.setc(x, y, E.WATER, 0);
     for (let x = 110; x < 380; x += 30) w.setc(x, 246, E.SEED, 0);
-    e.advanceTicks(60 * 25);
+    e.advanceTicks(60);
     return w.cells.reduce((n, c) => n + (c === E.PLANT || c === E.BLOOM), 0);
   };
   const spring = findSpell(5, 0, 0), winter = findSpell(5, 3, 0);
   assert.ok(spring > 0 && winter > 0, 'calm spring and calm winter spells exist');
   const sp = grow(spring * L + 100), wi = grow(winter * L + 100);
-  assert.ok(sp > wi * 1.5, `spring garden ${sp} vs winter garden ${wi}`);
+  assert.ok(sp > wi * 2.5, `after one second: spring garden ${sp} vs winter garden ${wi}`);
   assert.deepEqual([...E.SEASON_LIFE.plantGate], [5, 6, 10, 18]);
 });
 
