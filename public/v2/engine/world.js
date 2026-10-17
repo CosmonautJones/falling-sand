@@ -115,7 +115,7 @@ export const SNOWFALL = Object.freeze({
   hang: 0.45,     // chance a falling flake hangs in the air this tick
   drift: 0.25,    // chance it drifts down and sideways instead of straight down
   loose: 0.2,     // sideways speed past which sliding snow ignores friction, so a slide carries on
-  packDepth: 8,   // snow buried under this many snow grains ...
+  packDepth: 8,   // snow buried under this many grains of snow or packed ice ...
   packOdds: 1800, // ... turns to ice about once in this many ticks (~30 s)
 });
 export const LIFE = Object.freeze({
@@ -451,7 +451,8 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     let vx = VX[i], vy = VY[i] + G; if (vy > MAXV) vy = MAXV;
     if (m === SNOW) {
       if (vy > SNOWFALL.maxFall) vy = SNOWFALL.maxFall;
-      if (y + 1 < H && cells[i + W] === AIR) {
+      // Flutter only while drifting down slowly: thrown, blasted or wind-whipped snow flies freely.
+      if (vy >= 0 && vx < 0.8 && vx > -0.8 && y + 1 < H && cells[i + W] === AIR) {
         const r = rf();
         if (r < SNOWFALL.hang) { VY[i] = vy; return; }
         if (r < SNOWFALL.hang + SNOWFALL.drift) {
@@ -1319,7 +1320,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       case SNOW: {
         // Deep snow packs to ice under its own weight; a winter's drift can become a small glacier.
         if (ri(SNOWFALL.packOdds) !== 0 || get(x, y + 1) === AIR) return false;
-        for (let d = 1; d <= SNOWFALL.packDepth; d++) if (get(x, y - d) !== SNOW) return false;
+        for (let d = 1; d <= SNOWFALL.packDepth; d++) { const a = get(x, y - d); if (a !== SNOW && a !== ICE) return false; }
         transmute(x, y, ICE); return true;
       }
       case CRYSTAL:

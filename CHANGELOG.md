@@ -9,9 +9,9 @@ This log covers the browser V2. The [Godot V2 project](https://github.com/Cosmon
 ### Improved
 
 - **Snow piles into soft mounds.** It used to stack into vertical towers and columns, because its friction rule refused to slide whenever the cell two below was blocked. It now slumps into low drifts.
-- **Snowfall flutters.** Flakes fall about eight times slower than sand, hang in the air for a moment, and drift sideways, and wind still carries them.
+- **Snowfall flutters.** Slowly falling flakes come down about eight times slower than sand, hang in the air for a moment, and drift sideways. Snow that is thrown, blasted or caught by a strong wind still flies freely.
 - **Avalanches.** A snow grain that slides pulls the snow above it along, so a bank pushed off a ledge pours over as a mass.
-- **Deep snow packs to ice.** Snow buried under eight or more grains of snow slowly turns to ice from the bottom up, so a winter's drift can become a small glacier. Thin layers stay snow.
+- **Deep snow packs to ice.** Snow buried under eight or more grains of snow or packed ice slowly turns to ice, so the inside of a deep drift becomes a small glacier over a few minutes. Shallow layers stay snow.
 - **Snow and ice look better.** Snow gets a bright top crust, a cool blue body and the odd glint. Ice is clearer blue with faint cracks.
 - **Glow lights caves.** Light from lava, fire and embers reaches further, especially into enclosed spaces, and open air inside caves sits in shadow. The lighting setting scales both.
 

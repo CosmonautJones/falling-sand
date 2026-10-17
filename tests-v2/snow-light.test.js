@@ -70,9 +70,9 @@ test('deep snow packs to ice from the bottom; a thin layer does not', () => {
   let iceY = 0, n = 0; deep.w.cells.forEach((c, i) => { if (c === E.ICE) { iceY += (i / 480) | 0; n++; } });
   assert.ok(iceY / n > 240, 'the ice forms at the bottom of the bank');
   const thin = world();
-  thin.box(150, 255, 199, 259, E.SNOW);
+  thin.box(150, 252, 199, 259, E.SNOW);
   thin.e.advanceTicks(60 * 60);
-  assert.equal(thin.count(E.ICE), 0, 'a thin layer stays snow');
+  assert.equal(thin.count(E.ICE), 0, 'a layer eight deep (seven above the bottom grain) stays snow');
 });
 
 test('a sliding snow grain pulls the snow above it along', () => {
@@ -84,8 +84,28 @@ test('a sliding snow grain pulls the snow above it along', () => {
   e.advanceTicks(60 * 15);
   let right = 0; w.cells.forEach((c, i) => { if (c === E.SNOW && i % 480 > 161) right++; });
   assert.ok(right > 150, `the bank avalanches off its ledge (${right} grains went over)`);
-  const src = readFileSync(new URL('../public/v2/engine/world.js', import.meta.url), 'utf8');
-  assert.match(src, /function loosenSnow\(x, y, dir\)/);
+});
+
+test('thrown and blasted snow still flies; only slow-falling flakes flutter', () => {
+  const rise = (m, vx, vy) => {
+    const { e, w } = world(); w.setc(240, 200, m, 0);
+    const s = e.inspect(); s.VX[200 * 480 + 240] = vx; s.VY[200 * 480 + 240] = vy;
+    let top = 200, far = 0;
+    for (let t = 0; t < 40; t++) { e.advanceTicks(1); w.cells.forEach((c, i) => { if (c === m) { top = Math.min(top, (i / 480) | 0); far = Math.max(far, Math.abs(i % 480 - 240)); } }); }
+    return { up: 200 - top, far };
+  };
+  const snowUp = rise(E.SNOW, 0, -5), sandUp = rise(E.SAND, 0, -5);
+  assert.ok(snowUp.up > sandUp.up * 0.7, `snow thrown upward rises ${snowUp.up}, sand ${sandUp.up}`);
+  const snowSide = rise(E.SNOW, 4, 0), sandSide = rise(E.SAND, 4, 0);
+  assert.ok(snowSide.far > sandSide.far * 0.6, `snow thrown sideways travels ${snowSide.far}, sand ${sandSide.far}`);
+  const bank = m => {
+    const { e, w, box } = world(); box(200, 240, 280, 259, m);
+    w.detonate(240, 241, 8);
+    let top = 260; for (let t = 0; t < 60; t++) { e.advanceTicks(1); w.cells.forEach((c, i) => { if (c === m) top = Math.min(top, (i / 480) | 0); }); }
+    return 240 - top;
+  };
+  const sb = bank(E.SNOW), ab = bank(E.SAND);
+  assert.ok(sb > ab * 0.6, `a blast throws snow ${sb} rows high, sand ${ab}`);
 });
 
 // ---------- the look ----------
@@ -94,7 +114,7 @@ test('the shader shades snow and ice by their real ids, and glow lights caves', 
   assert.match(frag, /if \(abs\(id - 43\.0\) < 0\.5\) \{/);
   assert.match(frag, /\} else if \(abs\(id - 12\.0\) < 0\.5\) \{/);
   assert.match(frag, /float encl = textureLod\(uFx, st, 4\.5\)\.r;/);
-  assert.match(frag, /vec3 glowL = lightF \* \(1\.5 \+ 1\.2 \* cave\)/);
+  assert.match(frag, /vec3 glowL = min\(lightF \* \(1\.5 \+ 1\.2 \* shut\)/, 'glow is capped and scaled by the light setting once');
   assert.match(frag, /col \*= 1\.0 - cave \* 0\.5;/, 'open air inside caves is shadowed');
   assert.ok(!/col = c\.rgb \* \(1\.0 - cave/.test(frag), 'solid ground is not shadowed (no halo around caves)');
 });

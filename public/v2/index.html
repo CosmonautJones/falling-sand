@@ -520,7 +520,7 @@ void main(){
   // How shut in this spot is: the solid share of a wide neighbourhood. Open air inside caves sits in
   // shadow, and glow from fire, lava and embers lights cave walls (the lighting setting scales both).
   float encl = textureLod(uFx, st, 4.5).r;
-  float cave = smoothstep(0.5, 0.92, encl) * uLight;
+  float shut = smoothstep(0.5, 0.92, encl), cave = shut * uLight;
   vec3 col;
   if (id < 0.5) {
     col = bg + max(c.rgb - vec3(14.0, 14.0, 20.0) / 255.0, 0.0) * 1.4;
@@ -539,8 +539,9 @@ void main(){
     float dyn = max(dot(nrm, normalize(vec3(eg * 30.0, 0.45))), 0.0);
     float exposed = mid(cellAt(cell - vec2(0.0, 1.0))) < 0.5 ? 1.0 : 0.0;
     float shadeAmt = L.a > 0.5 ? 0.0 : 1.0;
-    // Glow reaches further than it used to, and reaches harder into enclosed spaces, so a lava pool lights its cave.
-    vec3 glowL = lightF * (1.5 + 1.2 * cave) + textureLod(uEmis, st, 7.5).rgb * 2.5 * uLight;
+    // Glow reaches further than it used to, and harder into shut-in places, so a lava pool lights its cave.
+    // Capped so a big lava lake cannot blow grains out to white.
+    vec3 glowL = min(lightF * (1.5 + 1.2 * shut) + textureLod(uEmis, st, 7.5).rgb * 2.5, vec3(2.2));
     col = mix(col, col * (0.72 + 0.42 * key) + c.rgb * glowL * (0.5 + 1.1 * dyn) * uLight, shadeAmt * (0.4 + 0.6 * detail));
     if (L.r > 0.25) {
       if (uPx < 6.0) {
