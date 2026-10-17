@@ -677,7 +677,7 @@ const RITES = [
   ['alchemist', 'Alchemist', 'Stain twenty pages.'],
   ['complete', 'Complete Codex', 'Stain every page.'],
 ];
-const TOOLS = [['pour', 'Hold to pour'], ['spray', 'Scatter single grains'], ['line', 'Drag a line'], ['box', 'Drag a filled box'], ['heat', 'Heat wand: thaw, boil, ignite'], ['cool', 'Cool wand: freeze, quench, smother']];
+const TOOLS = [['pour', 'Hold to pour'], ['spray', 'Scatter single grains'], ['line', 'Drag a line'], ['box', 'Drag a filled box'], ['heat', 'Heat wand: thaw, boil, ignite'], ['cool', 'Cool wand: freeze, quench, smother'], ['tap', 'Tap: set a font that pours your element forever']];
 
 class Component extends DCLogic {
   constructor(props) {
@@ -1232,6 +1232,8 @@ class Component extends DCLogic {
     else if (s.walkerHand === 'heat') this.ops.push({ t: 'heat', x: at.x, y: at.y, r: 0 });
     else if (s.walkerHand === 'cool') this.ops.push({ t: 'cool', x: at.x, y: at.y, r: 0 });
   }
+  // A font set by the tap tool is already taught the brush element (air leaves it to learn).
+  tapOp(c) { return { t: 'font', x: c.x, y: c.y, m: this.state.brush }; }
   toolTick() {
     if (this.state.walkerIn && this.painting) { this.useWalkerTool(); return null; }
     if (!this.painting || !this.curCell) return null;
@@ -1389,6 +1391,7 @@ class Component extends DCLogic {
         const starting = !this.painting;
         this.painting = true;
         if (tool === 'pour') pour(c.x, c.y, px, py);
+        else if (tool === 'tap') { if (starting) this.ops.push(this.tapOp(c)); }
         else if (starting || this.state.paused) { const op = this.toolTick(); if (op) this.ops.push(op); }
       },
       probe: (px, py) => { const c = this.cellAt(px, py); this.showProbe(c.x, c.y, px, py); },
@@ -1439,6 +1442,7 @@ class Component extends DCLogic {
       if (tool === 'line' || tool === 'box') { this.gesture = 'drag'; this.dragStart = { x, y }; this.drawPreview(); return; }
       this.gesture = 'paint'; this.painting = true; this.lastCell = null;
       if (tool === 'pour') pour(x, y, e.clientX, e.clientY);
+      else if (tool === 'tap') this.ops.push(this.tapOp({ x, y }));
       else { const op = this.toolTick(); if (op) this.ops.push(op); }
     });
     on(vp, 'pointermove', e => {

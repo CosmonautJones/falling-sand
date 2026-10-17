@@ -4,6 +4,27 @@
 
 This log covers the browser V2. The [Godot V2 project](https://github.com/CosmonautJones/alembic-godot-v2) has its own builds and releases; its saves and feature set differ. Dates below are in America/New_York.
 
+## 2026-10-17 — The classic pack
+
+Nine new things to discover, borrowed in spirit from the classic falling-sand toys and earned the Alembic way, by transmutation. None of the code is copied; each is rebuilt for this engine.
+
+### New
+
+- **Napalm.** Oil beside sulfur turns to a sticky jelly. Lit, it burns where it lies for about five seconds. Water only boils against it, and a blast throws it burning.
+- **Methane.** Fungus beside water breathes swamp gas. It bubbles up through water, gathers under ceilings and flashes at a spark. A deep pocket explodes.
+- **Wax and molten wax.** Honey against ice or snow sets as wax. A flame on top of a wax column eats down into it like a candle, and the odd drip of melt runs down the side and sets again. Lava and the heat wand melt it; water and the cool wand set it at once.
+- **Concrete.** Mud beside pumice makes a heavy grey slurry that sinks through water and fills any mould. It sets to stone: in about 10 seconds on its own, or about 1.5 seconds against stone, brick or glass, so a pour cures from its walls inward.
+- **C-4.** Nitro beside wax kneads into a putty that stays where it is put. Heat alone won't set it off, but a flame, ember, lava or burning fuse will. It has more than twice the blast radius of a TNT cask, and every block of it touching the blast goes off too.
+- **Fuse.** Plant beside powder turns to a cord you can lay in lines. Lit, it burns along at about seven grains a second and sets off whatever waits at the end. Water won't save it once it is lit.
+- **Cryo.** Aether against ice falls as a freezing powder. It freezes water within two grains, turns lava to obsidian, snuffs fire and burning napalm, and spends itself as snow.
+- **The font.** Aether touching a pearl makes a font. It learns the first thing that touches it and pours it forever: a well for water, a spout for sand, upward for gases, and a steady torch for fire. It will not copy walls, voids, rifts or visitors.
+- **Tap tool.** The new seventh tool sets down a font already taught your brush element. Line the top of the vessel with taps, like the spigots in the old toys. With air as the brush, the font learns from whatever touches it first.
+
+### Notes
+
+- Every material slot is now used (64 of 64). The next new material needs the material tables widened first; this is on the roadmap.
+- Saved flasks keep fonts but not what they learned. A loaded font learns again from whatever it is touching, usually the stream it was pouring.
+
 ## 2026-10-17 — Snow that behaves like snow, glow that lights caves
 
 ### Improved
