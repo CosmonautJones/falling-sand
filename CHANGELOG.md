@@ -4,6 +4,21 @@
 
 This log covers the browser V2. The [Godot V2 project](https://github.com/CosmonautJones/alembic-godot-v2) has its own builds and releases; its saves and feature set differ. Dates below are in America/New_York.
 
+## 2026-10-17 — Snow that behaves like snow, glow that lights caves
+
+### Improved
+
+- **Snow piles into soft mounds.** It used to stack into vertical towers and columns, because its friction rule refused to slide whenever the cell two below was blocked. It now slumps into low drifts.
+- **Snowfall flutters.** Slowly falling flakes come down about eight times slower than sand, hang in the air for a moment, and drift sideways. Snow that is thrown, blasted or caught by a strong wind still flies freely.
+- **Avalanches.** A snow grain that slides pulls the snow above it along, so a bank pushed off a ledge pours over as a mass.
+- **Deep snow packs to ice.** Snow buried under eight or more grains of snow or packed ice slowly turns to ice, so the inside of a deep drift becomes a small glacier over a few minutes. Shallow layers stay snow.
+- **Snow and ice look better.** Snow gets a bright top crust, a cool blue body and the odd glint. Ice is clearer blue with faint cracks.
+- **Glow lights caves.** Light from lava, fire and embers reaches further, especially into enclosed spaces, and open air inside caves sits in shadow. The lighting setting scales both.
+
+### Fixed
+
+- **Steamy caves no longer set plants on fire.** Steam is held at heat 90 and plants used to ignite from heat at 62, so steam trapped under a cave roof cooked hanging plants into flame. In a test, 15 of 16 steamy caves caught fire before this fix and none after. Living, water-filled growth (plants, seeds, blooms, fungus) now catches from heat alone only at 100, above anything steam can reach. Dry fuel (wood, oil, powder, sulfur) still catches at 62, so wood leaning on a hot lava cup still lights. Flames, embers, lava and the heat wand light everything as before.
+
 ## 2026-10-16 — Seasons and weather warnings
 
 ### New

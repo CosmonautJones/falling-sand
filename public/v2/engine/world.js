@@ -27,7 +27,7 @@ const DISP = new Uint8Array(64);
 Object.entries({[WATER]:8,[BRINE]:6,[ACID]:6,[OIL]:3,[MERCURY]:3,[NITRO]:3,[LAVA]:1,[ICHOR]:3,[HONEY]:1}).forEach(([k,v])=>DISP[k]=v);
 // Feel tables: FRIC = chance a powder refuses a diagonal slide (>=0.5 also needs a 2-deep drop, so piles stand steeper); VISC = chance a liquid refuses to flow sideways/diagonally this tick.
 const FRIC = new Float32Array(64), VISC = new Float32Array(64);
-Object.entries({[ASH]:0.6,[MUD]:0.7,[SALT]:0.3,[SNOW]:0.5,[CHARCOAL]:0.3,[SULFUR]:0.2,[PUMICE]:0.4}).forEach(([k,v])=>FRIC[k]=v);
+Object.entries({[ASH]:0.6,[MUD]:0.7,[SALT]:0.3,[SNOW]:0.35,[CHARCOAL]:0.3,[SULFUR]:0.2,[PUMICE]:0.4}).forEach(([k,v])=>FRIC[k]=v);
 Object.entries({[LAVA]:0.8,[OIL]:0.4,[MERCURY]:0.3,[NITRO]:0.3,[ICHOR]:0.5,[HONEY]:0.9}).forEach(([k,v])=>VISC[k]=v);
 const CR = new Int16Array(64), CG = new Int16Array(64), CB = new Int16Array(64);
 COLORS.forEach((c, i) => { CR[i] = c[0]; CG[i] = c[1]; CB[i] = c[2]; });
@@ -108,6 +108,16 @@ export function gustAt(seed, stormT) {
 }
 // Creature lifetimes, as the expected number of ticks (60 per second at 1x) before the event.
 // Each tick is an independent roll, so these are averages, not timers.
+// Snow: falls slowly and flutters, slumps into mounds, slides as a mass once it lets go, and packs
+// to ice under its own weight.
+export const SNOWFALL = Object.freeze({
+  maxFall: 0.5,   // snow never falls faster than this (sand reaches 7)
+  hang: 0.45,     // chance a falling flake hangs in the air this tick
+  drift: 0.25,    // chance it drifts down and sideways instead of straight down
+  loose: 0.2,     // sideways speed past which sliding snow ignores friction, so a slide carries on
+  packDepth: 8,   // snow buried under this many grains of snow or packed ice ...
+  packOdds: 1800, // ... turns to ice about once in this many ticks (~30 s)
+});
 export const LIFE = Object.freeze({
   minnowGasp: 150,   // a minnow on land with air beside it: ~2.5 s
   miteAge: 36000,    // old age: ~10 min
@@ -218,7 +228,12 @@ const CS = 8, CW = 60, CH = 34, CNN = CW * CH;
 const G = 0.16, MAXV = 7;
 const GOLD_CARRY = 90, MUD_CARRY = -40;
 const FLAMMABLE = new Uint8Array(64); for (const m of [PLANT, WOOD, OIL, SEED, BLOOM, POWDER, FUNGUS, SULFUR]) FLAMMABLE[m] = 1;
+const WET_FUEL = new Uint8Array(64); for (const m of [PLANT, SEED, BLOOM, FUNGUS]) WET_FUEL[m] = 1;
 const BOIL = 90, IGNITE = 62;
+// Heat alone lights dry fuel (wood, oil, powder, sulfur) at IGNITE. Living, water-filled growth (plant,
+// seed, bloom, fungus) needs more than steam can ever give (steam is pinned at 90), so a steamy cave
+// wets its plants instead of lighting them. Flames, embers and lava still light anything directly.
+export const IGNITE_WET = 100;
 // Restless materials keep their 8x8 chunk awake even when nothing moved: they act on their own
 // (fire, critters, growth, decay, random drips) or ride the draft (gases, light powders).
 const ALIVE = new Uint8Array(64);
@@ -434,6 +449,18 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
   function movePowder(x, y) {
     const i = y * W + x, m = cells[i];
     let vx = VX[i], vy = VY[i] + G; if (vy > MAXV) vy = MAXV;
+    if (m === SNOW) {
+      if (vy > SNOWFALL.maxFall) vy = SNOWFALL.maxFall;
+      // Flutter only while drifting down slowly: thrown, blasted or wind-whipped snow flies freely.
+      if (vy >= 0 && vx < 0.8 && vx > -0.8 && y + 1 < H && cells[i + W] === AIR) {
+        const r = rf();
+        if (r < SNOWFALL.hang) { VY[i] = vy; return; }
+        if (r < SNOWFALL.hang + SNOWFALL.drift) {
+          const s = vx > 0.1 ? 1 : vx < -0.1 ? -1 : (ri(2) === 0 ? -1 : 1);
+          if (trySwap(x, y, x + s, y + 1)) { const j = i + W + s; VY[j] = vy; VX[j] = vx * 0.9; return; }
+        }
+      }
+    }
     if (DENS[m] < 60) { const c = windC(x, y); vx += WU[c] * 0.06; vy += WV[c] * 0.05; }
     if (vy >= 1.2 || vy < 0 || vx >= 0.8 || vx <= -0.8) {
       if (ballistic(x, y, vx, vy, false)) return;
@@ -446,12 +473,20 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       if (KIND[below] === K_LIQUID) { VY[j] = Math.min(VY[j] * 0.5, 0.5); splashUp(x, y); }
       return;
     }
-    const fr = FRIC[m];
-    if (fr > 0 && (rf() < fr || (fr >= 0.5 && !canMove(x, y + 1, x, y + 2)))) { vx *= 0.55; VY[i] = 0; VX[i] = (vx > -0.05 && vx < 0.05) ? 0 : vx; return; }
+    const fr = FRIC[m], loose = m === SNOW && (vx > SNOWFALL.loose || vx < -SNOWFALL.loose);
+    if (fr > 0 && !loose && (rf() < fr || (fr >= 0.5 && !canMove(x, y + 1, x, y + 2)))) { vx *= 0.55; VY[i] = 0; VX[i] = (vx > -0.05 && vx < 0.05) ? 0 : vx; return; }
     const f = vx > 0.2 ? 1 : vx < -0.2 ? -1 : (ri(2) === 0 ? -1 : 1);
-    if (trySwap(x, y, x + f, y + 1)) { const j = i + W + f; VY[j] = vy * 0.7; VX[j] = vx * 0.8 + f * 0.15; return; }
-    if (trySwap(x, y, x - f, y + 1)) { const j = i + W - f; VY[j] = vy * 0.7; VX[j] = vx * 0.8 - f * 0.15; return; }
+    if (trySwap(x, y, x + f, y + 1)) { const j = i + W + f; VY[j] = vy * 0.7; VX[j] = vx * 0.8 + f * 0.15; if (m === SNOW) loosenSnow(x, y, f); return; }
+    if (trySwap(x, y, x - f, y + 1)) { const j = i + W - f; VY[j] = vy * 0.7; VX[j] = vx * 0.8 - f * 0.15; if (m === SNOW) loosenSnow(x, y, -f); return; }
     VY[i] = 0; vx *= 0.55; VX[i] = (vx > -0.05 && vx < 0.05) ? 0 : vx;
+  }
+  // A snow grain that slides pulls the snow resting above it along: the start of an avalanche.
+  function loosenSnow(x, y, dir) {
+    for (const dx of [0, -dir]) {
+      const nx = x + dx, ny = y - 1; if (!inb(nx, ny)) continue;
+      const j = ny * W + nx;
+      if (cells[j] === SNOW && VX[j] * dir <= SNOWFALL.loose) { VX[j] = dir * (SNOWFALL.loose + 0.1); markDirty(nx, ny); }
+    }
   }
   function moveLiquid(x, y) {
     const i = y * W + x, m = cells[i];
@@ -1282,6 +1317,12 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
         return false;
       case RIFT: riftPull(x, y); return false;
       case SAND: if (get(x, y + 1) === BRINE) { transmute(x, y, STONE); return true; } return false;
+      case SNOW: {
+        // Deep snow packs to ice under its own weight; a winter's drift can become a small glacier.
+        if (ri(SNOWFALL.packOdds) !== 0 || get(x, y + 1) === AIR) return false;
+        for (let d = 1; d <= SNOWFALL.packDepth; d++) { const a = get(x, y - d); if (a !== SNOW && a !== ICE) return false; }
+        transmute(x, y, ICE); return true;
+      }
       case CRYSTAL:
         if (y + 1 < H && get(x, y + 1) === AIR && (hasN(x, y, WATER) || hasN(x, y, ICE)) && ri(6) === 0) transmute(x, y + 1, WATER);
         return false;
@@ -1360,7 +1401,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
           if (ALIVE[m] || KIND[m] === K_GAS || (m === BLOOM && vegetation === 'native')) lv = 1;
           if (m !== AIR && KIND[m] !== K_GAS && m !== FIRE && m !== PLASMA) sol++;
           if (m !== m0 || v !== AMBIENT[m]) quiet = 0;
-          if (!born[i] && ((m === ICE && v >= COLD.meltAt) || (m === SNOW && v >= 40) || (m === WATER && v >= BOIL) || (FLAMMABLE[m] && v >= IGNITE))) meltList[melts++] = i;
+          if (!born[i] && ((m === ICE && v >= COLD.meltAt) || (m === SNOW && v >= 40) || (m === WATER && v >= BOIL) || (FLAMMABLE[m] && v >= (WET_FUEL[m] ? IGNITE_WET : IGNITE)))) meltList[melts++] = i;
         }
       }
       HS[c] = qHS[c] = hs; SOL[c] = qSOL[c] = sol; live[c] = qLive[c] = lv; tQuiet[c] = quiet;
