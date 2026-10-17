@@ -97,7 +97,7 @@ New materials are transmuted, not handed out. Each one needs a codex page, a hin
 | 4.1 | Electricity: a spark runs through lead, gold and mercury; sets off tnt, powder and nitro; splits brine into salt and gas; crystal conducts one way | L | 2.2 |
 | 4.2 | Fulgurite: lightning or spark on sand makes glass branches | S | 4.1 |
 | 4.3 | Rust: lead plus water plus time | S | 2.2 |
-| 4.4 | Frost: aether-chilled ice that freezes water outward (shipped early as cryo, 1b.15) | S | done |
+| 4.4 | Frost: aether-chilled ice that freezes water outward — shipped early as cryo (1b.15) | S | — |
 | 4.5 | Per-world secret recipe: three ingredients chosen by the world seed, hinted by codex riddles | S | — |
 | 4.6 | Codex v2: silhouettes of undiscovered products ("? + water → ?"), progress ring, a witnessed log | M | — |
 | 4.7 | Wind and pressure: a coarse field driven by storms, blasts and a new bellows; pushes gas and light grains | L | 3.1 |

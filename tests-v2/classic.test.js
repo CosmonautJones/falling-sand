@@ -221,6 +221,20 @@ test('cryo snuffs burning napalm and fire, spending itself as snow', () => {
   run(240);
   assert.ok(count(E.NAPALM) > 60, `the cold saved most of the pool (${count(E.NAPALM)} of 150)`);
   assert.ok(count(E.CRYO) < 150, 'and spent itself doing it (cryo only ever turns to snow)');
+  const litCount = w => { let n = 0; w.s.cells.forEach((c, i) => { if (c === E.NAPALM && w.s.shades[i] >= E.CLASSIC.lit) n++; }); return n; };
+  const b = world();
+  b.box(100, 259, 120, 259, E.NAPALM); b.s.setc(110, 258, E.FIRE, 0);
+  b.run(60);
+  b.box(92, 257, 128, 258, E.CRYO);
+  b.run(30);
+  assert.ok(litCount(b) <= 3, `snuffed napalm stays out (${litCount(b)} still lit)`);
+  const c = world();
+  c.box(99, 245, 99, 259, E.GLASS); c.box(130, 245, 130, 259, E.GLASS);
+  c.box(100, 255, 129, 259, E.NAPALM); c.s.setc(115, 254, E.FIRE, 0);
+  c.run(60);
+  for (let t = 0; t < 6; t++) c.w.advanceTicks(1, [{ tick: c.w.captureState().tickIndex + 1, sequence: 0, op: { t: 'cool', x: 115, y: 257, r: 22 } }]);
+  c.run(30);
+  assert.ok(litCount(c) <= 15, `the cool wand puts it out too (${litCount(c)} still lit)`);
 });
 
 // ---------- font ----------
@@ -254,8 +268,8 @@ test('the font will not learn walls or doors, and gives gases upward and fire as
   assert.ok(c.count(E.FIRE) >= 1, 'a fire font keeps a flame: a torch');
   assert.equal(c.at(240, 259), E.FONT);
   assert.equal(c.at(240, 258), E.FIRE, 'the flame stands above it');
-  for (const m of [E.STONE, E.VOID, E.RIFT, E.FONT, E.AIR]) assert.equal(E.fontLearns(m), false, E.NAMES[m]);
-  for (const m of [E.SAND, E.WATER, E.FIRE, E.STEAM, E.MITE, E.NAPALM]) assert.equal(E.fontLearns(m), true, E.NAMES[m]);
+  for (const m of [E.STONE, E.VOID, E.RIFT, E.FONT, E.AIR, E.RELIC, E.MITE, E.MINNOW, E.VISITOR]) assert.equal(E.fontLearns(m), false, E.NAMES[m]);
+  for (const m of [E.SAND, E.WATER, E.FIRE, E.STEAM, E.NAPALM]) assert.equal(E.fontLearns(m), true, E.NAMES[m]);
 });
 
 test('aether at a pearl becomes a font; the font op validates and survives a checkpoint', () => {
@@ -278,9 +292,23 @@ test('aether at a pearl becomes a font; the font op validates and survives a che
   assert.deepEqual(e.inspect().cells, f.inspect().cells, 'a restored font pours exactly as the original');
 });
 
-test('the page offers a tap tool that sends the font op', async () => {
+test('stacked fonts keep what they each learned, and lava sets off c-4', () => {
+  const a = world();
+  a.w.applyOperation({ t: 'font', x: 240, y: 100, m: E.WATER }); a.w.applyOperation({ t: 'font', x: 240, y: 101, m: E.SAND });
+  a.s.heat[101 * E.W + 240] = 200;
+  a.run(3);
+  assert.equal(a.s.shades[100 * E.W + 240], E.WATER); assert.equal(a.s.shades[101 * E.W + 240], E.SAND);
+  const b = world();
+  b.box(200, 255, 205, 259, E.C4); b.box(206, 255, 208, 259, E.LAVA);
+  const ev = []; for (let t = 0; t < 10; t++) ev.push(...b.run(1));
+  assert.ok(ev.some(e => e.t === 'blast'), 'lava touching c-4 sets it off');
+});
+
+test('the page offers a tap tool that sends the font op, only once the font is known', async () => {
   const { readFileSync } = await import('node:fs');
   const html = readFileSync(new URL('../public/v2/index.html', import.meta.url), 'utf8');
   assert.match(html, /\['tap', '[^']+'\]/);
   assert.match(html, /t: 'font', x: [^,]+, y: [^,]+, m: /);
+  assert.match(html, /tapOp\(c\) \{ return this\.known\.has\(this\.M\.FONT\)/);
+  assert.match(html, /k !== 'tap' \|\| this\.known\.has\(this\.M\.FONT\)/);
 });

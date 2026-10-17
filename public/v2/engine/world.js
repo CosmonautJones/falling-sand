@@ -277,8 +277,9 @@ export const IGNITE_WET = 100;
 const ALIVE = new Uint8Array(64);
 for (const m of [FIRE, EMBER, LAVA, PLANT, MOSS, MUD, SMOKE, STEAM, CLOUD, PLASMA, MITE, MINNOW, VISITOR, ACID, VOID, RIFT, ICE, CRYSTAL, AZOTH, AETHER, ICHOR, ASH,
   SNOW, SULFUR, FUNGUS, SPORE, FIREFLY, CORAL, BEETLE, NEWT, MOLTEN_WAX, CONCRETE, CRYO, FONT]) ALIVE[m] = 1;
-// A font learns anything that moves, and fire (a torch). Walls, doors and visitors it will not copy.
-export const fontLearns = m => m > 0 && m < 64 && m !== FONT && m !== VOID && m !== RIFT && m !== VISITOR && m !== RELIC && (KIND[m] !== 0 || m === FIRE);
+// A font learns any powder, liquid or gas, and fire (a torch). Walls, doors and creatures it will not copy.
+export const fontLearns = m => m > 0 && m < 64 && m !== FONT && m !== VOID && m !== RIFT && m !== RELIC &&
+  m !== MITE && m !== MINNOW && m !== VISITOR && m !== FIREFLY && m !== BEETLE && m !== NEWT && (KIND[m] !== 0 || m === FIRE);
 const CC = new Uint16Array(CNN);
 for (let cy = 0; cy < CH; cy++) for (let cx = 0; cx < CW; cx++) CC[cy * CW + cx] = 8 * Math.max(1, Math.min(8, H - cy * 8));
 
@@ -741,7 +742,8 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
   }
   function light(x, y) {
     const i = y * W + x;
-    if (shades[i] < CLASSIC.lit) { shades[i] = cells[i] === NAPALM ? 110 : 100; markDirty(x, y); }
+    // Newly lit grains wait a tick before spreading, so a flame front walks instead of crossing a pool in one scan.
+    if (shades[i] < CLASSIC.lit) { shades[i] = cells[i] === NAPALM ? 110 : 100; born[i] = 1; markDirty(x, y); }
   }
   function burnNapalm(x, y) {
     const i = y * W + x;
@@ -777,7 +779,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       else if (n === FIRE) { transmute(nx, ny, AIR); spent = true; }
       else if (n === EMBER) { transmute(nx, ny, ASH); spent = true; }
       else if (n === STEAM) { transmute(nx, ny, WATER); spent = true; }
-      else if ((n === NAPALM || n === FUSE) && shades[ni] >= CLASSIC.lit) { shades[ni] = 0; spent = true; }
+      else if ((n === NAPALM || n === FUSE) && shades[ni] >= CLASSIC.lit) { shades[ni] = 0; heat[ni] = 0; spent = true; }
       else if (heat[ni] > 0) heat[ni] = heat[ni] > 30 ? heat[ni] - 30 : 0;
     }
     // The cold reaches a little further than touch: water within two cells freezes too, so a dusting skins a pond.
@@ -839,6 +841,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       if (n === SALT) transmute(nx, ny, PUMICE);
       if (n === AMBER) transmute(nx, ny, HONEY);
       if (n === WAX) transmute(nx, ny, MOLTEN_WAX);
+      if (n === C4) { detonate(nx, ny, CLASSIC.c4Radius); return true; }
       if (n === PLANT || n === WOOD || n === SEED || n === OIL || n === BLOOM) transmute(nx, ny, FIRE);
     }
     return false;
@@ -1518,7 +1521,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
         const i = row + x;
         if (born[i]) continue;
         const m = cells[i];
-        if (SOURCE[m] > 0 || cells[i - W] !== m) continue;
+        if (SOURCE[m] > 0 || cells[i - W] !== m || m === FONT) continue;
         if (heat[i] < heat[i - W] + 24) continue;
         swap(x, y, x, y - 1); born[i - W] = 1;
       }
@@ -1800,10 +1803,10 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
         else if (m === STEAM && ri(3) === 0) transmute(x, y, WATER);
         else if (m === CLOUD && ri(8) === 0) transmute(x, y, WATER);
         else if (m === LAVA && ri(4) === 0) transmute(x, y, OBSIDIAN);
-        else if (m === FIRE && ri(2) === 0) transmute(x, y, SMOKE);
+        else if (m === FIRE && (hasN(x, y, NAPALM) || ri(2) === 0)) transmute(x, y, SMOKE);
         else if (m === EMBER && ri(3) === 0) transmute(x, y, ASH);
         else if (m === MOLTEN_WAX && ri(3) === 0) transmute(x, y, WAX);
-        else if ((m === NAPALM || m === FUSE) && shades[i] >= CLASSIC.lit && ri(3) === 0) shades[i] = 0;
+        else if ((m === NAPALM || m === FUSE) && shades[i] >= CLASSIC.lit) { shades[i] = 0; heat[i] = Math.min(heat[i], IGNITE - 1); }
       }
     }
   }
