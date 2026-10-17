@@ -169,7 +169,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
         <summary>More <span class="current-tool">· {{ toolLabel }}</span></summary>
         <div class="more-panel" data-scroll>
       <div style="display:flex;">
-        <sc-for list="{{ tools }}" as="t" hint-placeholder-count="6">
+        <sc-for list="{{ tools }}" as="t" hint-placeholder-count="7">
           <button onClick="{{ t.onClick }}" title="{{ t.title }}" style="background:{{ t.bg }}; color:{{ t.color }}; border:1px solid {{ t.border }}; margin-left:-1px; padding:6px 10px; font-size:13px; cursor:pointer; position:relative; z-index:{{ t.z }};">{{ t.label }}</button>
         </sc-for>
       </div>
@@ -250,7 +250,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
       <div class="sheet-body" data-scroll>
         <div class="sheet-label">Tool</div>
         <div class="seg seg-3">
-          <sc-for list="{{ tools }}" as="t" hint-placeholder-count="6">
+          <sc-for list="{{ tools }}" as="t" hint-placeholder-count="7">
             <button onClick="{{ t.onClick }}" title="{{ t.title }}" style="background:{{ t.bg }}; color:{{ t.color }}; border-color:{{ t.border }};">{{ t.label }}</button>
           </sc-for>
         </div>
@@ -677,7 +677,7 @@ const RITES = [
   ['alchemist', 'Alchemist', 'Stain twenty pages.'],
   ['complete', 'Complete Codex', 'Stain every page.'],
 ];
-const TOOLS = [['pour', 'Hold to pour'], ['spray', 'Scatter single grains'], ['line', 'Drag a line'], ['box', 'Drag a filled box'], ['heat', 'Heat wand: thaw, boil, ignite'], ['cool', 'Cool wand: freeze, quench, smother']];
+const TOOLS = [['pour', 'Hold to pour'], ['spray', 'Scatter single grains'], ['line', 'Drag a line'], ['box', 'Drag a filled box'], ['heat', 'Heat wand: thaw, boil, ignite'], ['cool', 'Cool wand: freeze, quench, smother'], ['tap', 'Tap: set a font that pours your element forever']];
 
 class Component extends DCLogic {
   constructor(props) {
@@ -1232,6 +1232,9 @@ class Component extends DCLogic {
     else if (s.walkerHand === 'heat') this.ops.push({ t: 'heat', x: at.x, y: at.y, r: 0 });
     else if (s.walkerHand === 'cool') this.ops.push({ t: 'cool', x: at.x, y: at.y, r: 0 });
   }
+  // A font set by the tap tool is already taught the brush element (air leaves it to learn).
+  // The tap is only offered once the font has been transmuted: new things are made, not handed out.
+  tapOp(c) { return this.known.has(this.M.FONT) ? { t: 'font', x: c.x, y: c.y, m: this.state.brush } : null; }
   toolTick() {
     if (this.state.walkerIn && this.painting) { this.useWalkerTool(); return null; }
     if (!this.painting || !this.curCell) return null;
@@ -1252,7 +1255,7 @@ class Component extends DCLogic {
   cellToPx(c) { const v = this.view; return { x: ((c.x + 0.5) / this.M.W) * this.vw * v.zoom + v.panX, y: ((c.y + 0.5) / this.M.H) * this.vh * v.zoom + v.panY }; }
   updateReticleSize() {
     const el = this.retRef.current; if (!el || !this.vw || !this.M) return;
-    const s = this.state, r = s.tool === 'spray' ? Math.max(2, s.radius * 1.6) : s.radius;
+    const s = this.state, r = s.tool === 'spray' ? Math.max(2, s.radius * 1.6) : s.tool === 'tap' ? 0 : s.radius;
     const d = Math.max(8, (2 * r + 1) * (this.vw / this.M.W) * this.view.zoom);
     el.style.width = d + 'px'; el.style.height = d + 'px';
     el.style.borderStyle = s.tool === 'spray' ? 'dashed' : 'solid';
@@ -1389,6 +1392,7 @@ class Component extends DCLogic {
         const starting = !this.painting;
         this.painting = true;
         if (tool === 'pour') pour(c.x, c.y, px, py);
+        else if (tool === 'tap') { const op = starting && this.tapOp(c); if (op) this.ops.push(op); }
         else if (starting || this.state.paused) { const op = this.toolTick(); if (op) this.ops.push(op); }
       },
       probe: (px, py) => { const c = this.cellAt(px, py); this.showProbe(c.x, c.y, px, py); },
@@ -1439,6 +1443,7 @@ class Component extends DCLogic {
       if (tool === 'line' || tool === 'box') { this.gesture = 'drag'; this.dragStart = { x, y }; this.drawPreview(); return; }
       this.gesture = 'paint'; this.painting = true; this.lastCell = null;
       if (tool === 'pour') pour(x, y, e.clientX, e.clientY);
+      else if (tool === 'tap') { const op = this.tapOp({ x, y }); if (op) this.ops.push(op); }
       else { const op = this.toolTick(); if (op) this.ops.push(op); }
     });
     on(vp, 'pointermove', e => {
@@ -1811,7 +1816,7 @@ class Component extends DCLogic {
       soundLabel: s.sound ? 'sound on' : 'sound off', soundColor: s.sound ? '#f0e2c4' : '#7d6c55',
       clocks: CLOCKS.map(v => ({ label: CLOCK_LABEL[v], bg: s.speed === v ? '#2a2119' : '#1c1612', color: s.speed === v ? '#e8c97a' : '#cbb89a', onClick: this.hnd('spd' + v, () => this.setSpeed(v)) })),
       onStep: this.hnd('step1', () => this.stepTicks(1)), stepTitle: 'Step one tick (.), or ten (Shift+.). Pauses first.',
-      tools: TOOLS.map(([k, title]) => ({ label: k, title, bg: s.tool === k ? '#2a2119' : '#1c1612', color: s.tool === k ? '#e8c97a' : '#cbb89a', border: s.tool === k ? '#cbb89a' : '#3a3128', z: s.tool === k ? 1 : 0, onClick: this.hnd('tool' + k, () => this.selectTool(k)) })),
+      tools: TOOLS.filter(([k]) => k !== 'tap' || this.known.has(this.M.FONT)).map(([k, title]) => ({ label: k, title, bg: s.tool === k ? '#2a2119' : '#1c1612', color: s.tool === k ? '#e8c97a' : '#cbb89a', border: s.tool === k ? '#cbb89a' : '#3a3128', z: s.tool === k ? 1 : 0, onClick: this.hnd('tool' + k, () => this.selectTool(k)) })),
       toastOpacity: s.toastOn ? 1 : 0, toastY: s.toastOn ? 0 : -8,
       toastLabel: t ? t.label : '', toastText: t ? t.text : '', toastSwatch: t ? t.swatch : 'transparent', toastBorder: t && t.rite ? '#e8c97a' : '#c49a4a', toastRot: t && t.rite ? 45 : 0,
       rites: RITES.map(([k, name, desc]) => { const on = this.unlocked.has(k); return { name: on ? name : name, desc, color: on ? '#f0e2c4' : '#6f6150', mark: on ? '#e8c97a' : '#4a3e30', fill: on ? '#c49a4a' : 'transparent', glow: on ? '0 0 10px rgba(232,201,122,.5)' : 'none' }; }),

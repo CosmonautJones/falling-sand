@@ -8,33 +8,41 @@ import { createWalkerState, stepWalker, dropWalkerIn, stepWalkerOut } from './wa
 
 export const W = 480, H = 270, N = W * H;
 export const AIR=0,SAND=1,WATER=2,STONE=3,FIRE=4,PLANT=5,OIL=6,SEED=7,ASH=8,MUD=9,GLASS=10,MOSS=11,ICE=12,WOOD=13,SALT=14,STEAM=15,LAVA=16,EMBER=17,OBSIDIAN=18,BRINE=19,CRYSTAL=20,ACID=21,LEAD=22,MERCURY=23,GOLD=24,AETHER=25,AZOTH=26,VOID=27,POWDER=28,BRICK=29,RIFT=30,TNT=31,NITRO=32,MITE=33,MINNOW=34,BLOOM=35,PEARL=36,SMOKE=37,PLASMA=38,CLOUD=39,VISITOR=40,ICHOR=41,RELIC=42,
-  SNOW=43,CHARCOAL=44,SULFUR=45,HONEY=46,AMBER=47,FUNGUS=48,SPORE=49,FIREFLY=50,CORAL=51,PUMICE=52,BEETLE=53,NEWT=54;
-export const COUNT = 55;
+  SNOW=43,CHARCOAL=44,SULFUR=45,HONEY=46,AMBER=47,FUNGUS=48,SPORE=49,FIREFLY=50,CORAL=51,PUMICE=52,BEETLE=53,NEWT=54,
+  NAPALM=55,METHANE=56,WAX=57,MOLTEN_WAX=58,CONCRETE=59,C4=60,FUSE=61,CRYO=62,FONT=63;
+// Material tables are sized 64, so 63 is the last id: a new material needs the tables widened first.
+export const COUNT = 64;
 
-export const NAMES = ['air','sand','water','stone','fire','plant','oil','seed','ash','mud','glass','moss','ice','wood','salt','steam','lava','ember','obsidian','brine','crystal','acid','lead','mercury','gold','aether','azoth','void','powder','brick','rift','tnt','nitro','mite','minnow','bloom','pearl','smoke','plasma','cloud','visitor','ichor','relic','snow','charcoal','sulfur','honey','amber','fungus','spore','firefly','coral','pumice','beetle','newt'];
+export const NAMES = ['air','sand','water','stone','fire','plant','oil','seed','ash','mud','glass','moss','ice','wood','salt','steam','lava','ember','obsidian','brine','crystal','acid','lead','mercury','gold','aether','azoth','void','powder','brick','rift','tnt','nitro','mite','minnow','bloom','pearl','smoke','plasma','cloud','visitor','ichor','relic','snow','charcoal','sulfur','honey','amber','fungus','spore','firefly','coral','pumice','beetle','newt','napalm','methane','wax','molten wax','concrete','c-4','fuse','cryo','font'];
 export const COLORS = [[14,14,20],[214,176,96],[58,122,214],[110,110,118],[255,84,28],[42,158,68],[138,72,24],[186,142,48],[168,168,172],[92,64,40],[148,206,196],[28,92,48],[176,214,232],[118,78,42],[236,232,224],[198,206,214],[255,106,12],[220,64,32],[28,24,36],[36,148,168],[186,154,220],[156,214,48],[86,90,98],[176,186,196],[232,178,48],[120,220,255],[218,88,168],[8,0,18],[48,42,38],[176,92,64],[92,44,148],[196,52,44],[72,160,64],[196,152,78],[74,186,198],[236,64,112],[210,198,178],[74,68,66],[214,232,255],[150,156,172],[120,255,150],[96,236,128],[64,196,186],
-  [232,240,250],[46,40,40],[226,204,72],[232,158,40],[214,126,34],[178,150,192],[206,196,150],[222,244,120],[238,118,108],[184,174,162],[88,118,72],[62,148,118]];
+  [232,240,250],[46,40,40],[226,204,72],[232,158,40],[214,126,34],[178,150,192],[206,196,150],[222,244,120],[238,118,108],[184,174,162],[88,118,72],[62,148,118],
+  [176,70,36],[150,190,120],[236,222,180],[248,214,150],[150,146,138],[184,176,132],[120,84,52],[170,230,255],[214,190,255]];
 const DENS = Uint8Array.from([10,160,100,255,3,40,70,130,45,170,255,30,255,255,150,2,205,18,255,118,255,108,195,188,220,1,255,40,85,255,255,255,95,52,88,35,255,4,3,0,50,104,230,
-  40,150,140,120,255,255,5,3,255,60,50,86]);
+  40,150,140,120,255,255,5,3,255,60,50,86,
+  90,2,255,85,180,255,255,60,255]);
 const MOV = Uint8Array.from([1,1,1,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,1,0,1,1,1,1,1,0,1,1,0,0,0,1,1,1,0,0,1,0,1,1,1,1,
-  1,1,1,1,0,0,1,1,0,1,1,1]);
+  1,1,1,1,0,0,1,1,0,1,1,1,
+  1,1,0,1,1,0,0,1,0]);
 const K_STATIC=0, K_POWDER=1, K_LIQUID=2, K_GAS=3;
 export const KIND = Uint8Array.from([0,1,2,0,0,0,2,1,1,1,0,0,0,0,1,3,2,1,0,2,0,2,1,2,1,3,0,1,1,0,0,0,2,1,1,0,0,3,0,3,0,2,1,
-  1,1,1,2,0,0,3,0,0,1,1,1]);
+  1,1,1,2,0,0,3,0,0,1,1,1,
+  2,3,0,2,2,0,0,1,0]);
 const SHADE = Uint8Array.from([0,18,14,5,22,12,16,14,12,14,10,10,10,12,16,18,20,18,6,12,14,14,8,16,18,20,22,4,10,8,16,10,14,16,14,12,10,10,10,14,10,12,10,
-  6,6,10,10,12,12,10,8,14,12,14,12]);
+  6,6,10,10,12,12,10,8,14,12,14,12,
+  10,8,6,6,10,6,8,12,0]);
 const DISP = new Uint8Array(64);
-Object.entries({[WATER]:8,[BRINE]:6,[ACID]:6,[OIL]:3,[MERCURY]:3,[NITRO]:3,[LAVA]:1,[ICHOR]:3,[HONEY]:1}).forEach(([k,v])=>DISP[k]=v);
+Object.entries({[WATER]:8,[BRINE]:6,[ACID]:6,[OIL]:3,[MERCURY]:3,[NITRO]:3,[LAVA]:1,[ICHOR]:3,[HONEY]:1,[NAPALM]:2,[MOLTEN_WAX]:2,[CONCRETE]:1}).forEach(([k,v])=>DISP[k]=v);
 // Feel tables: FRIC = chance a powder refuses a diagonal slide (>=0.5 also needs a 2-deep drop, so piles stand steeper); VISC = chance a liquid refuses to flow sideways/diagonally this tick.
 const FRIC = new Float32Array(64), VISC = new Float32Array(64);
-Object.entries({[ASH]:0.6,[MUD]:0.7,[SALT]:0.3,[SNOW]:0.35,[CHARCOAL]:0.3,[SULFUR]:0.2,[PUMICE]:0.4}).forEach(([k,v])=>FRIC[k]=v);
-Object.entries({[LAVA]:0.8,[OIL]:0.4,[MERCURY]:0.3,[NITRO]:0.3,[ICHOR]:0.5,[HONEY]:0.9}).forEach(([k,v])=>VISC[k]=v);
+Object.entries({[ASH]:0.6,[MUD]:0.7,[SALT]:0.3,[SNOW]:0.35,[CHARCOAL]:0.3,[SULFUR]:0.2,[PUMICE]:0.4,[CRYO]:0.1}).forEach(([k,v])=>FRIC[k]=v);
+Object.entries({[LAVA]:0.8,[OIL]:0.4,[MERCURY]:0.3,[NITRO]:0.3,[ICHOR]:0.5,[HONEY]:0.9,[NAPALM]:0.85,[MOLTEN_WAX]:0.6,[CONCRETE]:0.85}).forEach(([k,v])=>VISC[k]=v);
 const CR = new Int16Array(64), CG = new Int16Array(64), CB = new Int16Array(64);
 COLORS.forEach((c, i) => { CR[i] = c[0]; CG[i] = c[1]; CB[i] = c[2]; });
 
 export const STARTER = [SAND,WATER,STONE,SEED,OIL,FIRE,AIR,ICE,WOOD,SALT,LAVA,ACID,LEAD,TNT];
 export const TRANSMUTED = [PLANT,ASH,MUD,GLASS,MOSS,STEAM,SMOKE,EMBER,OBSIDIAN,BRINE,CRYSTAL,MERCURY,GOLD,AETHER,AZOTH,VOID,POWDER,BRICK,RIFT,NITRO,MITE,MINNOW,BLOOM,PEARL,CLOUD,PLASMA,VISITOR,ICHOR,RELIC,
-  SNOW,CHARCOAL,SULFUR,HONEY,AMBER,FUNGUS,SPORE,FIREFLY,CORAL,PUMICE,BEETLE,NEWT];
+  SNOW,CHARCOAL,SULFUR,HONEY,AMBER,FUNGUS,SPORE,FIREFLY,CORAL,PUMICE,BEETLE,NEWT,
+  NAPALM,METHANE,WAX,MOLTEN_WAX,CONCRETE,C4,FUSE,CRYO,FONT];
 export const BRUSH_SIZES = [1, 3, 6, 12, 22];
 
 // The cold side of the vessel. Heat values are the engine's 0-255 scale; still water rests at 34.
@@ -133,24 +141,42 @@ export const ECOLOGY = Object.freeze({
   mudHatch: 240,     // by food, one mud grain can become one mite (~4 s)
   miteCrowd: 3,     // births stop with this many mites in the eight neighboring cells
 });
+// The classic pack: napalm, methane, wax, concrete, c-4, fuse, cryo and the font.
+// Napalm and fuse keep a lit flag in their shade (LIT and above); a font keeps the id it learned there.
+export const CLASSIC = Object.freeze({
+  lit: 64,              // shade at or above this means burning (napalm, fuse)
+  napalmBurn: 6,        // a lit napalm grain loses one step of its 46 every N ticks on average (~4.6 s)
+  fuseOdds: 8,          // a lit fuse grain burns through in 1 in N per tick (~7 grains a second)
+  waxMelt: 170,         // wax melts at this heat: lava or the heat wand, not the candle flame beside it
+  waxSetBelow: 32,      // molten wax below this heat, away from flame, sets again ...
+  waxSetOdds: 60,       // ... about once in this many ticks
+  waxSoften: 40,        // a flame resting on wax eats down into it 1 in N per tick: a candle burns down, not through
+  waxDrip: 300,         // a flame touching wax melts a drip of it 1 in N per tick
+  waxBurn: 12,          // molten wax touching flame burns 1 in N
+  concreteSet: 600,     // resting concrete sets to stone in ~10 s ...
+  concreteSetFast: 90,  // ... or ~1.5 s against stone, brick or glass, so a pour cures from its mould inward
+  c4Radius: 9,
+  methanePocket: 5,     // methane with this many methane neighbours goes off instead of flashing
+  methaneFade: 3000,    // methane thins away about once in this many ticks
+});
 const AMBIENT = new Uint8Array(256).fill(18), CONDUCT = new Uint8Array(256).fill(4), SOURCE = new Uint8Array(256), SEEDHEAT = new Uint8Array(256);
-Object.entries({[ICE]:COLD.iceRest,[WATER]:34,[BRINE]:32,[STEAM]:88,[FIRE]:220,[LAVA]:255,[EMBER]:200,[OIL]:22,[ACID]:28,[MERCURY]:24,[NITRO]:26,[AETHER]:40,[OBSIDIAN]:14,[GLASS]:16,[CRYSTAL]:12,[SMOKE]:40,[CLOUD]:16,[PLASMA]:255,[SNOW]:6}).forEach(([k,v])=>AMBIENT[k]=v);
-Object.entries({[AIR]:7,[STEAM]:7,[AETHER]:7,[SMOKE]:7,[CLOUD]:7,[WATER]:6,[BRINE]:6,[ACID]:6,[MERCURY]:8,[GOLD]:8,[LEAD]:8,[RELIC]:8,[ICE]:5,[GLASS]:2,[WOOD]:2,[PLANT]:3,[BLOOM]:3,[MOSS]:3,[OBSIDIAN]:1,[FIRE]:6,[LAVA]:6,[EMBER]:6,[PLASMA]:6}).forEach(([k,v])=>CONDUCT[k]=v);
+Object.entries({[ICE]:COLD.iceRest,[WATER]:34,[BRINE]:32,[STEAM]:88,[FIRE]:220,[LAVA]:255,[EMBER]:200,[OIL]:22,[ACID]:28,[MERCURY]:24,[NITRO]:26,[AETHER]:40,[OBSIDIAN]:14,[GLASS]:16,[CRYSTAL]:12,[SMOKE]:40,[CLOUD]:16,[PLASMA]:255,[SNOW]:6,[CRYO]:0}).forEach(([k,v])=>AMBIENT[k]=v);
+Object.entries({[AIR]:7,[STEAM]:7,[AETHER]:7,[SMOKE]:7,[CLOUD]:7,[WATER]:6,[BRINE]:6,[ACID]:6,[MERCURY]:8,[GOLD]:8,[LEAD]:8,[RELIC]:8,[ICE]:5,[GLASS]:2,[WOOD]:2,[PLANT]:3,[BLOOM]:3,[MOSS]:3,[OBSIDIAN]:1,[FIRE]:6,[LAVA]:6,[EMBER]:6,[PLASMA]:6,[CRYO]:8,[WAX]:2}).forEach(([k,v])=>CONDUCT[k]=v);
 Object.entries({[FIRE]:220,[LAVA]:255,[EMBER]:200,[STEAM]:90,[PLASMA]:255}).forEach(([k,v])=>SOURCE[k]=v);
 for (let i = 0; i < 256; i++) SEEDHEAT[i] = SOURCE[i] > 0 ? SOURCE[i] : AMBIENT[i];
 
 // Renderer LUT: R liquid (255 clear, 128 opaque), G bevel (255 powder, 128 solid), B glassy, A gas.
 export const LUT = new Uint8Array(64 * 4);
 for (const m of [WATER, BRINE, ACID, ICHOR]) LUT[m*4] = 255;
-for (const m of [OIL, LAVA, MERCURY, NITRO, HONEY]) LUT[m*4] = 128;
-for (const m of [SAND, SEED, ASH, MUD, SALT, EMBER, LEAD, GOLD, POWDER, MITE, RELIC, SNOW, CHARCOAL, SULFUR, PUMICE, BEETLE, NEWT]) LUT[m*4+1] = 255;
-for (const m of [STONE, PLANT, MOSS, WOOD, OBSIDIAN, BRICK, TNT, BLOOM, PEARL, FUNGUS, CORAL]) LUT[m*4+1] = 128;
+for (const m of [OIL, LAVA, MERCURY, NITRO, HONEY, NAPALM, MOLTEN_WAX, CONCRETE]) LUT[m*4] = 128;
+for (const m of [SAND, SEED, ASH, MUD, SALT, EMBER, LEAD, GOLD, POWDER, MITE, RELIC, SNOW, CHARCOAL, SULFUR, PUMICE, BEETLE, NEWT, CRYO]) LUT[m*4+1] = 255;
+for (const m of [STONE, PLANT, MOSS, WOOD, OBSIDIAN, BRICK, TNT, BLOOM, PEARL, FUNGUS, CORAL, WAX, C4, FUSE, FONT]) LUT[m*4+1] = 128;
 for (const m of [GLASS, CRYSTAL, ICE, AZOTH, AMBER]) LUT[m*4+2] = 255;
-for (const m of [STEAM, AETHER, SMOKE, CLOUD, SPORE]) LUT[m*4+3] = 255;
+for (const m of [STEAM, AETHER, SMOKE, CLOUD, SPORE, METHANE]) LUT[m*4+3] = 255;
 const EMF = new Uint8Array(64);
 Object.entries({[FIRE]:255,[LAVA]:230,[EMBER]:230,[GOLD]:40,[AETHER]:140,[AZOTH]:150,[RIFT]:170,[BLOOM]:50,[CRYSTAL]:30,[ACID]:25,[STEAM]:12,[MINNOW]:20,[PEARL]:25,[MERCURY]:15,[PLASMA]:255,[VISITOR]:170,[ICHOR]:110,[RELIC]:110,
-  [FIREFLY]:200,[AMBER]:50,[FUNGUS]:22,[CORAL]:25,[SULFUR]:10}).forEach(([k,v])=>EMF[k]=v);
-const NOAO = new Uint8Array(64); for (const m of [FIRE,GLASS,CRYSTAL,STEAM,AETHER,AZOTH,VOID,RIFT,PLASMA,SMOKE,CLOUD,SPORE,FIREFLY,AMBER]) NOAO[m] = 1;
+  [FIREFLY]:200,[AMBER]:50,[FUNGUS]:22,[CORAL]:25,[SULFUR]:10,[CRYO]:30,[FONT]:60}).forEach(([k,v])=>EMF[k]=v);
+const NOAO = new Uint8Array(64); for (const m of [FIRE,GLASS,CRYSTAL,STEAM,AETHER,AZOTH,VOID,RIFT,PLASMA,SMOKE,CLOUD,SPORE,FIREFLY,AMBER,METHANE]) NOAO[m] = 1;
 
 export const PAGES = [
   {w:'The first emptiness.', l:'Grains fall through it. The vessel is a box of this, and every other reagent is an argument against it.'},
@@ -208,6 +234,15 @@ export const PAGES = [
   {w:'Lava frothed over salt.', l:'Light enough to float on water: a raft for mites. Acid grinds it down to sand.'},
   {w:'A patient shell on the dune.', l:'Walks sand and fungus, grazing the rot. Heat curls it still; fire ends it in ash. A poke sends it rolling.'},
   {w:'A bright tail in the shallows.', l:'Swims like a minnow but keeps to mud and shade. Flees lava and flame. Hatches where water meets mud.'},
+  {w:'Oil drank sulfur and turned to jelly.', l:'Thick and clinging. Once lit it burns where it lies for seconds, and water only boils against it. A blast throws it burning.'},
+  {w:'Rot breathes under water.', l:'Fungus beside water exhales it. It bubbles up, gathers under ceilings, and flashes at a spark. A deep pocket goes off.'},
+  {w:'Honey that met the cold.', l:'It stands. Heat softens it to a melt; a flame on top of a column keeps eating it, like a candle. Kneaded into nitro it makes c-4.'},
+  {w:'Wax that remembers the flame.', l:'Runs a little and sets again as it cools. Water or the cool wand sets it at once. A flame touching it feeds on it.'},
+  {w:'Mud that met pumice. Rome remembers.', l:'A heavy slurry that sinks through water and pours into any mould. It sets as stone, faster against stone, brick and glass.'},
+  {w:'Nitro kneaded into wax.', l:'It stays where it is put, and heat alone will not wake it. Fire, ember, lava or a burning fuse sets it off, and every block beside it answers.'},
+  {w:'Plant fibre soaked in powder.', l:'Lay it in lines. A spark walks it at a steady pace and sets off whatever waits at the end. Water does not save it once lit.'},
+  {w:'Aether touched ice and fell as frost.', l:'A cold powder. It freezes water to ice, quenches lava to obsidian and snuffs fire, spending itself as snow.'},
+  {w:'Aether found a pearl and would not stop.', l:'It learns the first thing that touches it and gives it back forever: a well, a spout, a torch. The tap tool sets one down already taught.'},
 ];
 export const HINTS = {
   [PLANT]:'A promise, given water.', [ASH]:'What fire keeps when it starves.', [MUD]:'Grey, slaked.', [GLASS]:'Sand that saw fire.',
@@ -221,13 +256,16 @@ export const HINTS = {
   [SNOW]:'A cloud against ice.', [CHARCOAL]:'Bury an ember.', [SULFUR]:'Acid on what fire left.', [HONEY]:'Mites at a bloom.',
   [AMBER]:'Burn something sweet.', [FUNGUS]:'Wood, mud, patience.', [SPORE]:'Wait by the fungus.', [FIREFLY]:'Aether meets a bloom.',
   [CORAL]:'Moss in brine.', [PUMICE]:'Lava over salt.', [BEETLE]:'Fungus beside the garden.', [NEWT]:'Water against mud.',
+  [NAPALM]:'Oil and the yellow bone.', [METHANE]:'Rot, under water.', [WAX]:'Honey, chilled.', [MOLTEN_WAX]:'Warm the wax.',
+  [CONCRETE]:'Mud beside pumice.', [C4]:'Nitro kneaded into wax.', [FUSE]:'Powder soaks a plant.', [CRYO]:'Aether against ice.',
+  [FONT]:'Aether at a pearl.',
 };
 
 const DX = [-1,0,1,-1,1,-1,0,1], DY = [-1,-1,-1,0,0,1,1,1];
 const CS = 8, CW = 60, CH = 34, CNN = CW * CH;
 const G = 0.16, MAXV = 7;
 const GOLD_CARRY = 90, MUD_CARRY = -40;
-const FLAMMABLE = new Uint8Array(64); for (const m of [PLANT, WOOD, OIL, SEED, BLOOM, POWDER, FUNGUS, SULFUR]) FLAMMABLE[m] = 1;
+const FLAMMABLE = new Uint8Array(64); for (const m of [PLANT, WOOD, OIL, SEED, BLOOM, POWDER, FUNGUS, SULFUR, METHANE]) FLAMMABLE[m] = 1;
 const WET_FUEL = new Uint8Array(64); for (const m of [PLANT, SEED, BLOOM, FUNGUS]) WET_FUEL[m] = 1;
 const BOIL = 90, IGNITE = 62;
 // Heat alone lights dry fuel (wood, oil, powder, sulfur) at IGNITE. Living, water-filled growth (plant,
@@ -238,7 +276,10 @@ export const IGNITE_WET = 100;
 // (fire, critters, growth, decay, random drips) or ride the draft (gases, light powders).
 const ALIVE = new Uint8Array(64);
 for (const m of [FIRE, EMBER, LAVA, PLANT, MOSS, MUD, SMOKE, STEAM, CLOUD, PLASMA, MITE, MINNOW, VISITOR, ACID, VOID, RIFT, ICE, CRYSTAL, AZOTH, AETHER, ICHOR, ASH,
-  SNOW, SULFUR, FUNGUS, SPORE, FIREFLY, CORAL, BEETLE, NEWT]) ALIVE[m] = 1;
+  SNOW, SULFUR, FUNGUS, SPORE, FIREFLY, CORAL, BEETLE, NEWT, MOLTEN_WAX, CONCRETE, CRYO, FONT]) ALIVE[m] = 1;
+// A font learns any powder, liquid or gas, and fire (a torch). Walls, doors and creatures it will not copy.
+export const fontLearns = m => m > 0 && m < 64 && m !== FONT && m !== VOID && m !== RIFT && m !== RELIC &&
+  m !== MITE && m !== MINNOW && m !== VISITOR && m !== FIREFLY && m !== BEETLE && m !== NEWT && (KIND[m] !== 0 || m === FIRE);
 const CC = new Uint16Array(CNN);
 for (let cy = 0; cy < CH; cy++) for (let cx = 0; cx < CW; cx++) CC[cy * CW + cx] = 8 * Math.max(1, Math.min(8, H - cy * 8));
 
@@ -634,7 +675,9 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       const nx = cx + dx, ny = cy + dy; if (!inb(nx, ny)) continue;
       const ni = ny * W + nx, n = cells[ni];
       if (blastHard(n)) continue;
-      if ((n === TNT || n === NITRO) && d2 > 0) { chain.push(nx, ny, n === NITRO ? 6 : 4); continue; }
+      if ((n === TNT || n === NITRO || n === C4) && d2 > 0) { chain.push(nx, ny, n === C4 ? CLASSIC.c4Radius : n === NITRO ? 6 : 4); continue; }
+      if (n === METHANE) { transmute(nx, ny, FIRE); continue; }
+      if (n === NAPALM) light(nx, ny);
       if ((KIND[n] === K_POWDER || (KIND[n] === K_LIQUID && n !== WATER && n !== BRINE)) && d2 > 1) {
         const d = Math.sqrt(d2), sp = 1.4 + (r - d) / r * 5.5;
         VX[ni] = dx / d * sp + (rf() - 0.5); VY[ni] = dy / d * sp - 1.6 - rf();
@@ -683,10 +726,92 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       case MUD: transmute(nx, ny, BRICK); return true;
       case TNT: detonate(nx, ny, 4); return true;
       case NITRO: detonate(nx, ny, 6); return true;
+      case C4: detonate(nx, ny, CLASSIC.c4Radius); return true;
+      case NAPALM: case FUSE: light(nx, ny); return true;
+      case WAX: if (ri(CLASSIC.waxDrip) === 0) transmute(nx, ny, MOLTEN_WAX); return true;
+      case MOLTEN_WAX: if (ri(CLASSIC.waxBurn) === 0) transmute(nx, ny, FIRE); return true;
+      case METHANE: {
+        let pocket = 0;
+        for (let k = 0; k < 8; k++) if (get(nx + DX[k], ny + DY[k]) === METHANE) pocket++;
+        if (pocket >= CLASSIC.methanePocket) detonate(nx, ny, 3); else transmute(nx, ny, FIRE);
+        return true;
+      }
+      case FONT: return shades[ny * W + nx] === FIRE;
     }
     return false;
   }
+  function light(x, y) {
+    const i = y * W + x;
+    // Newly lit grains wait a tick before spreading, so a flame front walks instead of crossing a pool in one scan.
+    if (shades[i] < CLASSIC.lit) { shades[i] = cells[i] === NAPALM ? 110 : 100; born[i] = 1; markDirty(x, y); }
+  }
+  function burnNapalm(x, y) {
+    const i = y * W + x;
+    if (heat[i] < 200) heat[i] = 200;
+    markDirty(x, y);
+    for (let k = 0; k < 8; k++) {
+      const nx = x + DX[k], ny = y + DY[k], n = get(nx, ny);
+      if (n === WATER || n === BRINE) { if (ri(4) === 0) transmute(nx, ny, STEAM); }
+      else if (n === AIR) { if (DY[k] < 0 && ri(3) === 0) transmute(nx, ny, FIRE); }
+      else if (n !== STONE && (n !== NAPALM || shades[ny * W + nx] < CLASSIC.lit)) igniteCell(nx, ny, n);
+    }
+    if (ri(CLASSIC.napalmBurn) === 0 && --shades[i] < CLASSIC.lit) { transmute(x, y, ri(3) === 0 ? SMOKE : FIRE); return true; }
+    return false;
+  }
+  function burnFuse(x, y) {
+    markDirty(x, y);
+    if (ri(CLASSIC.fuseOdds) !== 0) return true;
+    for (let k = 0; k < 8; k++) {
+      const nx = x + DX[k], ny = y + DY[k], n = get(nx, ny);
+      if (n === AIR) { if (DY[k] < 0 && ri(4) === 0) transmute(nx, ny, FIRE); }
+      else if (n !== STONE) igniteCell(nx, ny, n);
+    }
+    transmute(x, y, ASH);
+    return true;
+  }
+  function chill(x, y) {
+    let spent = false;
+    for (let k = 0; k < 8; k++) {
+      const nx = x + DX[k], ny = y + DY[k]; if (!inb(nx, ny)) continue;
+      const ni = ny * W + nx, n = cells[ni];
+      if (n === WATER || n === BRINE) { transmute(nx, ny, ICE); heat[ni] = 0; spent = true; }
+      else if (n === LAVA) { transmute(nx, ny, OBSIDIAN); spent = true; }
+      else if (n === FIRE) { transmute(nx, ny, AIR); spent = true; }
+      else if (n === EMBER) { transmute(nx, ny, ASH); spent = true; }
+      else if (n === STEAM) { transmute(nx, ny, WATER); spent = true; }
+      else if ((n === NAPALM || n === FUSE) && shades[ni] >= CLASSIC.lit) { shades[ni] = 0; heat[ni] = 0; spent = true; }
+      else if (heat[ni] > 0) heat[ni] = heat[ni] > 30 ? heat[ni] - 30 : 0;
+    }
+    // The cold reaches a little further than touch: water within two cells freezes too, so a dusting skins a pond.
+    if (spent) for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+      if (dx * dx + dy * dy > 5) continue;
+      const nx = x + dx, ny = y + dy; if (!inb(nx, ny)) continue;
+      const ni = ny * W + nx; if (cells[ni] === WATER || cells[ni] === BRINE) { transmute(nx, ny, ICE); heat[ni] = 0; }
+    }
+    if (spent && ri(4) === 0) { transmute(x, y, SNOW); return true; }
+    return false;
+  }
+  // A font gives back what it learned into the air beside it: downward for what falls, upward for gases and flame.
+  const FONT_DOWN = [6, 5, 7, 3, 4], FONT_UP = [1, 0, 2, 3, 4];
+  function pourFont(x, y) {
+    const i = y * W + x, m = shades[i];
+    if (m <= 0 || !fontLearns(m)) {
+      for (let k = 0; k < 8; k++) { const n = get(x + DX[k], y + DY[k]); if (fontLearns(n)) { shades[i] = n; break; } }
+      return true;
+    }
+    // Up to three grains a tick across the mouth, so the stream reads as a stream; the sides only when the mouth is blocked.
+    const order = KIND[m] === K_GAS || m === FIRE ? FONT_UP : FONT_DOWN;
+    let poured = 0;
+    for (let n = 0; n < order.length && poured < 3; n++) {
+      if (n >= 3 && poured) break;
+      const k = order[n], nx = x + DX[k], ny = y + DY[k];
+      if (!inb(nx, ny) || cells[ny * W + nx] !== AIR) continue;
+      setc(nx, ny, m, grain(m)); markBorn(nx, ny); poured++;
+    }
+    return true;
+  }
   function burn(x, y) {
+    if (get(x, y + 1) === WAX && ri(CLASSIC.waxSoften) === 0) { transmute(x, y + 1, FIRE); transmute(x, y, ri(3) === 0 ? SMOKE : AIR); return; }
     let wet = false, fueled = false;
     for (let k = 0; k < 8; k++) {
       const nx = x + DX[k], ny = y + DY[k], n = get(nx, ny);
@@ -715,6 +840,8 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       if (n === SAND) transmute(nx, ny, GLASS);
       if (n === SALT) transmute(nx, ny, PUMICE);
       if (n === AMBER) transmute(nx, ny, HONEY);
+      if (n === WAX) transmute(nx, ny, MOLTEN_WAX);
+      if (n === C4) { detonate(nx, ny, CLASSIC.c4Radius); return true; }
       if (n === PLANT || n === WOOD || n === SEED || n === OIL || n === BLOOM) transmute(nx, ny, FIRE);
     }
     return false;
@@ -1263,6 +1390,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       case VISITOR: return visitorAct(x, y);
       case ICHOR: if (hasN(x, y, FIRE) || hasN(x, y, PLASMA)) { transmute(x, y, AETHER); return true; } return false;
       case MUD:
+        if (hasN(x, y, PUMICE) && ri(30) === 0) { transmute(x, y, CONCRETE); return true; }
         if (vegetation === 'native' && cycleMud(x, y)) return true;
         if (hasN(x, y, WATER) && ((x + y * 17 + tickIndex) % 4200) === 0) {
           const ac = gatherAir(x, y);
@@ -1284,6 +1412,8 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
         if (strikeRod(x, y)) return true;
         if (hasN(x, y, GOLD) && hasN(x, y, CRYSTAL)) { transmute(x, y, AZOTH); return true; }
         if (hasN(x, y, BLOOM)) { transmute(x, y, FIREFLY); return true; }
+        if (hasN(x, y, ICE)) { transmute(x, y, CRYO); return true; }
+        for (let k = 0; k < 8; k++) if (get(x + DX[k], y + DY[k]) === PEARL) { transmute(x + DX[k], y + DY[k], FONT); transmute(x, y, AIR); return true; }
         return false;
       case FIREFLY: return fireflyAct(x, y);
       case BEETLE: return beetleAct(x, y);
@@ -1295,6 +1425,8 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
         if (roll === 0) { transmute(x, y, MUD); return true; }
         if (roll < 40) { for (let k = 0; k < 8; k++) if (get(x + DX[k], y + DY[k]) === WOOD) { transmute(x + DX[k], y + DY[k], FUNGUS); break; } return false; }
         if (roll < 52) { const ac = gatherAir(x, y); if (ac) { const k = random.ecology.int(ac); transmute(AX[k], AY[k], SPORE); } }
+        // Rot under water breathes swamp gas.
+        if (roll >= 100 && roll < 110) { for (let k = 0; k < 8; k++) if (get(x + DX[k], y + DY[k]) === WATER) { transmute(x + DX[k], y + DY[k], METHANE); break; } }
         if (roll === 80 && hasN(x, y, PLANT)) {
           const ac = gatherAir(x, y);
           if (ac) { const k = random.ecology.int(ac); transmute(AX[k], AY[k], BEETLE); }
@@ -1311,9 +1443,34 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       case CORAL:
         if (random.ecology.int(60) === 0) { for (let k = 0; k < 8; k++) if (get(x + DX[k], y + DY[k]) === BRINE) { transmute(x + DX[k], y + DY[k], CORAL); break; } }
         return false;
-      case OIL: if (hasN(x, y, POWDER)) { transmute(x, y, NITRO); return true; } return false;
+      case OIL:
+        if (hasN(x, y, POWDER)) { transmute(x, y, NITRO); return true; }
+        if (hasN(x, y, SULFUR)) { transmute(x, y, NAPALM); return true; }
+        return false;
+      case NAPALM: return shades[y * W + x] >= CLASSIC.lit && burnNapalm(x, y);
+      case FUSE: return shades[y * W + x] >= CLASSIC.lit && burnFuse(x, y);
+      case METHANE: if (ri(CLASSIC.methaneFade) === 0) { transmute(x, y, AIR); return true; } return false;
+      case HONEY: if ((hasN(x, y, ICE) || hasN(x, y, SNOW)) && ri(20) === 0) { transmute(x, y, WAX); return true; } return false;
+      case MOLTEN_WAX: {
+        if (wetN(x, y)) { transmute(x, y, WAX); return true; }
+        if (heat[y * W + x] < CLASSIC.waxSetBelow && ri(CLASSIC.waxSetOdds) === 0 && !hasN(x, y, FIRE)) { transmute(x, y, WAX); return true; }
+        return false;
+      }
+      case CONCRETE: {
+        const below = get(x, y + 1);
+        if (below === AIR || ((KIND[below] === K_LIQUID || KIND[below] === K_GAS) && below !== CONCRETE)) return false;
+        const fast = hasN(x, y, STONE) || hasN(x, y, BRICK) || hasN(x, y, GLASS);
+        if (ri(fast ? CLASSIC.concreteSetFast : CLASSIC.concreteSet) === 0) { transmute(x, y, STONE); return true; }
+        return false;
+      }
+      case C4:
+        if (hasN(x, y, FIRE) || hasN(x, y, EMBER) || hasN(x, y, LAVA) || hasN(x, y, PLASMA)) { detonate(x, y, CLASSIC.c4Radius); return true; }
+        return false;
+      case CRYO: return chill(x, y);
+      case FONT: return pourFont(x, y);
       case TNT: case NITRO:
         if (hasN(x, y, FIRE) || hasN(x, y, EMBER) || hasN(x, y, LAVA) || hasN(x, y, PLASMA)) { detonate(x, y, m === NITRO ? 6 : 4); return true; }
+        if (m === NITRO && hasN(x, y, WAX)) { transmute(x, y, C4); return true; }
         return false;
       case RIFT: riftPull(x, y); return false;
       case SAND: if (get(x, y + 1) === BRINE) { transmute(x, y, STONE); return true; } return false;
@@ -1331,7 +1488,9 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
         return false;
       case VOID: devour(x, y); return false;
       case ICE: freezeWater(x, y); return false;
-      case PLANT: return vegetation === 'native' && growPlant(x, y);
+      case PLANT:
+        if (hasN(x, y, POWDER) && ri(10) === 0) { transmute(x, y, FUSE); return true; }
+        return vegetation === 'native' && growPlant(x, y);
       case BLOOM: return vegetation === 'native' && decayPlant(x, y);
       case MOSS:
         if (hasN(x, y, BRINE) && random.ecology.int(30) === 0) { transmute(x, y, CORAL); return true; }
@@ -1362,7 +1521,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
         const i = row + x;
         if (born[i]) continue;
         const m = cells[i];
-        if (SOURCE[m] > 0 || cells[i - W] !== m) continue;
+        if (SOURCE[m] > 0 || cells[i - W] !== m || m === FONT) continue;
         if (heat[i] < heat[i - W] + 24) continue;
         swap(x, y, x, y - 1); born[i - W] = 1;
       }
@@ -1401,7 +1560,8 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
           if (ALIVE[m] || KIND[m] === K_GAS || (m === BLOOM && vegetation === 'native')) lv = 1;
           if (m !== AIR && KIND[m] !== K_GAS && m !== FIRE && m !== PLASMA) sol++;
           if (m !== m0 || v !== AMBIENT[m]) quiet = 0;
-          if (!born[i] && ((m === ICE && v >= COLD.meltAt) || (m === SNOW && v >= 40) || (m === WATER && v >= BOIL) || (FLAMMABLE[m] && v >= (WET_FUEL[m] ? IGNITE_WET : IGNITE)))) meltList[melts++] = i;
+          if (!born[i] && ((m === ICE && v >= COLD.meltAt) || (m === SNOW && v >= 40) || (m === WATER && v >= BOIL) || (FLAMMABLE[m] && v >= (WET_FUEL[m] ? IGNITE_WET : IGNITE)) || (m === WAX && v >= CLASSIC.waxMelt) ||
+            ((m === NAPALM || m === FUSE) && v >= IGNITE && shades[i] < CLASSIC.lit))) meltList[melts++] = i;
         }
       }
       HS[c] = qHS[c] = hs; SOL[c] = qSOL[c] = sol; live[c] = qLive[c] = lv; tQuiet[c] = quiet;
@@ -1417,6 +1577,8 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       if (m === ICE || m === SNOW) transmute(i % W, (i / W) | 0, WATER);
       else if (m === WATER) transmute(i % W, (i / W) | 0, STEAM);
       else if (FLAMMABLE[m]) transmute(i % W, (i / W) | 0, FIRE);
+      else if (m === WAX) transmute(i % W, (i / W) | 0, MOLTEN_WAX);
+      else if (m === NAPALM || m === FUSE) light(i % W, (i / W) | 0);
     }
   }
   function stigmergy() {
@@ -1627,6 +1789,8 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
         else if ((m === WATER || m === BRINE) && ri(m === BRINE ? 14 : 7) === 0) { if (m === BRINE && ri(4) === 0) transmute(x, y, CRYSTAL); else transmute(x, y, STEAM); }
         else if (FLAMMABLE[m] && ri(9) === 0) transmute(x, y, FIRE);
         else if ((m === TNT || m === NITRO) && ri(12) === 0) detonate(x, y, m === NITRO ? 6 : 4);
+        else if (m === WAX && ri(4) === 0) transmute(x, y, MOLTEN_WAX);
+        else if ((m === NAPALM || m === FUSE) && ri(9) === 0) light(x, y);
         else if (m === SAND && ri(60) === 0) transmute(x, y, GLASS);
         else if (m === MUD && ri(24) === 0) transmute(x, y, BRICK);
         else if (m === STONE && ri(260) === 0) transmute(x, y, LAVA);
@@ -1639,8 +1803,10 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
         else if (m === STEAM && ri(3) === 0) transmute(x, y, WATER);
         else if (m === CLOUD && ri(8) === 0) transmute(x, y, WATER);
         else if (m === LAVA && ri(4) === 0) transmute(x, y, OBSIDIAN);
-        else if (m === FIRE && ri(2) === 0) transmute(x, y, SMOKE);
+        else if (m === FIRE && (hasN(x, y, NAPALM) || ri(2) === 0)) transmute(x, y, SMOKE);
         else if (m === EMBER && ri(3) === 0) transmute(x, y, ASH);
+        else if (m === MOLTEN_WAX && ri(3) === 0) transmute(x, y, WAX);
+        else if ((m === NAPALM || m === FUSE) && shades[i] >= CLASSIC.lit) { shades[i] = 0; heat[i] = Math.min(heat[i], IGNITE - 1); }
       }
     }
   }
@@ -1659,8 +1825,11 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
           fx[o] = 0; fx[o + 1] = 0; fx[o + 2] = 0; fx[o + 3] = 0;
           continue;
         }
-        const s = shades[i];
+        let s = shades[i], lit = 0;
+        if (m === NAPALM || m === FUSE) { if (s >= CLASSIC.lit) { lit = 1; s = 0; } }
+        else if (m === FONT) s = 0;
         let r = CR[m] + s, g = CG[m] + s, b = CB[m] + s;
+        if (m === FONT && shades[i] > 0 && shades[i] < 64) { const q = shades[i]; r = (r + CR[q] * 3) >> 2; g = (g + CG[q] * 3) >> 2; b = (b + CB[q] * 3) >> 2; }
         if (!NOAO[m]) {
           let ao = 0;
           if (y + 1 < H && cells[i + W] !== AIR) ao += 4;
@@ -1687,6 +1856,10 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
           }
         }
         if (m === TNT && ((x + y) & 2) === 0) { r = 236; g = 214; b = 168; }
+        if (m === C4 && ((x ^ y) & 3) === 0) { r -= 22; g -= 22; b -= 26; }
+        if (m === FUSE && !lit && (x + y) & 1) { r += 14; g += 10; b += 4; }
+        if (m === FONT && tick !== 0) { const p = ((i * 5 + tick * 4) & 31) - 8; r += p; g += p; b += p; }
+        if (lit) { const p = ((i * 13 + tick * 9) & 31) - 10; r = 255; g = 130 + p * 3; b = 40 + p; }
         if (m === MITE) { if (s >= 64) { r += 36; g += 18; b -= 8; } else if (s <= -40) { r += 22; g += 10; b += 4; } }
         if (m === VISITOR && s >= 64) { r = (r + 240) >> 1; g = (g + 190) >> 1; b = b >> 1; }
         if (t > 64 && m !== FIRE && m !== LAVA && m !== EMBER && m !== PLASMA) { const q = (t - 64) >> 3; r += q; b -= q >> 1; }
@@ -1698,7 +1871,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
         }
         r = r < 0 ? 0 : r > 255 ? 255 : r; g = g < 0 ? 0 : g > 255 ? 255 : g; b = b < 0 ? 0 : b > 255 ? 255 : b;
         color[o] = r; color[o + 1] = g; color[o + 2] = b; color[o + 3] = m;
-        let f = EMF[m];
+        let f = lit ? 220 : EMF[m];
         if (f) {
           if (tick !== 0 && m === FIRE) f = 200 + ((i * 7 + tick * 13) & 55);
           else if (tick !== 0 && m === FIREFLY) f = ((i * 7 + tick * 3) & 63) < 36 ? 230 : 30;
@@ -1737,6 +1910,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       case 'rain': rainFromCeiling(op.m, op.n); break;
       case 'tempest': startStorm(); break;
       case 'spark': setc(op.x, op.y, EMBER, grain(EMBER)); break;
+      case 'font': if (inb(op.x, op.y)) { setc(op.x, op.y, FONT, 0); if (fontLearns(op.m)) shades[op.y * W + op.x] = op.m; } break;
       case 'clear': dropSparks(); clearGrid(); break;
       case 'reset': clearGrid(); seedVessel(false); break;
       case 'wipe': {

@@ -47,6 +47,8 @@ The real gaps are pacing controls, phone zoom ergonomics, a single place to tune
 | 1b.12 | Look: snow crust and blue body, clearer ice, glow that lights caves and shadowed cave air | done |
 | 1b.13 | Fix: steam can no longer ignite plants (living growth ignites from heat at 100, dry fuel still at 62) | done |
 | 1b.14 | Next: the logic layer — quicksilver current (Wireworld-style wires, sensors, gates, outputs) and animus (Game of Life material) | todo |
+| 1b.15 | Classic pack: napalm, methane, wax and molten wax, concrete, c-4, fuse, cryo and the font, plus a tap tool that sets a font already taught the brush element (`CLASSIC`) | done |
+| 1b.16 | Before any new material: widen the material tables past 64 (every 64-slot table in `world.js`, `MATERIALS` in `checkpoint.js`, the 64-wide LUT texture in `index.html`). The classic pack filled the last free id (63) | todo |
 
 The `LIFE`, `COLD` and `CLIMATE` tables move into `engine/rates.js` in Phase 2.
 
@@ -95,7 +97,7 @@ New materials are transmuted, not handed out. Each one needs a codex page, a hin
 | 4.1 | Electricity: a spark runs through lead, gold and mercury; sets off tnt, powder and nitro; splits brine into salt and gas; crystal conducts one way | L | 2.2 |
 | 4.2 | Fulgurite: lightning or spark on sand makes glass branches | S | 4.1 |
 | 4.3 | Rust: lead plus water plus time | S | 2.2 |
-| 4.4 | Frost: aether-chilled ice that freezes water outward | S | 2.2 |
+| 4.4 | Frost: aether-chilled ice that freezes water outward — shipped early as cryo (1b.15) | S | — |
 | 4.5 | Per-world secret recipe: three ingredients chosen by the world seed, hinted by codex riddles | S | — |
 | 4.6 | Codex v2: silhouettes of undiscovered products ("? + water → ?"), progress ring, a witnessed log | M | — |
 | 4.7 | Wind and pressure: a coarse field driven by storms, blasts and a new bellows; pushes gas and light grains | L | 3.1 |
