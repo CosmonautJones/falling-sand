@@ -789,7 +789,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     if (spent && ri(4) === 0) { transmute(x, y, SNOW); return true; }
     return false;
   }
-  // A font gives back what it learned into the air beside it: downward for what falls, upward for gases.
+  // A font gives back what it learned into the air beside it: downward for what falls, upward for gases and flame.
   const FONT_DOWN = [6, 5, 7, 3, 4], FONT_UP = [1, 0, 2, 3, 4];
   function pourFont(x, y) {
     const i = y * W + x, m = shades[i];
@@ -798,7 +798,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       return true;
     }
     // Up to three grains a tick across the mouth, so the stream reads as a stream; the sides only when the mouth is blocked.
-    const order = KIND[m] === K_GAS ? FONT_UP : FONT_DOWN;
+    const order = KIND[m] === K_GAS || m === FIRE ? FONT_UP : FONT_DOWN;
     let poured = 0;
     for (let n = 0; n < order.length && poured < 3; n++) {
       if (n >= 3 && poured) break;
@@ -1387,7 +1387,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       case VISITOR: return visitorAct(x, y);
       case ICHOR: if (hasN(x, y, FIRE) || hasN(x, y, PLASMA)) { transmute(x, y, AETHER); return true; } return false;
       case MUD:
-        if (ri(30) === 0 && hasN(x, y, PUMICE)) { transmute(x, y, CONCRETE); return true; }
+        if (hasN(x, y, PUMICE) && ri(30) === 0) { transmute(x, y, CONCRETE); return true; }
         if (vegetation === 'native' && cycleMud(x, y)) return true;
         if (hasN(x, y, WATER) && ((x + y * 17 + tickIndex) % 4200) === 0) {
           const ac = gatherAir(x, y);
@@ -1486,7 +1486,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       case VOID: devour(x, y); return false;
       case ICE: freezeWater(x, y); return false;
       case PLANT:
-        if (ri(10) === 0 && hasN(x, y, POWDER)) { transmute(x, y, FUSE); return true; }
+        if (hasN(x, y, POWDER) && ri(10) === 0) { transmute(x, y, FUSE); return true; }
         return vegetation === 'native' && growPlant(x, y);
       case BLOOM: return vegetation === 'native' && decayPlant(x, y);
       case MOSS:

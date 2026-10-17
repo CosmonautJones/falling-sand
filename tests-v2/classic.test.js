@@ -253,6 +253,7 @@ test('the font will not learn walls or doors, and gives gases upward and fire as
   c.run(600);
   assert.ok(c.count(E.FIRE) >= 1, 'a fire font keeps a flame: a torch');
   assert.equal(c.at(240, 259), E.FONT);
+  assert.equal(c.at(240, 258), E.FIRE, 'the flame stands above it');
   for (const m of [E.STONE, E.VOID, E.RIFT, E.FONT, E.AIR]) assert.equal(E.fontLearns(m), false, E.NAMES[m]);
   for (const m of [E.SAND, E.WATER, E.FIRE, E.STEAM, E.MITE, E.NAPALM]) assert.equal(E.fontLearns(m), true, E.NAMES[m]);
 });
