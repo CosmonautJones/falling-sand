@@ -517,11 +517,16 @@ void main(){
   lightF += vec3(0.55, 0.65, 1.0) * uFlash * 0.9;
   if (uShip.w > 0.5 && uShip.z > 0.5) { vec2 sd = gp - uShip.xy; lightF += vec3(0.15, 0.7, 0.3) * exp(-abs(sd.x) * 0.08) * step(0.0, sd.y) * exp(-sd.y * 0.01) * 0.5; }
   float occ = textureLod(uFx, st, 2.5).r;
+  // How shut in this spot is: the solid share of a wide neighbourhood. Open air inside caves sits in
+  // shadow, and glow from fire, lava and embers lights cave walls (the lighting setting scales both).
+  float encl = textureLod(uFx, st, 4.5).r;
+  float cave = smoothstep(0.5, 0.92, encl) * uLight;
   vec3 col;
   if (id < 0.5) {
     col = bg + max(c.rgb - vec3(14.0, 14.0, 20.0) / 255.0, 0.0) * 1.4;
     col *= 1.0 - occ * 0.42;
-    col += lightF * 0.1 * uLight;
+    col *= 1.0 - cave * 0.5;
+    col += lightF * (0.1 + 0.12 * cave) * uLight;
   } else {
     col = c.rgb;
     vec2 px = vec2(1.5 / uGrid.x, 0.0), py = vec2(0.0, 1.5 / uGrid.y);
@@ -534,7 +539,9 @@ void main(){
     float dyn = max(dot(nrm, normalize(vec3(eg * 30.0, 0.45))), 0.0);
     float exposed = mid(cellAt(cell - vec2(0.0, 1.0))) < 0.5 ? 1.0 : 0.0;
     float shadeAmt = L.a > 0.5 ? 0.0 : 1.0;
-    col = mix(col, col * (0.72 + 0.42 * key) + col * lightF * (0.45 + 1.0 * dyn) * uLight, shadeAmt * (0.4 + 0.6 * detail));
+    // Glow reaches further than it used to, and reaches harder into enclosed spaces, so a lava pool lights its cave.
+    vec3 glowL = lightF * (1.5 + 1.2 * cave) + textureLod(uEmis, st, 7.5).rgb * 2.5 * uLight;
+    col = mix(col, col * (0.72 + 0.42 * key) + c.rgb * glowL * (0.5 + 1.1 * dyn) * uLight, shadeAmt * (0.4 + 0.6 * detail));
     if (L.r > 0.25) {
       if (uPx < 6.0) {
       vec2 q = gp - 0.5; vec2 b = floor(q); vec2 w = fract(q);
@@ -569,6 +576,17 @@ void main(){
       vec4 k0 = cellAt(cell + vec2(1, 0)), k1 = cellAt(cell - vec2(1, 0)), k2 = cellAt(cell + vec2(0, 1)), k3 = cellAt(cell - vec2(0, 1));
       s += (mid(k0) < 0.5 ? bg : k0.rgb) + (mid(k1) < 0.5 ? bg : k1.rgb) + (mid(k2) < 0.5 ? bg : k2.rgb) + (mid(k3) < 0.5 ? bg : k3.rgb);
       col = mix(bg, s / 5.0, 0.8) + lightF * 0.25 * uLight;
+    }
+    // Snow (43): a bright crust, a cool blue body and the odd glint. Ice (12): clear blue with faint cracks.
+    if (abs(id - 43.0) < 0.5) {
+      col = mix(col, col * vec3(0.84, 0.91, 1.06), (1.0 - exposed) * 0.55);
+      col += exposed * smoothstep(0.6, 0.0, f.y) * 0.14 * vec3(1.0, 1.0, 1.04);
+      col += step(0.993, hash(cell + floor(uTime * 1.5))) * exposed * vec3(0.85, 0.92, 1.0) * 0.7;
+    } else if (abs(id - 12.0) < 0.5) {
+      float n = hash(floor(cell / 5.0));
+      float crack = smoothstep(0.93, 1.0, abs(sin(dot(gp, vec2(0.83, 1.31)) * 1.7 + n * 6.28)));
+      col = mix(col, col * vec3(0.84, 0.95, 1.1) + vec3(0.02, 0.04, 0.07), 0.5);
+      col += crack * 0.09 * detail * vec3(0.9, 0.97, 1.0);
     }
     float eye = uPx > 4.0 ? critterEye(gp, id) : 0.0;
     if (eye > 0.0) col = mix(col, col * 0.55 + vec3(0.12, 0.14, 0.1), eye);

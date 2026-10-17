@@ -43,6 +43,10 @@ The real gaps are pacing controls, phone zoom ergonomics, a single place to tune
 | 1b.8 | Seasons: a 16-minute year (spring, summer, autumn, winter) that sets which spells come; plants grow slower and mites rest more as the year turns (`SEASON_ODDS`, `SEASON_LIFE`) | done |
 | 1b.9 | Forecast: an almanac dial and countdown, omen whispers 40 s ahead, frost and warm glow on the glass | done |
 | 1b.10 | Open: day and night — a slow light cycle, cooler nights, fireflies that glow after dark | todo |
+| 1b.11 | Snow: mounds instead of towers, fluttering snowfall, avalanches, deep snow packs to ice (`SNOWFALL`) | done |
+| 1b.12 | Look: snow crust and blue body, clearer ice, glow that lights caves and shadowed cave air | done |
+| 1b.13 | Fix: steam can no longer ignite plants (living growth ignites from heat at 100, dry fuel still at 62) | done |
+| 1b.14 | Next: the logic layer — quicksilver current (Wireworld-style wires, sensors, gates, outputs) and animus (Game of Life material) | todo |
 
 The `LIFE`, `COLD` and `CLIMATE` tables move into `engine/rates.js` in Phase 2.
 
