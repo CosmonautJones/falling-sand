@@ -20,7 +20,7 @@ function component(t, withModule = true) {
   const context = {
     DCLogic: class {
       constructor() { this.props = {}; }
-      setState(value, done) { Object.assign(this.state, value); done?.(); }
+      setState(value, done) { Object.assign(this.state, value); this.onCommitDOM?.(value); done?.(); }
     },
     React: { createRef: () => ({ current: null }) }, localStorage: store, performance, console,
     Uint8Array, Float32Array, ArrayBuffer, Blob, Response, btoa, atob, URL,
@@ -232,4 +232,175 @@ test('Codex pin actions exist only for undiscovered targets in the existing reci
   checkExperiment(ui, recipe(3));
   ui.opening = undefined;
   assert.ok(ui.renderVals().pages.every(page => !page.canPin), 'recipes must be available before offering pins');
+});
+
+// A small ownerDocument/ref fake models only focus and mounting; production methods stay real.
+function focusDOM(ui) {
+  const doc = { body: { name: 'body' } }; doc.activeElement = doc.body;
+  const calls = [], members = new Set();
+  const node = (name, { visible = true, disabled = false } = {}) => ({
+    name, ownerDocument: doc, disabled, hidden: !visible, isConnected: true,
+    offsetParent: visible ? {} : null,
+    getClientRects: () => visible ? [{ width: 20, height: 20 }] : [],
+    focus() { assert.equal(this.isConnected, true, name + ' must be mounted before focus'); calls.push(name); doc.activeElement = this; },
+  });
+  const root = node('root'), card = node('card'), pour = node('pour'), codex = node('completed codex'),
+    dismiss = node('dismiss'), outside = node('outside');
+  const dom = { doc, calls, node, root, card, pour, codex, dismiss, outside, candidates: [] };
+  root.querySelectorAll = () => dom.candidates;
+  card.contains = element => element === card || members.has(element);
+  for (const key of ['experimentRef', 'experimentPourRef', 'experimentCodexRef']) ui[key] ??= { current: null };
+  ui.rootRef.current = root;
+  for (const element of [card, pour, codex, dismiss]) element.isConnected = false;
+  dom.mountPending = () => {
+    members.clear(); members.add(pour); members.add(dismiss);
+    card.isConnected = pour.isConnected = dismiss.isConnected = true;
+    ui.experimentRef.current = card; ui.experimentPourRef.current = pour; ui.experimentCodexRef.current = null;
+  };
+  dom.complete = () => {
+    members.delete(pour); members.add(codex); pour.isConnected = false; codex.isConnected = true;
+    ui.experimentPourRef.current = null; ui.experimentCodexRef.current = codex;
+    if (doc.activeElement === pour) doc.activeElement = doc.body;
+  };
+  dom.remove = () => {
+    const lostFocus = card.contains(doc.activeElement);
+    members.clear();
+    for (const element of [card, pour, codex, dismiss]) element.isConnected = false;
+    ui.experimentRef.current = ui.experimentPourRef.current = ui.experimentCodexRef.current = null;
+    if (lostFocus) doc.activeElement = doc.body;
+  };
+  return dom;
+}
+
+test('experiment focus refs exist and are exported before engine readiness', t => {
+  const { ui } = component(t, false), rendered = ui.renderVals();
+  for (const key of ['experimentRef', 'experimentPourRef', 'experimentCodexRef']) {
+    assert.ok(ui[key] && typeof ui[key] === 'object', key + ' is a component ref');
+    assert.equal(ui[key].current, null);
+    assert.equal(rendered[key], ui[key], key + ' reaches the template');
+  }
+});
+
+test('manual pin focuses its newly mounted pour action, while automatic nudges leave focus alone', t => {
+  for (const manual of [true, false]) {
+    const { ui } = component(t), dom = focusDOM(ui), commits = [];
+    dom.outside.focus(); dom.calls.length = 0;
+    ui.onCommitDOM = value => {
+      if (value.experiment) { commits.push('mounted'); dom.mountPending(); }
+    };
+    if (manual) ui.pinExperiment(recipe(0).goal);
+    else ui.nudge();
+    assert.deepEqual(commits, ['mounted']);
+    if (manual) {
+      assert.equal(dom.doc.activeElement, dom.pour);
+      assert.deepEqual(dom.calls, ['pour']);
+    } else {
+      assert.equal(dom.doc.activeElement, dom.outside);
+      assert.deepEqual(dom.calls, [], 'an automatic suggestion must not steal focus');
+    }
+  }
+});
+
+test('dismissal restores the first visible enabled control for each layout after card removal', t => {
+  for (const layout of ['desktop', 'phone', 'immersive', 'none']) {
+    const { ui } = component(t); ui.pinExperiment(recipe(0).goal);
+    const dom = focusDOM(ui);
+    const disabled = dom.node('disabled', { disabled: true }), hidden = dom.node('hidden', { visible: false });
+    const desktop = dom.node('desktop codex', { visible: layout === 'desktop' });
+    const phone = dom.node('phone element', { visible: layout === 'phone' });
+    const sand = dom.node('sand chip', { visible: layout !== 'none' });
+    dom.candidates = [disabled, hidden, desktop, phone, sand];
+    dom.mountPending(); dom.dismiss.focus(); dom.calls.length = 0;
+    ui.onCommitDOM = value => { if (value.experiment === null) dom.remove(); };
+    ui.dismissExperiment();
+    const expected = layout === 'desktop' ? desktop : layout === 'phone' ? phone : layout === 'immersive' ? sand : dom.doc.body;
+    assert.equal(dom.doc.activeElement, expected, layout);
+    assert.deepEqual(dom.calls, layout === 'none' ? [] : [expected.name], layout);
+    assert.equal(ui.experimentRef.current, null, 'the card was removed before handoff');
+  }
+});
+
+test('dismissal preserves outside focus and a new user focus choice during the commit', t => {
+  for (const changeDuringCommit of [false, true]) {
+    const { ui } = component(t); ui.pinExperiment(recipe(0).goal);
+    const dom = focusDOM(ui), fallback = dom.node('fallback');
+    dom.candidates = [fallback]; dom.mountPending();
+    (changeDuringCommit ? dom.dismiss : dom.outside).focus(); dom.calls.length = 0;
+    ui.onCommitDOM = value => {
+      if (value.experiment === null) { dom.remove(); if (changeDuringCommit) dom.outside.focus(); }
+    };
+    ui.dismissExperiment();
+    assert.equal(dom.doc.activeElement, dom.outside);
+    assert.ok(!dom.calls.includes('fallback'), 'handoff cannot override an intentional focus target');
+  }
+});
+
+test('normal and quiet completion focus the newly mounted Codex action only after its pour action disappears', t => {
+  for (const method of ['revealMany', 'stainQuietly']) {
+    const { ui } = component(t), goal = recipe(0).goal; ui.pinExperiment(goal);
+    const dom = focusDOM(ui); dom.mountPending(); dom.pour.focus(); dom.calls.length = 0;
+    ui.onCommitDOM = value => { if (value.discovered && ui.known.has(goal)) dom.complete(); };
+    ui[method]([goal]);
+    assert.equal(ui.experimentPourRef.current, null, method);
+    assert.equal(ui.experimentCodexRef.current, dom.codex, method);
+    assert.equal(dom.doc.activeElement, dom.codex, method);
+    assert.deepEqual(dom.calls, ['completed codex'], method);
+    assert.equal(ui.renderVals().experimentComplete, true, method);
+  }
+});
+
+test('completion cannot take outside focus, body focus, a new user target, or an unrelated discovery', t => {
+  for (const method of ['revealMany', 'stainQuietly']) for (const scenario of ['outside', 'body', 'new target', 'unrelated']) {
+    const { ui } = component(t), goal = recipe(0).goal; ui.pinExperiment(goal);
+    const dom = focusDOM(ui); dom.mountPending();
+    if (scenario === 'outside') dom.outside.focus();
+    else if (scenario !== 'body') dom.pour.focus();
+    dom.calls.length = 0;
+    ui.onCommitDOM = value => {
+      if (value.discovered && ui.known.has(goal)) {
+        dom.complete();
+        if (scenario === 'new target') dom.outside.focus();
+      }
+    };
+    ui[method]([scenario === 'unrelated' ? E.STEAM : goal]);
+    const expected = scenario === 'body' ? dom.doc.body : scenario === 'unrelated' ? dom.pour : dom.outside;
+    assert.equal(dom.doc.activeElement, expected, method + ': ' + scenario);
+    assert.ok(!dom.calls.includes('completed codex'), method + ': ' + scenario);
+  }
+});
+
+test('Codex hint references are unique stable ids and retain existing hidden-page hints', t => {
+  const { ui } = component(t); ui.known.add(recipe(0).goal);
+  const order = [...E.STARTER, ...E.TRANSMUTED], pages = ui.renderVals().pages;
+  assert.equal(new Set(pages.map(page => page.hintId)).size, pages.length);
+  for (let i = 0; i < order.length; i++) {
+    const id = order[i], page = pages[i];
+    assert.equal(page.hintId, 'codex-hint-' + id);
+    if (ui.known.has(id)) assert.equal(page.whisper, E.PAGES[id].w);
+    else {
+      assert.equal(page.whisper, E.HINTS[id] || 'Unwritten.');
+      assert.notEqual(page.name, E.NAMES[id], 'hint association must not expose a blank product name');
+      assert.equal(page.leaf, '');
+    }
+  }
+});
+
+
+test('manual pin focuses the completed action when its goal becomes known in the same DOM commit', t => {
+  const { ui } = component(t), goal = recipe(0).goal, dom = focusDOM(ui);
+  assert.equal(ui.known.has(goal), false, 'the manual pin starts with an undiscovered goal');
+  dom.outside.focus(); dom.calls.length = 0;
+  ui.onCommitDOM = value => {
+    if (value.experiment) {
+      ui.known.add(goal);
+      dom.mountPending();
+      dom.complete();
+    }
+  };
+  ui.pinExperiment(goal);
+  assert.equal(ui.experimentPourRef.current, null, 'the pending action vanished during this commit');
+  assert.equal(ui.experimentCodexRef.current, dom.codex);
+  assert.equal(ui.renderVals().experimentComplete, true);
+  assert.equal(dom.doc.activeElement, dom.codex);
+  assert.deepEqual(dom.calls, ['completed codex'], 'focus waits for the mounted completed action');
 });

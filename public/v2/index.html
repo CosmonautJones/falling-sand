@@ -81,7 +81,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
   <div class="flask-status" role="status" aria-live="polite" aria-atomic="true" style="color:#d4b56a; font-size:13px; max-width:100%;">{{ flaskStatus }}</div>
 
   <sc-if value="{{ experimentVisible }}" hint-placeholder-val="{{ false }}">
-    <section data-experiment class="experiment-card" aria-labelledby="experiment-title">
+    <section data-experiment ref="{{ experimentRef }}" class="experiment-card" aria-labelledby="experiment-title">
       <div class="experiment-copy">
         <div id="experiment-title" class="experiment-title">Pinned experiment</div>
         <div class="experiment-status" role="status" aria-live="polite" aria-atomic="true">{{ experimentStatus }}</div>
@@ -92,10 +92,10 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
       </div>
       <div class="experiment-actions">
         <sc-if value="{{ experimentPending }}" hint-placeholder-val="{{ true }}">
-          <button class="experiment-action" onClick="{{ onExperimentBrush }}">{{ experimentBrushLabel }}</button>
+          <button ref="{{ experimentPourRef }}" class="experiment-action" onClick="{{ onExperimentBrush }}">{{ experimentBrushLabel }}</button>
         </sc-if>
         <sc-if value="{{ experimentComplete }}" hint-placeholder-val="{{ false }}">
-          <button class="experiment-action" onClick="{{ openCodex }}">open codex</button>
+          <button ref="{{ experimentCodexRef }}" class="experiment-action" onClick="{{ openCodex }}">open codex</button>
         </sc-if>
         <button class="experiment-action" onClick="{{ onDismissExperiment }}">dismiss</button>
       </div>
@@ -354,10 +354,10 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
                 <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px; font-size:15px; font-weight:600; letter-spacing:.04em; color:{{ p.nameColor }};">
                   <span style="width:11px; height:11px; border:1px solid #5a4630; background:{{ p.swatch }};"></span>{{ p.name }}
                 </div>
-                <div style="font-style:italic; color:{{ p.whisperColor }}; font-size:14px; margin-bottom:4px;">{{ p.whisper }}</div>
+                <div id="{{ p.hintId }}" style="font-style:italic; color:{{ p.whisperColor }}; font-size:14px; margin-bottom:4px;">{{ p.whisper }}</div>
                 <div style="color:#cbb89a; font-size:14px; line-height:1.42; text-wrap:pretty;">{{ p.leaf }}</div>
                 <sc-if value="{{ p.canPin }}" hint-placeholder-val="{{ false }}">
-                  <button class="experiment-action" onClick="{{ p.onPin }}">pin experiment</button>
+                  <button class="experiment-action" aria-describedby="{{ p.hintId }}" onClick="{{ p.onPin }}">pin experiment</button>
                 </sc-if>
               </div>
             </sc-for>
@@ -716,7 +716,7 @@ const TOOLS = [['pour', 'Hold to pour'], ['spray', 'Scatter single grains'], ['l
 class Component extends DCLogic {
   constructor(props) {
     super(props);
-    ['rootRef', 'cvRef', 'vpRef', 'retRef', 'hudRef', 'phoneHudRef', 'boxRef', 'lineRef', 'almanacRef', 'frostRef', 'warmRef'].forEach(k => this[k] = React.createRef());
+    ['rootRef', 'cvRef', 'vpRef', 'retRef', 'hudRef', 'phoneHudRef', 'boxRef', 'lineRef', 'almanacRef', 'frostRef', 'warmRef', 'experimentRef', 'experimentPourRef', 'experimentCodexRef'].forEach(k => this[k] = React.createRef());
     this.view = { zoom: 1, panX: 0, panY: 0 };
     this.ops = []; this.h = {}; this.shake = 0; this.wonder = 0; this.flash = 0; this.wipe = -1; this.ship = null; this.walker = null; this.walkerKeys = {}; this.walkerCmd = null; this.walkerJump = false; this.pendingDt = 0; this.simMs = 0; this.stepQ = 0;
     this.last = performance.now(); this.frames = 0; this.lastSample = performance.now(); this.fps = 0;
@@ -891,18 +891,24 @@ class Component extends DCLogic {
   }
   stainQuietly(list) {
     if (!list.length) return;
+    const action = this.experimentPourRef.current, focus = action && action.ownerDocument.activeElement === action && list.includes(this.state.experiment?.goal);
     for (const id of list) this.known.add(id);
     try { localStorage.setItem(DKEY, JSON.stringify([...this.known])); } catch (e) {}
-    this.setState({ discovered: [...this.known] });
+    this.setState({ discovered: [...this.known] }, () => {
+      if (focus && action.ownerDocument.activeElement === action.ownerDocument.body) this.experimentCodexRef.current?.focus();
+    });
   }
   revealMany(list, note) {
     const M = this.M; let lastId = -1;
+    const action = this.experimentPourRef.current, focus = action && action.ownerDocument.activeElement === action && list.includes(this.state.experiment?.goal);
     for (const id of list) if (!this.known.has(id)) { this.known.add(id); lastId = id; }
     if (lastId < 0) return;
     try { localStorage.setItem(DKEY, JSON.stringify([...this.known])); } catch (e) {}
     this.lastFind = M.NAMES[lastId];
     const w = note || M.PAGES[lastId].w;
-    this.setState({ discovered: [...this.known], whisper: w });
+    this.setState({ discovered: [...this.known], whisper: w }, () => {
+      if (focus && action.ownerDocument.activeElement === action.ownerDocument.body) this.experimentCodexRef.current?.focus();
+    });
     this.toast({ kind: 'find', names: [M.NAMES[lastId]], label: 'TRANSMUTED · ' + M.NAMES[lastId].toUpperCase(), text: w, swatch: rgb(M.COLORS[lastId]), rite: false });
     this.fanfare();
     if (this.nudgeGoal !== undefined && list.includes(this.nudgeGoal)) this.setState({ suggest: -1 });
@@ -969,11 +975,17 @@ class Component extends DCLogic {
     const recipe = this.opening.NUDGES.find(n => this.M[n.goal] === goal);
     if (!recipe) return;
     this.nudged = true; clearTimeout(this.nudgeT); this.nudgeGoal = goal;
-    this.setState({ experiment: { goal, brush: this.M[recipe.brush], text: recipe.text }, suggest: this.M[recipe.brush], folio: false, sheet: '' });
+    this.setState({ experiment: { goal, brush: this.M[recipe.brush], text: recipe.text }, suggest: this.M[recipe.brush], folio: false, sheet: '' }, () => (this.experimentPourRef.current || this.experimentCodexRef.current)?.focus());
   }
   dismissExperiment() {
+    const card = this.experimentRef.current, active = card && card.ownerDocument.activeElement;
+    const focus = card && card.contains(active);
     this.nudged = true; clearTimeout(this.nudgeT);
-    this.setState({ experiment: null, suggest: -1 });
+    this.setState({ experiment: null, suggest: -1 }, () => {
+      if (!focus || active.ownerDocument.activeElement !== active.ownerDocument.body) return;
+      const controls = this.rootRef.current?.querySelectorAll('.hd-btns button, [data-phone="element"], .ctl button') || [];
+      [...controls].find(el => !el.disabled && el.getClientRects().length)?.focus();
+    });
   }
   resumeExperiment() {
     const n = this.state.experiment;
@@ -1839,7 +1851,7 @@ class Component extends DCLogic {
       toolLabel: s.tool, radius: s.radius, cycleBrush: () => { const sizes = this.M.BRUSH_SIZES; this.selectRadius(sizes[(sizes.indexOf(s.radius) + 1) % sizes.length]); }, rootRef: this.rootRef, toggleScreen: () => this.goFullscreen(), vpRef: this.vpRef, cvRef: this.cvRef, retRef: this.retRef, hudRef: this.hudRef, boxRef: this.boxRef, lineRef: this.lineRef,
       miniRef: this.miniRef || (this.miniRef = React.createRef()), miniRectRef: this.miniRectRef || (this.miniRectRef = React.createRef()), zoomLabRef: this.zoomLabRef || (this.zoomLabRef = React.createRef()), pbZoomRef: this.pbZoomRef || (this.pbZoomRef = React.createRef()), cycleZoom: this.hnd('cycleZoom', () => this.cycleZoom()),
       miniPoint: this.miniPoint, zoomIn: () => this.zoomBy(1.5), zoomOut: () => this.zoomBy(1 / 1.5), zoomFit: () => { this.setState({ sheet: '' }); this.setView({ zoom: 1, panX: 0, panY: 0 }, true); },
-      phoneHudRef: this.phoneHudRef, almanacRef: this.almanacRef, frostRef: this.frostRef, warmRef: this.warmRef,
+      phoneHudRef: this.phoneHudRef, almanacRef: this.almanacRef, frostRef: this.frostRef, warmRef: this.warmRef, experimentRef: this.experimentRef, experimentPourRef: this.experimentPourRef, experimentCodexRef: this.experimentCodexRef,
       sheetOpen: !!s.sheet, elementsOpen: s.sheet === 'elements', optionsOpen: s.sheet === 'options',
       openElements: () => this.setState({ sheet: s.sheet === 'elements' ? '' : 'elements' }),
       openOptions: () => this.setState({ sheet: s.sheet === 'options' ? '' : 'options' }),
@@ -1943,6 +1955,7 @@ class Component extends DCLogic {
       const page = k
         ? { name: M.NAMES[id], swatch: rgb(M.COLORS[id]), whisper: M.PAGES[id].w, leaf: M.PAGES[id].l, opacity: 1, nameColor: '#f0e2c4', whisperColor: '#d4b56a' }
         : { name: '· · ·', swatch: '#1a1512', whisper: M.HINTS[id] || 'Unwritten.', leaf: '', opacity: 0.7, nameColor: '#6f6150', whisperColor: '#8f7d62' };
+      page.hintId = 'codex-hint-' + id;
       page.canPin = !k && s.ready && !s.engineError && !!this.opening && this.opening.NUDGES.some(n => M[n.goal] === id);
       if (page.canPin) page.onPin = this.hnd('pin' + id, () => this.pinExperiment(id));
       return page;
