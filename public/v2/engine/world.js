@@ -427,7 +427,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     if (isCritter(dst) || !MOV[dst]) return false;
     const gap = DENS[get(x, y)] - DENS[dst];
     if (gap <= 0) return false;
-    if (KIND[dst] === K_LIQUID && KIND[get(x, y)] === K_LIQUID && rf() * 50 >= Math.max(gap, 3)) return false;
+    if (KIND[dst] === K_LIQUID && KIND[get(x, y)] === K_LIQUID && rf() * 50 >= Math.max(gap, 3)) { if (!ALIVE[get(x, y)]) markDirty(x, y); return false; }
     swap(x, y, nx, ny); return true;
   }
   function trySwapUp(x, y, nx, ny) {
@@ -538,7 +538,12 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     }
     const below = get(x, y + 1);
     if (trySwap(x, y, x, y + 1)) { const j = i + W; VY[j] = vy; VX[j] = vx; if (KIND[below] === K_LIQUID) splashUp(x, y); return; }
-    if (VISC[m] > 0 && rf() < VISC[m]) { VY[i] = 0; VX[i] = vx * 0.8; return; }
+    if (VISC[m] > 0 && rf() < VISC[m]) {
+      // A refused roll delays a legal move; only genuinely blocked liquid can sleep.
+      if (!ALIVE[m] && (canMove(x, y, x - 1, y + 1) || canMove(x, y, x + 1, y + 1) ||
+          canMove(x, y, x - 1, y) || canMove(x, y, x + 1, y))) markDirty(x, y);
+      VY[i] = 0; VX[i] = vx * 0.8; return;
+    }
     const f0 = ri(2) === 0 ? -1 : 1;
     if (trySwap(x, y, x + f0, y + 1)) { const j = i + W + f0; VY[j] = vy * 0.8; VX[j] = vx + f0 * 0.3; return; }
     if (trySwap(x, y, x - f0, y + 1)) { const j = i + W - f0; VY[j] = vy * 0.8; VX[j] = vx - f0 * 0.3; return; }
