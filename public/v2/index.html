@@ -31,6 +31,9 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
 .sheet-backdrop{position:fixed;inset:0;z-index:24;background:rgba(6,4,3,.55)}
 .sheet{position:fixed;z-index:25;left:0;right:0;bottom:0;max-height:72dvh;flex-direction:column;background:#16110d;border-top:1px solid rgba(196,154,74,.55);border-radius:18px 18px 0 0;box-shadow:0 -18px 40px rgba(0,0,0,.6);padding-bottom:env(safe-area-inset-bottom);animation:sheet-up .22s ease-out}
 @keyframes sheet-up{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+.experiment-card{flex:0 0 auto;width:min(96vw,1440px);display:flex;align-items:center;gap:12px;padding:8px 12px;background:#19130e;border:1px solid #5a4630;border-radius:4px}.experiment-copy{flex:1;min-width:0}.experiment-title{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#c49a4a}.experiment-status{font-size:12px;color:#b8a483}.experiment-text{font-size:16px;line-height:1.3;color:#f0e2c4}.experiment-help{font-size:12px;color:#a8977c}.experiment-actions{display:flex;flex:0 0 auto;gap:8px;flex-wrap:wrap}.experiment-action{min-width:44px;min-height:44px;padding:8px 12px;background:#241b12;border:1px solid #5a4630;border-radius:8px;color:#f0e2c4;font-size:14px;cursor:pointer}.experiment-action:hover{border-color:#c49a4a}
+@media(max-width:700px){.experiment-card{width:calc(100% - 20px);flex-wrap:wrap;gap:6px;padding:8px 10px}.experiment-copy{flex-basis:100%}.experiment-text{font-size:15px}}
+@media(orientation:landscape) and (max-height:520px){.experiment-card{width:190px;flex:0 0 190px;flex-direction:column;align-items:stretch;justify-content:center;gap:8px;padding:8px}.experiment-copy{flex:0 0 auto}.experiment-actions{flex-direction:column}.fig{min-width:0}}
 .pour-hint{position:absolute;left:50%;top:56%;transform:translate(-50%,-50%);z-index:3;padding:8px 16px;border-radius:999px;background:rgba(20,16,12,.78);border:1px solid rgba(232,201,122,.45);color:#f0e2c4;font-size:14px;font-style:italic;letter-spacing:.03em;white-space:nowrap;pointer-events:none;animation:hint-breathe 2.4s ease-in-out infinite}
 @keyframes hint-breathe{50%{opacity:.55}}[data-suggest="true"]{animation:suggest 1.6s ease-in-out infinite}@keyframes suggest{50%{border-color:#e8c97a;box-shadow:0 0 0 2px rgba(232,201,122,.35),0 0 18px rgba(232,201,122,.35)}}
 @media(prefers-reduced-motion:reduce){[data-suggest="true"]{animation:none;border-color:#e8c97a}.sheet,.pour-hint{animation:none}}
@@ -77,13 +80,35 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
   </header>
   <div class="flask-status" role="status" aria-live="polite" aria-atomic="true" style="color:#d4b56a; font-size:13px; max-width:100%;">{{ flaskStatus }}</div>
 
+  <sc-if value="{{ experimentVisible }}" hint-placeholder-val="{{ false }}">
+    <section data-experiment ref="{{ experimentRef }}" class="experiment-card" aria-labelledby="experiment-title">
+      <div class="experiment-copy">
+        <div id="experiment-title" class="experiment-title">Pinned experiment</div>
+        <div class="experiment-status" role="status" aria-live="polite" aria-atomic="true">{{ experimentStatus }}</div>
+        <div class="experiment-text">{{ experimentText }}</div>
+        <sc-if value="{{ experimentPending }}" hint-placeholder-val="{{ true }}">
+          <div class="experiment-help">Missing ingredients? Use the vessel's reset control.</div>
+        </sc-if>
+      </div>
+      <div class="experiment-actions">
+        <sc-if value="{{ experimentPending }}" hint-placeholder-val="{{ true }}">
+          <button ref="{{ experimentPourRef }}" class="experiment-action" onClick="{{ onExperimentBrush }}">{{ experimentBrushLabel }}</button>
+        </sc-if>
+        <sc-if value="{{ experimentComplete }}" hint-placeholder-val="{{ false }}">
+          <button ref="{{ experimentCodexRef }}" class="experiment-action" onClick="{{ openCodex }}">open codex</button>
+        </sc-if>
+        <button class="experiment-action" onClick="{{ onDismissExperiment }}">dismiss</button>
+      </div>
+    </section>
+  </sc-if>
+
   <figure class="col fig" style="margin:0; position:relative; width:min(96vw,1440px); flex:1 1 0; min-height:0; padding:10px; border-radius:4px; background:radial-gradient(120% 80% at 50% 0%, rgba(176,137,72,.26), transparent 48%), linear-gradient(180deg, #43382c, #2b231b); box-shadow:inset 0 1px 0 rgba(232,201,122,.7), inset 0 -1px 0 rgba(0,0,0,.6), inset 0 0 0 1px #2a2118, 0 0 0 1px #5a4630, 0 30px 60px rgba(0,0,0,.65); container-type:size; display:flex; align-items:center; justify-content:center;">
     <div class="rivet" style="position:absolute; top:4px; left:4px; width:5px; height:5px; border-radius:50%; background:radial-gradient(circle at 35% 35%, #f0d38a, #6b5130);"></div>
     <div class="rivet" style="position:absolute; top:4px; right:4px; width:5px; height:5px; border-radius:50%; background:radial-gradient(circle at 35% 35%, #f0d38a, #6b5130);"></div>
     <div class="rivet" style="position:absolute; bottom:4px; left:4px; width:5px; height:5px; border-radius:50%; background:radial-gradient(circle at 35% 35%, #f0d38a, #6b5130);"></div>
     <div class="rivet" style="position:absolute; bottom:4px; right:4px; width:5px; height:5px; border-radius:50%; background:radial-gradient(circle at 35% 35%, #f0d38a, #6b5130);"></div>
 
-    <div ref="{{ vpRef }}" style="position:relative; overflow:hidden; width:min(100cqw, calc(100cqh * 480 / 270)); aspect-ratio:480 / 270; max-height:100%; background:#0b090e; touch-action:none; -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; cursor:none; border-radius:2px;">
+    <div ref="{{ vpRef }}" style="position:relative; overflow:hidden; width:min(100cqw, calc(100cqh * 480 / 270)); aspect-ratio:480 / 270; max-height:100%; background:#0b090e; touch-action:none; -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; cursor:none; border-radius:2px; pointer-events:{{ vesselEvents }};">
       <canvas ref="{{ cvRef }}" style="position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none;"></canvas>
       <div ref="{{ frostRef }}" class="omen-frost" aria-hidden="true" style="position:absolute; inset:0; pointer-events:none; opacity:0; transition:opacity 1.2s linear; box-shadow:inset 0 0 0 2px rgba(230,244,255,.5), inset 0 0 22px 6px rgba(205,232,255,.42), inset 0 0 110px 16px rgba(170,205,240,.22); background:radial-gradient(120% 90% at 50% 45%, rgba(0,0,0,0) 62%, rgba(205,230,255,.10) 100%);"></div>
       <div ref="{{ warmRef }}" class="omen-warm" aria-hidden="true" style="position:absolute; inset:0; pointer-events:none; opacity:0; transition:opacity 1.2s linear; box-shadow:inset 0 -40px 70px -20px rgba(255,150,60,.26); background:linear-gradient(to top, rgba(255,140,50,.10), rgba(255,140,50,0) 38%);"></div>
@@ -91,6 +116,12 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
 
       <sc-if value="{{ paused }}" hint-placeholder-val="{{ false }}">
         <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(10,8,7,.4); color:#c49a4a; letter-spacing:.3em; font-size:13px; pointer-events:none;">THE VESSEL HOLDS</div>
+      </sc-if>
+
+      <sc-if value="{{ engineError }}" hint-placeholder-val="{{ false }}">
+        <div class="engine-error" role="alert" style="position:absolute; inset:0; display:flex; align-items:flex-start; justify-content:center; padding:24px 12px; z-index:12; cursor:default;">
+          <div style="max-width:32rem; padding:12px 16px; background:rgba(20,16,12,.96); border:1px solid #c49a4a; color:#f0e2c4; font-size:16px; line-height:1.4; text-align:center;">{{ engineError }}</div>
+        </div>
       </sc-if>
 
       <sc-if value="{{ pourHint }}" hint-placeholder-val="{{ false }}">
@@ -323,8 +354,11 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
                 <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px; font-size:15px; font-weight:600; letter-spacing:.04em; color:{{ p.nameColor }};">
                   <span style="width:11px; height:11px; border:1px solid #5a4630; background:{{ p.swatch }};"></span>{{ p.name }}
                 </div>
-                <div style="font-style:italic; color:{{ p.whisperColor }}; font-size:14px; margin-bottom:4px;">{{ p.whisper }}</div>
+                <div id="{{ p.hintId }}" style="font-style:italic; color:{{ p.whisperColor }}; font-size:14px; margin-bottom:4px;">{{ p.whisper }}</div>
                 <div style="color:#cbb89a; font-size:14px; line-height:1.42; text-wrap:pretty;">{{ p.leaf }}</div>
+                <sc-if value="{{ p.canPin }}" hint-placeholder-val="{{ false }}">
+                  <button class="experiment-action" aria-describedby="{{ p.hintId }}" onClick="{{ p.onPin }}">pin experiment</button>
+                </sc-if>
               </div>
             </sc-for>
           </div>
@@ -682,7 +716,7 @@ const TOOLS = [['pour', 'Hold to pour'], ['spray', 'Scatter single grains'], ['l
 class Component extends DCLogic {
   constructor(props) {
     super(props);
-    ['rootRef', 'cvRef', 'vpRef', 'retRef', 'hudRef', 'phoneHudRef', 'boxRef', 'lineRef', 'almanacRef', 'frostRef', 'warmRef'].forEach(k => this[k] = React.createRef());
+    ['rootRef', 'cvRef', 'vpRef', 'retRef', 'hudRef', 'phoneHudRef', 'boxRef', 'lineRef', 'almanacRef', 'frostRef', 'warmRef', 'experimentRef', 'experimentPourRef', 'experimentCodexRef'].forEach(k => this[k] = React.createRef());
     this.view = { zoom: 1, panX: 0, panY: 0 };
     this.ops = []; this.h = {}; this.shake = 0; this.wonder = 0; this.flash = 0; this.wipe = -1; this.ship = null; this.walker = null; this.walkerKeys = {}; this.walkerCmd = null; this.walkerJump = false; this.pendingDt = 0; this.simMs = 0; this.stepQ = 0;
     this.last = performance.now(); this.frames = 0; this.lastSample = performance.now(); this.fps = 0;
@@ -701,10 +735,10 @@ class Component extends DCLogic {
     this.armOpening();
     this.unlocked = new Set(rites);
     this.P = new Float32Array(PMAX * 10); this.PD = new Float32Array(PMAX * 7); this.pn = 0;
-    this.state = { ready: false, discovered: [], brush: 1, radius: 6, tool: 'pour', paused: false, speed, folio: false, tab: 'codex', sheet: '', suggest: -1, pourHint: !poured, ambitions: [...this.ambDone], gallery: Array.isArray(gallery) ? gallery : [],
+    this.state = { ready: false, discovered: [], brush: 1, radius: 6, tool: 'pour', paused: false, speed, folio: false, tab: 'codex', sheet: '', suggest: -1, experiment: null, pourHint: !poured, ambitions: [...this.ambDone], gallery: Array.isArray(gallery) ? gallery : [],
       curtainMounted: !this.still, curtainOpacity: 1, whisper: '', toast: null, toastOn: false, probe: { on: false }, opus: false,
       rites: [...this.unlocked], flasks, sound, tempest, recording: false, shareLabel: 'copy scene stamp link', flaskBusy: false, flaskStatus: '', checkpointDownload: '',
-      walkerIn: false, walkerHand: 'spade', walkerWeapon: false };
+      engineError: '', walkerIn: false, walkerHand: 'spade', walkerWeapon: false };
     this.frame = this.frame.bind(this);
   }
 
@@ -762,29 +796,41 @@ class Component extends DCLogic {
 
   // ---------- engine ----------
   initEngine() {
+    this.workerSubmitted = false;
     try {
       const w = new Worker(this.url, { type: 'module' });
-      w.onmessage = e => { const d = e.data; if (d.t === 'checkpoint' || d.t === 'restore') { this.onCheckpointReply(d); return; } if (d.type !== 'frame') return; this.workerOk = true; this.bufs = [d.color, d.emis, d.fx]; this.onFrame(d); };
+      w.onmessage = e => { if (this.worker !== w) return; const d = e.data; if (d.t === 'checkpoint' || d.t === 'restore') { this.onCheckpointReply(d); return; } if (d.type !== 'frame') return; this.workerOk = true; clearTimeout(this.watch); this.bufs = [d.color, d.emis, d.fx]; this.onFrame(d); };
       w.onerror = e => { if (e && e.preventDefault) e.preventDefault(); this.toLocal(); };
       this.worker = w; this.mode = 'worker';
       this.watch = setTimeout(() => { if (!this.workerOk) this.toLocal(); }, 2500);
     } catch (e) { this.toLocal(); }
   }
   toLocal() {
-    if (this.mode === 'local') return;
+    if (this.mode === 'local' || this.mode === 'failed') return;
+    clearTimeout(this.watch);
     if (this.worker) { this.worker.terminate(); this.worker = null; }
     for (const [requestId, job] of this.checkpointJobs) this.onCheckpointReply({ t: job.operation, requestId, ok: false, error: 'Worker unavailable; please retry.' });
     this.checkpointRequests = [];
+    if (this.workerSubmitted) {
+      this.mode = 'failed'; this.have = false;
+      this.ops = []; this.pending = []; this.pendingDt = 0; this.stepQ = 0;
+      this.painting = false; this.gesture = 'none'; this.walkerCmd = null; this.walkerKeys = {};
+      this.setState({ paused: true, flaskBusy: false, engineError: 'Simulation stopped. Reload to restart, then restore a saved flask if needed.' });
+      return;
+    }
     this.eng = this.M.createEngine(); this.mode = 'local';
     const n = this.M.N * 4; this.bufs = [new ArrayBuffer(n), new ArrayBuffer(n), new ArrayBuffer(n)]; this.have = true;
   }
   send() {
+    if (this.mode === 'failed') return;
     const msg = { type: 'tick', dt: this.pendingDt, speed: this.state.speed, paused: this.state.paused, step: this.state.paused ? this.stepQ : 0, still: this.still, ops: this.ops, held: this.toolTick(), walkerInput: this.walkerInputPayload(), walkerCmd: this.walkerCmd };
     this.ops = []; this.pendingDt = 0; this.stepQ = 0; this.walkerCmd = null; this.walkerJump = false; this.have = false;
     const requests = this.checkpointRequests; this.checkpointRequests = [];
     if (this.mode === 'worker') {
       msg.color = this.bufs[0]; msg.emis = this.bufs[1]; msg.fx = this.bufs[2];
-      this.worker.postMessage(msg, this.bufs);
+      this.workerSubmitted = true;
+      try { this.worker.postMessage(msg, this.bufs); }
+      catch (e) { this.toLocal(); return; }
       for (const request of requests) {
         try { this.worker.postMessage(request); }
         catch (e) { this.onCheckpointReply({ t: request.t, requestId: request.requestId, ok: false, error: e.message }); }
@@ -845,18 +891,24 @@ class Component extends DCLogic {
   }
   stainQuietly(list) {
     if (!list.length) return;
+    const action = this.experimentPourRef.current, focus = action && action.ownerDocument.activeElement === action && list.includes(this.state.experiment?.goal);
     for (const id of list) this.known.add(id);
     try { localStorage.setItem(DKEY, JSON.stringify([...this.known])); } catch (e) {}
-    this.setState({ discovered: [...this.known] });
+    this.setState({ discovered: [...this.known] }, () => {
+      if (focus && action.ownerDocument.activeElement === action.ownerDocument.body) this.experimentCodexRef.current?.focus();
+    });
   }
   revealMany(list, note) {
     const M = this.M; let lastId = -1;
+    const action = this.experimentPourRef.current, focus = action && action.ownerDocument.activeElement === action && list.includes(this.state.experiment?.goal);
     for (const id of list) if (!this.known.has(id)) { this.known.add(id); lastId = id; }
     if (lastId < 0) return;
     try { localStorage.setItem(DKEY, JSON.stringify([...this.known])); } catch (e) {}
     this.lastFind = M.NAMES[lastId];
     const w = note || M.PAGES[lastId].w;
-    this.setState({ discovered: [...this.known], whisper: w });
+    this.setState({ discovered: [...this.known], whisper: w }, () => {
+      if (focus && action.ownerDocument.activeElement === action.ownerDocument.body) this.experimentCodexRef.current?.focus();
+    });
     this.toast({ kind: 'find', names: [M.NAMES[lastId]], label: 'TRANSMUTED · ' + M.NAMES[lastId].toUpperCase(), text: w, swatch: rgb(M.COLORS[lastId]), rite: false });
     this.fanfare();
     if (this.nudgeGoal !== undefined && list.includes(this.nudgeGoal)) this.setState({ suggest: -1 });
@@ -917,6 +969,30 @@ class Component extends DCLogic {
     this.setState({ sheet: '', whisper: "Today's vessel. Everyone pours into the same glass today." });
     this.chime(523);
   }
+  // A pin keeps an existing opening recipe visible; it never changes the vessel.
+  pinExperiment(goal) {
+    if (!this.M || !this.opening || !this.state.ready || this.state.engineError || this.known.has(goal)) return;
+    const recipe = this.opening.NUDGES.find(n => this.M[n.goal] === goal);
+    if (!recipe) return;
+    this.nudged = true; clearTimeout(this.nudgeT); this.nudgeGoal = goal;
+    this.setState({ experiment: { goal, brush: this.M[recipe.brush], text: recipe.text }, suggest: this.M[recipe.brush], folio: false, sheet: '' }, () => (this.experimentPourRef.current || this.experimentCodexRef.current)?.focus());
+  }
+  dismissExperiment() {
+    const card = this.experimentRef.current, active = card && card.ownerDocument.activeElement;
+    const focus = card && card.contains(active);
+    this.nudged = true; clearTimeout(this.nudgeT);
+    this.setState({ experiment: null, suggest: -1 }, () => {
+      if (!focus || active.ownerDocument.activeElement !== active.ownerDocument.body) return;
+      const controls = this.rootRef.current?.querySelectorAll('.hd-btns button, [data-phone="element"], .ctl button') || [];
+      [...controls].find(el => !el.disabled && el.getClientRects().length)?.focus();
+    });
+  }
+  resumeExperiment() {
+    const n = this.state.experiment;
+    if (!this.M || !this.state.ready || this.state.engineError || !n || this.known.has(n.goal)) return;
+    this.pickElement(n.brush); this.selectTool('pour');
+    this.setState({ folio: false });
+  }
   // One suggestion per session, after the opening blast settles (or 25 s of calm).
   queueNudge(ms) { if (this.nudged) return; clearTimeout(this.nudgeT); this.nudgeT = setTimeout(() => this.nudge(), ms); }
   nudge() { if (this.nudged) return;
@@ -924,7 +1000,7 @@ class Component extends DCLogic {
     const n = this.opening && this.M && this.opening.pickNudge(this.known, this.M);
     if (!n) return;
     this.nudgeGoal = n.goal;
-    this.setState({ suggest: n.brush, whisper: n.text });
+    this.setState({ experiment: n, suggest: n.brush, whisper: n.text });
     this.toast({ label: 'TRY', text: n.text, swatch: rgb(this.M.COLORS[n.brush]), rite: false });
   }
   // The opening spark's blast is the vessel's, not the player's: it does not earn the cask rites.
@@ -1133,7 +1209,7 @@ class Component extends DCLogic {
     if (this.wantShot) { this.wantShot = false; cv.toBlob(b => b && this.download(b, 'alembic.png'), 'image/png'); }
   }
   frame(now) {
-    if (!this.alive) return;
+    if (!this.alive || this.mode === 'failed') return;
     this.raf = requestAnimationFrame(this.frame);
     const dt = Math.max(0, now - this.last); this.last = now; this.pendingDt += dt;
     if (this.pending.length) { this.ops.push(...this.pending); this.pending = []; }
@@ -1605,6 +1681,7 @@ class Component extends DCLogic {
     } catch (e) { this.setState({ flaskStatus: 'Scene stamp link failed to load.' }); }
   }
   requestCheckpoint(operation, payload, job) {
+    if (this.mode === 'failed') { this.setState({ flaskBusy: false, flaskStatus: 'Simulation stopped. Reload before saving or restoring a flask.' }); return null; }
     if (this.checkpointJobs.size) return null;
     const requestId = ++this.checkpointId;
     const timer = setTimeout(() => {
@@ -1768,13 +1845,13 @@ class Component extends DCLogic {
   hnd(key, fn) { return this.h[key] || (this.h[key] = fn); }
 
   renderVals() {
-    const s = this.state, M = this.M, t = s.toast;
+    const s = this.state, M = this.M, t = s.toast, suggest = s.experiment && this.known.has(s.experiment.goal) ? -1 : s.suggest;
     const fmt = ts => { const d = new Date(ts); return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' · ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }); };
     const base = {
       toolLabel: s.tool, radius: s.radius, cycleBrush: () => { const sizes = this.M.BRUSH_SIZES; this.selectRadius(sizes[(sizes.indexOf(s.radius) + 1) % sizes.length]); }, rootRef: this.rootRef, toggleScreen: () => this.goFullscreen(), vpRef: this.vpRef, cvRef: this.cvRef, retRef: this.retRef, hudRef: this.hudRef, boxRef: this.boxRef, lineRef: this.lineRef,
       miniRef: this.miniRef || (this.miniRef = React.createRef()), miniRectRef: this.miniRectRef || (this.miniRectRef = React.createRef()), zoomLabRef: this.zoomLabRef || (this.zoomLabRef = React.createRef()), pbZoomRef: this.pbZoomRef || (this.pbZoomRef = React.createRef()), cycleZoom: this.hnd('cycleZoom', () => this.cycleZoom()),
       miniPoint: this.miniPoint, zoomIn: () => this.zoomBy(1.5), zoomOut: () => this.zoomBy(1 / 1.5), zoomFit: () => { this.setState({ sheet: '' }); this.setView({ zoom: 1, panX: 0, panY: 0 }, true); },
-      phoneHudRef: this.phoneHudRef, almanacRef: this.almanacRef, frostRef: this.frostRef, warmRef: this.warmRef,
+      phoneHudRef: this.phoneHudRef, almanacRef: this.almanacRef, frostRef: this.frostRef, warmRef: this.warmRef, experimentRef: this.experimentRef, experimentPourRef: this.experimentPourRef, experimentCodexRef: this.experimentCodexRef,
       sheetOpen: !!s.sheet, elementsOpen: s.sheet === 'elements', optionsOpen: s.sheet === 'options',
       openElements: () => this.setState({ sheet: s.sheet === 'elements' ? '' : 'elements' }),
       openOptions: () => this.setState({ sheet: s.sheet === 'options' ? '' : 'options' }),
@@ -1783,10 +1860,12 @@ class Component extends DCLogic {
       brushDot: [6, 9, 13, 18, 24][Math.max(0, [1, 3, 6, 12, 22].indexOf(s.radius))],
       toolHint: `${s.tool} · size ${s.radius}`, brushName: '', brushSwatch: 'transparent', elementAria: 'Choose an element',
       starterTiles: [], foundTiles: [], foundLabel: '', blankNote: '',
+      experimentVisible: false, experimentPending: false, experimentComplete: false, experimentStatus: '', experimentText: '', experimentBrushLabel: '',
+      onExperimentBrush: () => this.resumeExperiment(), onDismissExperiment: () => this.dismissExperiment(),
       pourHint: s.pourHint && !s.curtainMounted, pourHintText: '',
-      suggesting: s.suggest >= 0 && s.brush !== s.suggest ? 'true' : 'false',
+      suggesting: suggest >= 0 && s.brush !== suggest ? 'true' : 'false',
       showHud: this.props.hud ?? true,
-      paused: s.paused, folio: s.folio, probe: s.probe, recording: s.recording,
+      paused: s.paused && !s.engineError, engineError: s.engineError, vesselEvents: s.engineError ? 'none' : 'auto', folio: s.folio, probe: s.probe, recording: s.recording,
       curtainMounted: s.curtainMounted, curtainOpacity: s.curtainOpacity, liftCurtain: () => this.liftCurtain(),
       titleColor: s.opus ? '#e8b86a' : '#c49a4a', titleGlow: s.opus ? 22 : 0,
       line: s.opus ? 'The Magnum Opus is in the glass. Lead kneels.' : (s.whisper || (this.coarse ? 'Drag to pour. Hold still to name a grain. Pinch, or tap with two fingers, to zoom.' : 'Hold to pour. Right-click names a grain; hold right-click to pan when zoomed. Scroll zooms. Casks remember fire. Space pauses; period steps a tick; comma cycles speed; [ ] the brush.')),
@@ -1816,7 +1895,7 @@ class Component extends DCLogic {
       soundLabel: s.sound ? 'sound on' : 'sound off', soundColor: s.sound ? '#f0e2c4' : '#7d6c55',
       clocks: CLOCKS.map(v => ({ label: CLOCK_LABEL[v], bg: s.speed === v ? '#2a2119' : '#1c1612', color: s.speed === v ? '#e8c97a' : '#cbb89a', onClick: this.hnd('spd' + v, () => this.setSpeed(v)) })),
       onStep: this.hnd('step1', () => this.stepTicks(1)), stepTitle: 'Step one tick (.), or ten (Shift+.). Pauses first.',
-      tools: TOOLS.filter(([k]) => k !== 'tap' || this.known.has(this.M.FONT)).map(([k, title]) => ({ label: k, title, bg: s.tool === k ? '#2a2119' : '#1c1612', color: s.tool === k ? '#e8c97a' : '#cbb89a', border: s.tool === k ? '#cbb89a' : '#3a3128', z: s.tool === k ? 1 : 0, onClick: this.hnd('tool' + k, () => this.selectTool(k)) })),
+      tools: TOOLS.filter(([k]) => k !== 'tap' || (M && this.known.has(M.FONT))).map(([k, title]) => ({ label: k, title, bg: s.tool === k ? '#2a2119' : '#1c1612', color: s.tool === k ? '#e8c97a' : '#cbb89a', border: s.tool === k ? '#cbb89a' : '#3a3128', z: s.tool === k ? 1 : 0, onClick: this.hnd('tool' + k, () => this.selectTool(k)) })),
       toastOpacity: s.toastOn ? 1 : 0, toastY: s.toastOn ? 0 : -8,
       toastLabel: t ? t.label : '', toastText: t ? t.text : '', toastSwatch: t ? t.swatch : 'transparent', toastBorder: t && t.rite ? '#e8c97a' : '#c49a4a', toastRot: t && t.rite ? 45 : 0,
       rites: RITES.map(([k, name, desc]) => { const on = this.unlocked.has(k); return { name: on ? name : name, desc, color: on ? '#f0e2c4' : '#6f6150', mark: on ? '#e8c97a' : '#4a3e30', fill: on ? '#c49a4a' : 'transparent', glow: on ? '0 0 10px rgba(232,201,122,.5)' : 'none' }; }),
@@ -1831,19 +1910,28 @@ class Component extends DCLogic {
       chips: [], sizes: [], pages: [], tally: '', folioCount: '',
     };
     if (!M) return base;
+    const experiment = s.experiment, complete = !!experiment && this.known.has(experiment.goal);
+    base.experimentVisible = !!experiment && s.ready && !s.engineError;
+    base.experimentComplete = complete;
+    base.experimentPending = !!experiment && !complete;
+    if (experiment) {
+      base.experimentStatus = complete ? 'Discovered · ' + M.NAMES[experiment.goal] : 'Waiting for a new Codex page.';
+      base.experimentText = complete ? 'This page is now in your Codex. Choose another experiment, or keep exploring.' : experiment.text;
+      base.experimentBrushLabel = 'pour ' + M.NAMES[experiment.brush];
+    }
     const order = [...M.STARTER, ...M.TRANSMUTED];
     base.chips = order.filter(id => this.known.has(id)).map(id => {
       const on = s.brush === id, ki = M.STARTER.indexOf(id);
       return {
         name: M.NAMES[id], title: M.PAGES[id].w, swatch: rgb(M.COLORS[id]),
-        bg: on ? '#2a2119' : '#1c1612', border: on ? '#cbb89a' : id === s.suggest ? '#e8c97a' : '#3a3128',
+        bg: on ? '#2a2119' : '#1c1612', border: on ? '#cbb89a' : id === suggest ? '#e8c97a' : '#3a3128',
         shadow: on ? 'inset 0 0 0 1px #cbb89a, 0 0 12px rgba(196,154,74,.25)' : 'none',
         hasKey: ki >= 0 && ki < 10, key: ki === 9 ? '0' : String(ki + 1),
         onClick: this.hnd('b' + id, () => this.setState({ brush: id })),
       };
     });
     const tile = id => {
-      const on = s.brush === id, tip = id === s.suggest && !on;
+      const on = s.brush === id, tip = id === suggest && !on;
       return { name: tip ? M.NAMES[id] + ' ✦' : M.NAMES[id], swatch: rgb(M.COLORS[id]), on: on ? 'true' : 'false', bg: on ? '#2a2119' : '#1c1612', border: on ? '#c49a4a' : tip ? '#e8c97a' : '#3a3128', onClick: this.hnd('pk' + id, () => this.pickElement(id)) };
     };
     base.pourHintText = `${this.coarse ? 'Drag a finger' : 'Click and drag'} to pour ${M.NAMES[s.brush]}`;
@@ -1864,9 +1952,13 @@ class Component extends DCLogic {
     base.folioCount = s.tab === 'codex' ? base.tally : s.tab === 'rites' ? base.riteTally : s.tab === 'ambitions' ? `${this.ambDone.size} / ${base.ambitionsList.length} ambitions` : 'Three flasks. Stopper the vessel to keep it.';
     base.pages = order.map(id => {
       const k = this.known.has(id);
-      return k
+      const page = k
         ? { name: M.NAMES[id], swatch: rgb(M.COLORS[id]), whisper: M.PAGES[id].w, leaf: M.PAGES[id].l, opacity: 1, nameColor: '#f0e2c4', whisperColor: '#d4b56a' }
         : { name: '· · ·', swatch: '#1a1512', whisper: M.HINTS[id] || 'Unwritten.', leaf: '', opacity: 0.7, nameColor: '#6f6150', whisperColor: '#8f7d62' };
+      page.hintId = 'codex-hint-' + id;
+      page.canPin = !k && s.ready && !s.engineError && !!this.opening && this.opening.NUDGES.some(n => M[n.goal] === id);
+      if (page.canPin) page.onPin = this.hnd('pin' + id, () => this.pinExperiment(id));
+      return page;
     });
     return base;
   }

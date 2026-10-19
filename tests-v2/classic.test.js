@@ -310,5 +310,5 @@ test('the page offers a tap tool that sends the font op, only once the font is k
   assert.match(html, /\['tap', '[^']+'\]/);
   assert.match(html, /t: 'font', x: [^,]+, y: [^,]+, m: /);
   assert.match(html, /tapOp\(c\) \{ return this\.known\.has\(this\.M\.FONT\)/);
-  assert.match(html, /k !== 'tap' \|\| this\.known\.has\(this\.M\.FONT\)/);
+  assert.match(html, /k !== 'tap' \|\| \(M && this\.known\.has\(M\.FONT\)\)/);
 });
