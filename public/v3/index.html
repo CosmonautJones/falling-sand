@@ -9,6 +9,7 @@
       content="Break a dam. Grow a valley. Burn it down and see what returns. A living falling-sand playground."
     />
     <title>Living Valley · Alembic III</title>
+    <script src="../webgpu-presenter.js"></script>
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
@@ -64,6 +65,7 @@
           aria-label="Valley canvas. Select a tool, then draw. Arrow keys move the brush; Enter applies it. Use two fingers to explore."
           aria-describedby="canvas-help"
         ></canvas>
+        <div id="cursor-ring" aria-hidden="true" style="position:absolute;display:none;pointer-events:none;border:1px solid rgba(228,233,207,.72);border-radius:50%;transform:translate(-50%,-50%);z-index:0;"></div>
         <p id="canvas-help" class="sr-only">
           Water feeds soil. Seeds grow in wet, sunlit ground. Fire returns plant nutrients to
           litter. Stone roofs shade plants. Scroll to zoom, or pan with two fingers. On a keyboard,
