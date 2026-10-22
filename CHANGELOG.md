@@ -4,6 +4,33 @@
 
 This log covers the browser V2. The [Godot V2 project](https://github.com/CosmonautJones/alembic-godot-v2) has its own builds and releases; its saves and feature set differ. Dates below are in America/New_York.
 
+Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and the version sections follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Earlier V2 releases were tagged by date (`v2-2026-10-14`, `v2-2026-10-16`); `0.2.0` is the first SemVer release. The dated entries below the 0.2.0 summary are the player-facing notes it includes.
+
+## [Unreleased]
+
+## [0.2.0] - 2026-10-21
+
+Everything merged to `main` since the `v2-2026-10-16` release.
+
+### Added
+
+- **Catch the Pour.** An optional finite-resource puzzle at `/v2/catch/`: route one 2,000-cell water charge into the cistern using 160 stone and 240 sand, and hold 1,320 water for 60 ticks by tick 900. It has build previews, budgets, Undo and an exact Retry, and runs in its own tab with separate storage, so the sandbox and saved flasks are unaffected ([#39](https://github.com/CosmonautJones/falling-sand/pull/39)).
+- **Pinned Codex experiments.** You can keep one Codex experiment visible while you play. Discovering it marks it complete, and keyboard focus follows pin, completion and dismissal ([#38](https://github.com/CosmonautJones/falling-sand/pull/38)).
+- The classic pack: napalm, methane, wax, concrete, C-4, fuse, cryo, the font and the tap tool ([#37](https://github.com/CosmonautJones/falling-sand/pull/37); see "The classic pack" below).
+- Seasons, the almanac forecast and weather omens ([#34](https://github.com/CosmonautJones/falling-sand/pull/34); see "Seasons and weather warnings" below).
+
+### Changed
+
+- Snow slumps into drifts, flutters, avalanches and packs to ice, and glow lights caves ([#36](https://github.com/CosmonautJones/falling-sand/pull/36)).
+- The brush size shows on its own control ([#39](https://github.com/CosmonautJones/falling-sand/pull/39)).
+
+### Fixed
+
+- Thick liquids no longer stall when they lose a movement roll but still have somewhere to go ([#38](https://github.com/CosmonautJones/falling-sand/pull/38)).
+- A worker failure now stops with a clear recovery message. Before, it could quietly replace the active vessel ([#38](https://github.com/CosmonautJones/falling-sand/pull/38)).
+- Steamy caves no longer set plants on fire ([#36](https://github.com/CosmonautJones/falling-sand/pull/36)).
+- The selected element is no longer clipped on 320px-wide screens ([#39](https://github.com/CosmonautJones/falling-sand/pull/39)).
+
 ## 2026-10-17 — The classic pack
 
 Nine new things to discover, borrowed in spirit from the classic falling-sand toys and earned the Alembic way, by transmutation. None of the code is copied; each is rebuilt for this engine.
@@ -147,3 +174,6 @@ Shipped in [#27](https://github.com/CosmonautJones/falling-sand/pull/27).
 - Added ¼× speed and remembered speed preference.
 - Added deterministic single-step while paused: **.** for one tick, **Shift+.** for ten, plus desktop/phone step buttons.
 - Added a phone zoom button, two-finger tap zoom toggle and pinch snapping near whole zoom levels for crisper grains.
+
+[Unreleased]: https://github.com/CosmonautJones/falling-sand/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/CosmonautJones/falling-sand/compare/v2-2026-10-16...v0.2.0
