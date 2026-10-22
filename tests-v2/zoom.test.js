@@ -38,7 +38,7 @@ test('a pinch released near a whole zoom snaps to it', () => {
   const m = method('pinchEnd');
   assert.match(html, /SNAP_ZOOM = 0\.12/);
   assert.match(m, /Math\.abs\(v\.zoom - whole\) < SNAP_ZOOM\) this\.zoomBy\(whole \/ v\.zoom, pc\.mx, pc\.my\)/);
-  assert.match(m, /pc\.moved && pc\.vel && this\.glide\) this\.glide\.kick\(pc\.vel\.x, pc\.vel\.y/, 'a moving pinch glides after release');
+  assert.match(m, /pc\.moved && pc\.vel && this\.glide\) this\.glide\.kick\(pc\.vel\.x, pc\.vel\.y\)/, 'a moving pinch glides after release');
   assert.match(html, /sampleVelocity\(pc\.vel, mx, my, performance\.now\(\)\)/);
   assert.match(html, /touch\.cancel\(\)/, 'the second finger cancels the pour before the pinch');
 });

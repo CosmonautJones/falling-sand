@@ -47,20 +47,25 @@ export function sampleVelocity(prev, x, y, time) {
 export function createGlide({ pan, requestFrame = requestAnimationFrame, cancelFrame = cancelAnimationFrame }) {
   let raf = 0, vx = 0, vy = 0, t = 0;
   const step = (time) => {
-    const dt = Math.min(34, Math.max(0, time - t));
+    // A frame timestamp can sit behind performance.now(). Treat that as one frame of glide
+    // so the velocity still decays instead of coasting forever.
+    const dt = t ? Math.min(34, time - t) : 16;
+    const stepDt = dt > 0 ? dt : 16;
     t = time;
-    if (dt > 0) pan(vx * dt, vy * dt);
-    const decay = Math.pow(0.9, dt / (1000 / 60));
+    let moved = true;
+    try { moved = pan(vx * stepDt, vy * stepDt) !== false; }
+    catch (e) { raf = 0; vx = 0; vy = 0; return; }
+    const decay = Math.pow(0.9, stepDt / (1000 / 60));
     vx *= decay; vy *= decay;
-    if (Math.hypot(vx, vy) < 0.015) { raf = 0; vx = 0; vy = 0; return; }
+    if (!moved || !(Math.hypot(vx, vy) >= 0.015)) { raf = 0; vx = 0; vy = 0; return; }
     raf = requestFrame(step);
   };
   return {
     get moving() { return raf !== 0; },
     stop() { if (raf) cancelFrame(raf); raf = 0; vx = 0; vy = 0; },
-    kick(x, y, time) {
+    kick(x, y) {
       if (!(Math.hypot(x, y) >= 0.02)) return;
-      vx = x; vy = y; t = time;
+      vx = x; vy = y; t = 0;
       if (!raf) raf = requestFrame(step);
     },
   };

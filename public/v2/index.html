@@ -1578,16 +1578,18 @@ class Component extends DCLogic {
     }
     const whole = Math.round(v.zoom);
     if (whole >= 1 && Math.abs(v.zoom - whole) > 0.001 && Math.abs(v.zoom - whole) < SNAP_ZOOM) this.zoomBy(whole / v.zoom, pc.mx, pc.my);
-    if (pc.moved && pc.vel && this.glide) this.glide.kick(pc.vel.x, pc.vel.y, performance.now());
+    if (pc.moved && pc.vel && this.glide) this.glide.kick(pc.vel.x, pc.vel.y);
   }
   glidePan(dx, dy) {
-    if (!this.cam || !this.view) return;
+    if (!this.cam || !this.view) return false;
+    const prevX = this.view.panX, prevY = this.view.panY;
     const shift = v => this.cam.panView(this.vw, this.vh, v, dx, dy);
     this.view = shift(this.view);
     if (this.viewT) this.viewT = shift(this.viewT);
     this.viewUser = true;
     this.updateReticleSize();
     this.syncViewUI();
+    return Math.hypot(this.view.panX - prevX, this.view.panY - prevY) > 0.05;
   }
   // A second finger lands after the dab is already queued. Drop it if the worker has not taken it;
   // otherwise paint air over the same stroke. A finished pour is not in touchStroke, so this cannot reach back.

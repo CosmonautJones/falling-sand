@@ -104,16 +104,25 @@ test('a glide pans, decays, and stops', () => {
     requestFrame: fn => { frame = fn; return 1; },
     cancelFrame: () => { frame = null; },
   });
-  g.kick(0.01, 0, 0);
+  g.kick(0.01, 0);
   assert.equal(frame, null, 'a tiny flick does not glide');
-  g.kick(1, 0, 0);
+  g.kick(1, 0);
   assert.equal(typeof frame, 'function');
-  frame(16);
-  frame(32);
-  assert.ok(pans[0][0] > pans[1][0], 'the glide slows down');
+  frame(100);
+  frame(40);
+  assert.ok(pans[0][0] > pans[1][0], 'the glide slows down even if the frame clock jumps backward');
   g.stop();
   assert.equal(frame, null);
   assert.equal(g.moving, false);
+  let again = null;
+  const held = createGlide({
+    pan: () => false,
+    requestFrame: fn => { again = fn; return 1; },
+    cancelFrame: () => { again = null; },
+  });
+  held.kick(1, 0);
+  again(10);
+  assert.equal(held.moving, false, 'a glide that the camera clamp rejects stops');
 });
 
 test('undo drops a queued pour and paints air once the worker has taken it', () => {
