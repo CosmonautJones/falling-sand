@@ -366,14 +366,6 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
       </sc-if>
       <sc-if value="{{ tabTools }}" hint-placeholder-val="{{ false }}">
         <div data-sheet="tools">
-          <div class="sheet-label">Tool</div>
-          <div class="seg seg-3">
-            <sc-for list="{{ tools }}" as="t" hint-placeholder-count="7">
-              <button onClick="{{ t.onClick }}" title="{{ t.title }}" style="background:{{ t.bg }}; color:{{ t.color }}; border-color:{{ t.border }};">{{ t.label }}</button>
-            </sc-for>
-          </div>
-          <div class="sheet-label">Step</div>
-          <div class="seg"><button onClick="{{ onStep }}" aria-label="Step one tick">step</button></div>
           <div class="sheet-brush-land">
             <div class="sheet-label">Brush</div>
             <div class="seg seg-5">
@@ -389,6 +381,14 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
               </sc-for>
             </div>
           </div>
+          <div class="sheet-label">Tool</div>
+          <div class="seg seg-3">
+            <sc-for list="{{ tools }}" as="t" hint-placeholder-count="7">
+              <button onClick="{{ t.onClick }}" title="{{ t.title }}" style="background:{{ t.bg }}; color:{{ t.color }}; border-color:{{ t.border }};">{{ t.label }}</button>
+            </sc-for>
+          </div>
+          <div class="sheet-label">Step</div>
+          <div class="seg"><button onClick="{{ onStep }}" aria-label="Step one tick">step</button></div>
         </div>
       </sc-if>
       <sc-if value="{{ tabVessel }}" hint-placeholder-val="{{ false }}">

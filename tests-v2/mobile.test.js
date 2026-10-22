@@ -45,6 +45,8 @@ test('a landscape rail grows by the left inset and the toast clears the whisper'
   assert.match(html, /\.sheet-foot\{display:none\}/);
   assert.match(html, /\.sheet-body\{min-height:120px\}/);
   assert.match(html, /\.sheet-brush-land\{display:block\}/);
+  const tools = html.slice(html.indexOf('data-sheet="tools"'), html.indexOf('data-sheet="vessel"'));
+  assert.ok(tools.indexOf('sheet-brush-land') < tools.indexOf('>Tool<'), 'landscape Brush and Speed lead the Tools tab');
   assert.match(html, /\.experiment-card\{position:fixed;[^}]*top:calc\(max\(8px,env\(safe-area-inset-top\)\) \+ 92px\)/);
   assert.match(html, /data-safe-right/);
   assert.match(html, /\.toast\{top:calc\(max\(8px, env\(safe-area-inset-top\)\) \+ 86px\)!important\}/);
