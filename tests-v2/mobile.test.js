@@ -37,6 +37,12 @@ test('a touch screen fills the dynamic viewport and parks the minimap in the saf
   assert.match(html, /viewport-fit=cover/);
 });
 
+test('a landscape rail grows by the left inset and the toast clears the whisper', () => {
+  assert.match(html, /\.phone-bar\{[^}]*width:calc\(76px \+ env\(safe-area-inset-left\)\)/);
+  assert.match(html, /\.hd\{[^}]*left:calc\(84px \+ env\(safe-area-inset-left\)\)/);
+  assert.match(html, /\.toast\{top:calc\(max\(8px, env\(safe-area-inset-top\)\) \+ 44px\)!important\}/);
+});
+
 test('layout respects safe-area insets and dynamic viewport height', () => {
   assert.match(html, /env\(safe-area-inset-top\)/);
   assert.match(html, /env\(safe-area-inset-bottom\)/);

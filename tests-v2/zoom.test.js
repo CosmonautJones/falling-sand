@@ -6,13 +6,16 @@ const html = readFileSync(new URL('../public/v2/index.html', import.meta.url), '
 const bar = html.slice(html.indexOf('<nav class="phone-bar"'), html.indexOf('</nav>'));
 const method = name => { const i = html.indexOf(`  ${name}(`); return html.slice(i, html.indexOf('\n  }\n', i)); };
 
-test('the phone bar has a thumb zoom button that steps 2×, 4×, then fits', () => {
+test('the phone bar has a thumb zoom button that steps 1×, 2×, 4×, then fits', () => {
   assert.match(bar, /data-phone="zoom"[^>]*onClick="\{\{ cycleZoom \}\}"/);
   assert.match(html, /ZOOM_STEPS = \[2, 4\]/);
   const m = method('cycleZoom');
-  assert.match(m, /ZOOM_STEPS\.find\(z => z > v\.zoom \+ 0\.05\) \|\| 1/);
+  assert.match(m, /defaultView\(this\.vw, this\.vh\)/, '1× is the height-filling view, so fit can return to it');
+  assert.match(m, /\[\s*1,\s*\.\.\.ZOOM_STEPS\s*\]/);
   assert.match(m, /this\.zoomBy\(next \/ v\.zoom, this\.vw \/ 2, this\.vh \/ 2\)/, 'zooms around the middle of the view');
-  assert.match(html, /pz\.textContent = v\.zoom < 1\.05 \? '⊕'/, 'the button shows the current zoom');
+  assert.match(m, /this\.setView\(fill, true\)/);
+  assert.match(html, /pz\.textContent = v\.zoom < 1\.05 \? '⊕'/, 'a fitted world still reads as fit');
+  assert.match(html, /atFill \? '1×'/, 'the height-filling view reads as 1×');
 });
 
 test('a quick two-finger tap toggles fit and a close-up; a slow or moving pinch does not', () => {

@@ -172,6 +172,25 @@ test('pointer mapping round-trips at every zoom and offset on a tall screen', ()
   assert.ok(fitCam.y > 0, 'fit on a phone letterboxes the short world inside the tall screen');
 });
 
+test('a bottom bar lifts the floor into view and still lets it pan back down', () => {
+  const vw = 390, vh = 844, bar = 96;
+  const plain = defaultView(vw, vh);
+  const lifted = defaultView(vw, vh, bar);
+  const a = cameraFromView(vw, vh, plain);
+  const b = cameraFromView(vw, vh, lifted);
+  assert.ok(Math.abs(a.scale - b.scale) < 1e-9, 'grain size stays the fill-height size');
+  assert.ok(Math.abs(b.y - (a.y - bar)) < 1e-6, 'the world rises by the bar');
+  assert.ok(Math.abs(b.y + WORLD_H * b.scale - (vh - bar)) < 1e-6, 'the floor sits on top of the bar');
+  const floor = screenToGrain(vw, vh, lifted, vw / 2, vh - bar - 1, bar);
+  assert.ok(floor.y > WORLD_H - 2 && floor.y < WORLD_H, `floor grain ${floor.y}`);
+  const back = panView(vw, vh, lifted, 0, bar, bar);
+  assert.ok(Math.abs(cameraFromView(vw, vh, back).y) < 1e-6, 'panning down brings the top of the world back');
+  const tooFar = panView(vw, vh, lifted, 0, -400, bar);
+  assert.ok(Math.abs(cameraFromView(vw, vh, tooFar).y - b.y) < 1e-6, 'the floor cannot rise past the bar');
+  assert.deepEqual(defaultView(vw, vh, 0), plain);
+  assert.deepEqual(defaultView(1280, 720), { zoom: 1, panX: 0, panY: 0 });
+});
+
 test('a landscape phone that is wider than the world shows the whole vessel', () => {
   const view = defaultView(844, 390);
   assert.deepEqual(view, { zoom: 1, panX: 0, panY: 0 });

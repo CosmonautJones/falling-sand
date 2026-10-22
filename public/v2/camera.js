@@ -34,6 +34,21 @@ function frameOffset(vw, vh) {
   return { base, x: (vw - WORLD_W * base) / 2, y: (vh - WORLD_H * base) / 2 };
 }
 
+// Optional last argument: CSS pixels of the bottom edge covered by a bar.
+// Zero keeps the old clamp. A positive value lets the floor slide up until it
+// clears that bar, and no further.
+function bottomEdge(edge) {
+  if (typeof edge === 'number') return Math.max(0, finite(edge, 0));
+  if (edge && typeof edge.bottom === 'number') return Math.max(0, finite(edge.bottom, 0));
+  return 0;
+}
+
+function verticalOrigin(vh, worldH, originY, bottom) {
+  const limit = Math.max(0, vh - bottom);
+  if (worldH <= limit + 0.001) return (limit - worldH) / 2;
+  return Math.min(0, Math.max(limit - worldH, originY));
+}
+
 // Pixel camera: world origin (grain 0,0) at (x, y), `scale` CSS pixels per grain.
 export function cameraFromView(vw, vh, view) {
   const frame = frameOffset(vw, vh);
@@ -48,8 +63,9 @@ export function cameraFromView(vw, vh, view) {
   };
 }
 
-export function clampView(vw, vh, view) {
+export function clampView(vw, vh, view, edge = 0) {
   const frame = frameOffset(vw, vh);
+  const bottom = bottomEdge(edge);
   const zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, finite(view.zoom, 1)));
   const scale = frame.base * zoom;
   const worldW = WORLD_W * scale;
@@ -58,71 +74,73 @@ export function clampView(vw, vh, view) {
   let originY = frame.y + finite(view.panY, 0);
   if (worldW <= vw + 0.001) originX = (vw - worldW) / 2;
   else originX = Math.min(0, Math.max(vw - worldW, originX));
-  if (worldH <= vh + 0.001) originY = (vh - worldH) / 2;
-  else originY = Math.min(0, Math.max(vh - worldH, originY));
+  originY = verticalOrigin(vh, worldH, originY, bottom);
   return { zoom, panX: originX - frame.x, panY: originY - frame.y };
 }
 
-export function screenToGrain(vw, vh, view, sx, sy) {
-  const cam = cameraFromView(vw, vh, clampView(vw, vh, view));
+export function screenToGrain(vw, vh, view, sx, sy, edge = 0) {
+  const cam = cameraFromView(vw, vh, clampView(vw, vh, view, edge));
   return { x: (sx - cam.x) / cam.scale, y: (sy - cam.y) / cam.scale };
 }
 
 // Screen position of a grain's center.
-export function grainToScreen(vw, vh, view, gx, gy) {
-  const cam = cameraFromView(vw, vh, clampView(vw, vh, view));
+export function grainToScreen(vw, vh, view, gx, gy, edge = 0) {
+  const cam = cameraFromView(vw, vh, clampView(vw, vh, view, edge));
   return { x: cam.x + (gx + 0.5) * cam.scale, y: cam.y + (gy + 0.5) * cam.scale };
 }
 
 // Keep the world fraction (gx, gy) under the screen point while zoom changes.
-export function viewFromAnchor(vw, vh, zoom, sx, sy, gx, gy) {
+export function viewFromAnchor(vw, vh, zoom, sx, sy, gx, gy, edge = 0) {
   const frame = frameOffset(vw, vh);
   const scale = frame.base * zoom;
   const originX = sx - gx * WORLD_W * scale;
   const originY = sy - gy * WORLD_H * scale;
-  return clampView(vw, vh, { zoom, panX: originX - frame.x, panY: originY - frame.y });
+  return clampView(vw, vh, { zoom, panX: originX - frame.x, panY: originY - frame.y }, edge);
 }
 
-export function zoomAround(vw, vh, view, factor, sx, sy) {
-  const clamped = clampView(vw, vh, view);
-  const grain = screenToGrain(vw, vh, clamped, sx, sy);
+export function zoomAround(vw, vh, view, factor, sx, sy, edge = 0) {
+  const clamped = clampView(vw, vh, view, edge);
+  const grain = screenToGrain(vw, vh, clamped, sx, sy, edge);
   const zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, clamped.zoom * factor));
-  return viewFromAnchor(vw, vh, zoom, sx, sy, grain.x / WORLD_W, grain.y / WORLD_H);
+  return viewFromAnchor(vw, vh, zoom, sx, sy, grain.x / WORLD_W, grain.y / WORLD_H, edge);
 }
 
-export function panView(vw, vh, view, dx, dy) {
-  const clamped = clampView(vw, vh, view);
-  return clampView(vw, vh, { zoom: clamped.zoom, panX: clamped.panX + dx, panY: clamped.panY + dy });
+export function panView(vw, vh, view, dx, dy, edge = 0) {
+  const clamped = clampView(vw, vh, view, edge);
+  return clampView(vw, vh, { zoom: clamped.zoom, panX: clamped.panX + dx, panY: clamped.panY + dy }, edge);
 }
 
 // Center a grain (not a fraction) in the viewport, keeping zoom.
-export function panToCenter(vw, vh, view, gx, gy) {
-  const clamped = clampView(vw, vh, view);
+export function panToCenter(vw, vh, view, gx, gy, edge = 0) {
+  const clamped = clampView(vw, vh, view, edge);
   const frame = frameOffset(vw, vh);
   const scale = frame.base * clamped.zoom;
   const originX = vw / 2 - gx * scale;
   const originY = vh / 2 - gy * scale;
-  return clampView(vw, vh, { zoom: clamped.zoom, panX: originX - frame.x, panY: originY - frame.y });
+  return clampView(vw, vh, { zoom: clamped.zoom, panX: originX - frame.x, panY: originY - frame.y }, edge);
 }
 
 // Whole world on a desktop-shaped viewport. Height-filling crop when the
-// viewport is taller than 480:270 (a phone held upright).
-export function defaultView(vw, vh) {
+// viewport is taller than 480:270 (a phone held upright). A bottom edge lifts
+// that crop so the floor clears a bar covering the bottom of the screen.
+export function defaultView(vw, vh, edge = 0) {
   if (!(vw > 0) || !(vh > 0)) return { zoom: 1, panX: 0, panY: 0 };
   const worldAspect = WORLD_W / WORLD_H;
-  if (vw / vh >= worldAspect * 0.995) return { zoom: 1, panX: 0, panY: 0 };
+  const bottom = bottomEdge(edge);
+  if (vw / vh >= worldAspect * 0.995 && !(bottom > 0)) return { zoom: 1, panX: 0, panY: 0 };
   const base = containScale(vw, vh);
-  const zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, fillHeightScale(vh) / base));
+  const zoom = vw / vh >= worldAspect * 0.995 ? 1 : Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, fillHeightScale(vh) / base));
   const scale = base * zoom;
   const frame = frameOffset(vw, vh);
   const originX = (vw - WORLD_W * scale) / 2;
-  const originY = (vh - WORLD_H * scale) / 2;
-  return clampView(vw, vh, { zoom, panX: originX - frame.x, panY: originY - frame.y });
+  let originY = (vh - WORLD_H * scale) / 2;
+  if (bottom > 0) originY = Math.min(originY, (vh - bottom) - WORLD_H * scale);
+  return clampView(vw, vh, { zoom, panX: originX - frame.x, panY: originY - frame.y }, edge);
 }
 
 // Visible world, as fractions of the vessel, for the minimap.
-export function viewRect(vw, vh, view) {
-  const cam = cameraFromView(vw, vh, clampView(vw, vh, view));
+export function viewRect(vw, vh, view, edge = 0) {
+  const cam = cameraFromView(vw, vh, clampView(vw, vh, view, edge));
   const x0 = Math.max(0, (0 - cam.x) / cam.scale);
   const y0 = Math.max(0, (0 - cam.y) / cam.scale);
   const x1 = Math.min(WORLD_W, (vw - cam.x) / cam.scale);
