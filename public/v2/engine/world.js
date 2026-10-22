@@ -345,14 +345,27 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
   // pourMark follows a touch dab through every swap. It is not checkpointed: a pinch
   // deletes exactly those grains, and lifting the finger clears the tags.
   const PRE = new Uint8Array(W * H), PREMARK = new Uint8Array(N);
+  // Spray's radius is fractional, and a loop from x - r steps on those fractions
+  // and never lands on a cell. Floor the start and ceil the end so the tag and
+  // the fling visit exactly the integer cells the brush can paint.
+  function brushRect(x0, y0, x1, y1) {
+    return [
+      Math.max(0, Math.floor(Math.min(x0, x1))),
+      Math.max(0, Math.floor(Math.min(y0, y1))),
+      Math.min(W - 1, Math.ceil(Math.max(x0, x1))),
+      Math.min(H - 1, Math.ceil(Math.max(y0, y1))),
+    ];
+  }
   function flingPre(x0, y0, x1, y1, m) {
-    for (let y = Math.max(0, y0); y <= Math.min(H - 1, y1); y++) for (let x = Math.max(0, x0); x <= Math.min(W - 1, x1); x++) {
+    const [xa, ya, xb, yb] = brushRect(x0, y0, x1, y1);
+    for (let y = ya; y <= yb; y++) for (let x = xa; x <= xb; x++) {
       const i = y * W + x; PRE[i] = cells[i] === m ? 1 : 0; PREMARK[i] = pourMark[i];
     }
   }
   function stampPour(x0, y0, x1, y1, m) {
     if (!m) return;
-    for (let y = Math.max(0, y0); y <= Math.min(H - 1, y1); y++) for (let x = Math.max(0, x0); x <= Math.min(W - 1, x1); x++) {
+    const [xa, ya, xb, yb] = brushRect(x0, y0, x1, y1);
+    for (let y = ya; y <= yb; y++) for (let x = xa; x <= xb; x++) {
       const i = y * W + x;
       if (cells[i] !== m) continue;
       if (!PRE[i] || PREMARK[i]) pourMark[i] = 1;
@@ -361,7 +374,8 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
   function flingCells(x0, y0, x1, y1, m, vx, vy) {
     const hasX = typeof vx === 'number' && isFinite(vx), hasY = typeof vy === 'number' && isFinite(vy);
     if ((!hasX && !hasY) || m === AIR || KIND[m] === K_STATIC || isCritter(m)) return;
-    for (let y = Math.max(0, y0); y <= Math.min(H - 1, y1); y++) for (let x = Math.max(0, x0); x <= Math.min(W - 1, x1); x++) {
+    const [xa, ya, xb, yb] = brushRect(x0, y0, x1, y1);
+    for (let y = ya; y <= yb; y++) for (let x = xa; x <= xb; x++) {
       const i = y * W + x; if (cells[i] !== m || PRE[i]) continue;
       if (hasX) VX[i] = Math.max(-MAXV, Math.min(MAXV, vx));
       if (hasY) VY[i] = Math.max(-MAXV, Math.min(MAXV, vy));
@@ -618,6 +632,13 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     born[i] = 1;
     // A sampled few transmutations become sparks in the UI; the sample is positional, so no hidden counter.
     if (EV.length < 24 && ((x * 7 + y * 13 + tickIndex) & 15) === 0) ev({ t: 'tx', x, y, m: dest });
+  }
+  // setc drops the pour tag. Salt that drinks is still that grain, so the tag stays.
+  // Nothing else in the sim loop reads it.
+  function dissolveSalt(x, y) {
+    const i = y * W + x, tag = pourMark[i];
+    transmute(x, y, BRINE);
+    if (tag) pourMark[i] = 1;
   }
 
   function growPlant(x, y) {
@@ -1390,8 +1411,8 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       case ASH: if (hasN(x, y, WATER)) { transmute(x, y, MUD); return true; } return false;
       case SALT:
         if (hasN(x, y, ASH)) { transmute(x, y, POWDER); return true; }
-        if (hasN(x, y, SNOW)) { transmute(x, y, BRINE); return true; }
-        if (wetN(x, y)) { transmute(x, y, BRINE); return true; }
+        if (hasN(x, y, SNOW)) { dissolveSalt(x, y); return true; }
+        if (wetN(x, y)) { dissolveSalt(x, y); return true; }
         return false;
       case STEAM:
         if (hasN(x, y, ICE)) { transmute(x, y, WATER); return true; }
@@ -1971,13 +1992,16 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
             if (i < 0 || i >= N) continue;
             const cur = cells[i], was = prior[k];
             const dabHere = cur === m && was !== m;
+            const dissolved = m === SALT && cur === BRINE && was !== BRINE && was !== SALT;
             const hole = span[k] === 1 && m !== AIR && cur === AIR && was !== AIR;
-            if (!dabHere && !hole) continue;
+            if (!dabHere && !dissolved && !hole) continue;
             setc(i % W, (i / W) | 0, was, grain(was));
           }
         }
         if (m !== AIR) {
-          for (let i = 0; i < N; i++) if (pourMark[i] && cells[i] === m) setc(i % W, (i / W) | 0, AIR, 0);
+          // A tagged salt grain may already be brine. Other materials still have to match.
+          const brine = m === SALT ? BRINE : -1;
+          for (let i = 0; i < N; i++) if (pourMark[i] && (cells[i] === m || cells[i] === brine)) setc(i % W, (i / W) | 0, AIR, 0);
         }
         pourMark.fill(0);
         break;

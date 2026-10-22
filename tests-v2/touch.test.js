@@ -699,3 +699,117 @@ test('a live touch hold tags every held pour, and a pinch takes the grains back'
   assert.equal(sprayHeld.t, 'spray');
   assert.equal(sprayHeld.mark, 1, 'held spray ticks carry the stroke tag');
 });
+
+test('a fractional spray paints the same cells with or without a tag, and the tag covers them', () => {
+  const radii = E.BRUSH_SIZES.map((size) => Math.max(2, size * 1.6));
+  const planes = () => [new Uint8Array(E.N * 4), new Uint8Array(E.N * 4), new Uint8Array(E.N * 4)];
+  for (const r of radii) {
+    const shoot = (mark) => {
+      const engine = E.createEngine({ seed: 11, scene: 'empty', weather: false, ambientEmbers: false });
+      const op = { t: 'spray', x: 240, y: 40, r, m: E.GOLD, n: 40 };
+      if (mark) op.mark = 1;
+      engine.tick({ paused: true, ops: [op] }, ...planes());
+      const w = engine.inspect();
+      const at = [];
+      let tagged = 0;
+      for (let i = 0; i < E.N; i++) {
+        if (w.cells[i] === E.GOLD) at.push(i);
+        if (w.pourMark[i]) tagged++;
+      }
+      return { at, tagged };
+    };
+    const plain = shoot(false);
+    const marked = shoot(true);
+    assert.deepEqual(marked.at, plain.at, `r ${r} paints the same cells either way`);
+    assert.ok(plain.at.length > 0, `r ${r} sprays a grain`);
+    assert.equal(plain.tagged, 0);
+    assert.equal(marked.tagged, marked.at.length, `r ${r} tags every sprayed grain`);
+  }
+});
+
+test('a live gold spray at every brush size is removed by a pinch', () => {
+  const { ui, timers, fire, scr, heldMarks } = touchPage();
+  const frame = 1000 / 60;
+  const keeper = 20 * E.W + 20;
+  const table = {};
+  for (const paused of [false, true]) {
+    for (const size of E.BRUSH_SIZES) {
+      const label = `gold spray ${paused ? 'paused' : 'running'} size ${size}`;
+      resetStroke(ui, timers);
+      heldMarks.length = 0;
+      const engine = seedHold(ui, E.GOLD, paused);
+      ui.state.tool = 'spray';
+      ui.state.radius = size;
+      const base = countMat(engine.inspect().cells, E.GOLD);
+      fire('pointerdown', 1, scr.x, scr.y);
+      assert.equal(ui.toolTick(), null, `${label} waits out the hold`);
+      const expectR = Math.max(2, size * 1.6);
+      const n = Math.round(600 / frame);
+      let flushed = false;
+      for (let i = 0; i < n; i++) {
+        const t = (i + 1) * frame;
+        if (!flushed && t >= 120) {
+          const timer = timers.find((tm) => tm.fn && tm.ms === 120);
+          assert.ok(timer, label);
+          timer.fn();
+          flushed = true;
+          assert.equal(ui.ops[0].t, 'spray', label);
+          assert.equal(ui.ops[0].mark, 1, label);
+          assert.equal(ui.ops[0].r, expectR, `${label} keeps the spray radius`);
+        }
+        ui.pendingDt = frame;
+        ui.send();
+      }
+      const w = engine.inspect();
+      assert.ok(countMat(w.cells, E.GOLD) > base, `${label} sprays`);
+      assert.ok(heldMarks.length > 0 && heldMarks.every((m) => m === 1), `${label} held ticks are tagged`);
+      w.setc(241, 30, E.BRICK, 4);
+      ui.ops.push({ t: 'box', x0: 400, y0: 10, x1: 430, y1: 30, m: E.BRICK });
+      fire('pointerdown', 2, scr.x + 80, scr.y + 40);
+      ui.state.paused = true;
+      ui.pendingDt = 0;
+      ui.send();
+      const after = engine.inspect();
+      const leftover = countMat(after.cells, E.GOLD) - 1;
+      table[label] = leftover;
+      assert.equal(after.cells[keeper], E.GOLD, `${label} keeps the sealed grain`);
+      assert.equal(leftover, 0, `${label} leaves no spray`);
+      assert.equal(after.cells[30 * E.W + 241], E.BRICK, `${label} keeps the brick on the stroke`);
+    }
+  }
+  assert.deepEqual(table, {
+    'gold spray running size 1': 0,
+    'gold spray running size 3': 0,
+    'gold spray running size 6': 0,
+    'gold spray running size 12': 0,
+    'gold spray running size 22': 0,
+    'gold spray paused size 1': 0,
+    'gold spray paused size 3': 0,
+    'gold spray paused size 6': 0,
+    'gold spray paused size 12': 0,
+    'gold spray paused size 22': 0,
+  });
+});
+
+test('a pinch removes salt that has already become brine, and leaves other brine', () => {
+  const color = [new Uint8Array(E.N * 4), new Uint8Array(E.N * 4), new Uint8Array(E.N * 4)];
+  const engine = E.createEngine({ seed: 3, scene: 'empty', weather: false, ambientEmbers: false });
+  engine.tick({ paused: true, ops: [
+    { t: 'box', x0: 0, y0: 55, x1: 479, y1: 59, m: E.STONE },
+    { t: 'box', x0: 10, y0: 10, x1: 30, y1: 30, m: E.STONE },
+    { t: 'p', x: 20, y: 20, r: 0, m: E.BRINE },
+    { t: 'p', x: 239, y: 31, r: 0, m: E.WATER },
+  ] }, ...color);
+  const w = engine.inspect();
+  const prior = w.cells.slice();
+  const keeper = 20 * E.W + 20;
+  engine.tick({ paused: true, ops: [{ t: 'p', x: 240, y: 30, r: 1, m: E.SALT, mark: 1 }] }, ...color);
+  simulateMs(engine, 600, color);
+  assert.ok(countMat(w.cells, E.BRINE) > 1, 'some of the dab turned to brine');
+  assert.equal(w.cells[keeper], E.BRINE);
+  const foot = strokeFootprint(prior, 240, 30, 1);
+  engine.tick({ paused: true, ops: [{ t: 'revert', m: E.SALT, ...foot }] }, ...color);
+  assert.equal(countMat(w.cells, E.SALT), 0, 'no salt from the dab remains');
+  assert.equal(countMat(w.cells, E.BRINE), 1, 'only the sealed brine remains');
+  assert.equal(w.cells[keeper], E.BRINE);
+});
