@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { createTouchPour, createGlide, sampleVelocity, LONG_PRESS_MS, MOVE_SLOP } from '../public/v2/touch-gesture.js';
+import * as cam from '../public/v2/camera.js';
 import * as E from '../public/v2/alembic-engine-v2.js';
 
 function harness() {
@@ -358,4 +359,343 @@ test('a pinch removes a tagged dab wherever it slid, and leaves other edits', ()
   simulateMs(state, 100, color);
   state.restore(saved);
   assert.ok([...state.inspect().pourMark].every(v => v === 0), 'restoring a world clears ephemeral marks');
+});
+
+// The page's real pointer path. send() attaches held: toolTick() every frame the
+// finger is down, which is the stream a single marked dab never exercises.
+function touchPage() {
+  const html = readFileSync(new URL('../public/v2/index.html', import.meta.url), 'utf8');
+  const script = html.match(
+    /<script type="text\/x-dc" data-dc-script[^>]*>([\s\S]*?)<\/script>/,
+  )[1];
+  const timers = [];
+  const window = {
+    addEventListener() {},
+    removeEventListener() {},
+  };
+  const context = {
+    DCLogic: class {
+      constructor() {
+        this.props = {};
+      }
+    },
+    React: { createRef: () => ({ current: null }) },
+    performance: { now: () => 0 },
+    localStorage: { getItem: () => null, setItem() {} },
+    requestAnimationFrame: () => 1,
+    cancelAnimationFrame() {},
+    Float32Array,
+    Uint32Array,
+    Uint8Array,
+    ArrayBuffer,
+    Map,
+    Set,
+    window,
+    setTimeout(fn, ms) {
+      timers.push({ fn, ms });
+      return timers.length;
+    },
+    clearTimeout(id) {
+      if (timers[id - 1]) timers[id - 1].fn = null;
+    },
+  };
+  vm.createContext(context);
+  vm.runInContext(script + '\nthis.Component = Component;', context);
+  const ui = new context.Component();
+  ui.M = E;
+  ui.setState = (patch, cb) => {
+    if (patch && typeof patch === 'object') Object.assign(ui.state, patch);
+    if (typeof cb === 'function') cb();
+  };
+  ui.vw = 390;
+  ui.vh = 844;
+  const listeners = {};
+  const vp = {
+    getBoundingClientRect: () => ({
+      left: 0,
+      top: 0,
+      width: ui.vw,
+      height: ui.vh,
+      right: ui.vw,
+      bottom: ui.vh,
+    }),
+    setPointerCapture() {},
+    releasePointerCapture() {},
+    addEventListener(ev, fn) {
+      (listeners[ev] ||= []).push(fn);
+    },
+    removeEventListener() {},
+  };
+  ui.vpRef = { current: vp };
+  ui.retRef = { current: null };
+  ui.rootRef = { current: null };
+  ui.touchMod = {
+    createTouchPour,
+    createGlide: (opts) => createGlide({ requestFrame: () => 1, cancelFrame() {}, ...opts }),
+  };
+  ui.cam = ui.decorateCam(cam);
+  ui.view = ui.cam.defaultView(ui.vw, ui.vh);
+  ui.viewT = ui.view;
+  ui.mode = 'local';
+  ui.onFrame = () => {
+    ui.sawFrame = true;
+    if (ui.lastColor && ui.bufs) ui.lastColor.set(new Uint8Array(ui.bufs[0]));
+    ui.have = true;
+  };
+  ui.bindInput();
+  const scr = ui.cam.grainToScreen(ui.vw, ui.vh, ui.view, 240, 30);
+  const fire = (type, pointerId, x, y, pointerType = 'touch') => {
+    const e = {
+      type,
+      pointerId,
+      pointerType,
+      button: 0,
+      altKey: false,
+      clientX: x,
+      clientY: y,
+      buttons: 1,
+      target: { closest: () => null },
+      preventDefault() {},
+      stopPropagation() {},
+    };
+    for (const fn of listeners[type] || []) fn(e);
+  };
+  const heldMarks = [];
+  const tick = ui.toolTick.bind(ui);
+  ui.toolTick = () => {
+    const op = tick();
+    if (op) heldMarks.push(op.mark);
+    return op;
+  };
+  // The page runs inside vm, so its arrays and op objects are not the host's.
+  // The engine only accepts host objects. Copy at the send boundary.
+  const hostOp = (op) => {
+    const out = {};
+    for (const k of Object.keys(op)) out[k] = op[k];
+    return out;
+  };
+  const hostList = (list) => {
+    const out = [];
+    for (const op of list || []) out.push(hostOp(op));
+    return out;
+  };
+  const realSend = ui.send.bind(ui);
+  ui.send = function () {
+    const prev = this.toolTick;
+    this.ops = hostList(this.ops);
+    this.toolTick = () => {
+      const op = prev.call(this);
+      return op ? hostOp(op) : null;
+    };
+    try {
+      return realSend();
+    } finally {
+      this.toolTick = prev;
+      this.ops = [];
+    }
+  };
+  return { ui, timers, fire, scr, heldMarks };
+}
+
+function resetStroke(ui, timers) {
+  ui.ptrs?.clear();
+  ui.gesture = 'none';
+  ui.painting = false;
+  ui.lastCell = null;
+  ui.curCell = null;
+  ui.dragStart = null;
+  ui.ops = [];
+  ui.pending = [];
+  ui.pendingDt = 0;
+  ui.stepQ = 0;
+  ui.touchStroke = null;
+  ui.touchHold = null;
+  ui.touchHoldT = 0;
+  ui.touchLive = false;
+  ui.touchMarked = false;
+  ui.strokeFoot = null;
+  ui.flingV = null;
+  for (const t of timers) t.fn = null;
+}
+
+function seedHold(ui, mat, paused) {
+  const bufs = [new ArrayBuffer(E.N * 4), new ArrayBuffer(E.N * 4), new ArrayBuffer(E.N * 4)];
+  const engine = E.createEngine({ seed: 3, scene: 'empty', weather: false, ambientEmbers: false });
+  const setup = [
+    { t: 'box', x0: 0, y0: 55, x1: 479, y1: 59, m: E.STONE },
+    { t: 'box', x0: 10, y0: 10, x1: 30, y1: 30, m: E.STONE },
+    { t: 'p', x: 20, y: 20, r: 0, m: mat },
+  ];
+  if (mat !== E.WATER) setup.push({ t: 'p', x: 240, y: 30, r: 0, m: E.WATER });
+  const planes = bufs.map((b) => new Uint8Array(b));
+  engine.tick({ paused: true, ops: setup }, ...planes);
+  ui.eng = engine;
+  ui.bufs = bufs;
+  ui.lastColor = new Uint8Array(E.N * 4);
+  ui.lastColor.set(planes[0]);
+  ui.sawFrame = true;
+  ui.state.tool = 'pour';
+  ui.state.brush = mat;
+  ui.state.radius = 1;
+  ui.state.paused = paused;
+  ui.state.pourHint = false;
+  ui.state.speed = 1;
+  ui.state.walkerIn = false;
+  ui.state.probe = { on: false };
+  return engine;
+}
+
+function taggedCount(w, mat) {
+  let n = 0;
+  for (let i = 0; i < E.N; i++) if (w.pourMark[i] && w.cells[i] === mat) n++;
+  return n;
+}
+
+test('a live touch hold tags every held pour, and a pinch takes the grains back', () => {
+  const { ui, timers, fire, scr, heldMarks } = touchPage();
+  const cell = ui.cellAt(scr.x, scr.y);
+  assert.equal(cell.x, 240);
+  assert.equal(cell.y, 30);
+  const frame = 1000 / 60;
+  const holds = [100, 300, 600, 1000];
+  const materials = [
+    ['gold', E.GOLD],
+    ['sand', E.SAND],
+    ['water', E.WATER],
+    ['salt', E.SALT],
+  ];
+  const table = {};
+  const keeper = 20 * E.W + 20;
+  for (const [name, mat] of materials) {
+    for (const paused of [false, true]) {
+      for (const ms of holds) {
+        const label = `${name} ${paused ? 'paused' : 'running'} ${ms}ms`;
+        resetStroke(ui, timers);
+        heldMarks.length = 0;
+        const engine = seedHold(ui, mat, paused);
+        const base = countMat(engine.inspect().cells, mat);
+        fire('pointerdown', 1, scr.x, scr.y);
+        assert.equal(ui.painting, true, label);
+        assert.equal(ui.ops.length, 0, `${label} queues the first dab`);
+        assert.equal(ui.toolTick(), null, `${label} sends nothing while the hold is open`);
+        const n = Math.round(ms / frame);
+        let flushed = false;
+        for (let i = 0; i < n; i++) {
+          const t = (i + 1) * frame;
+          if (!flushed && t >= 120) {
+            const timer = timers.find((tm) => tm.fn && tm.ms === 120);
+            assert.ok(timer, `${label} arms the 120 ms hold`);
+            timer.fn();
+            flushed = true;
+            assert.equal(ui.ops[0]?.mark, 1, `${label} flushes a tagged dab`);
+            assert.equal(
+              countMat(engine.inspect().cells, mat),
+              base,
+              `${label} waits to send the flush`,
+            );
+          }
+          ui.pendingDt = frame;
+          ui.send();
+          if (t < 120 - 1e-6)
+            assert.equal(
+              countMat(engine.inspect().cells, mat),
+              base,
+              `${label} has no grains at ${t.toFixed(0)}ms`,
+            );
+        }
+        const w = engine.inspect();
+        const mid = countMat(w.cells, mat);
+        if (ms <= 120) {
+          assert.equal(mid, base, `${label} pours nothing inside the hold`);
+          assert.equal(heldMarks.length, 0, `${label} held stream is silent inside the hold`);
+        } else {
+          assert.ok(mid > base, `${label} does pour once the hold flushes`);
+          assert.ok(heldMarks.length > 0, `${label} held ticks ran`);
+          assert.ok(
+            heldMarks.every((m) => m === 1),
+            `${label} held pours carry the stroke tag`,
+          );
+          if (!paused)
+            assert.ok(taggedCount(w, mat) > 5, `${label} tags the grains the held ticks added`);
+        }
+        w.setc(241, 30, E.BRICK, 4);
+        ui.ops.push({ t: 'box', x0: 400, y0: 10, x1: 430, y1: 30, m: E.BRICK });
+        fire('pointerdown', 2, scr.x + 80, scr.y + 40);
+        ui.state.paused = true;
+        ui.pendingDt = 0;
+        ui.send();
+        const after = engine.inspect();
+        const leftover = countMat(after.cells, mat) - 1;
+        table[label] = leftover;
+        assert.equal(after.cells[keeper], mat, `${label} keeps the sealed grain`);
+        assert.equal(leftover, 0, `${label} leaves no dab`);
+        assert.equal(
+          after.cells[30 * E.W + 241],
+          E.BRICK,
+          `${label} keeps the brick on the stroke`,
+        );
+        assert.equal(countMat(after.cells, E.BRICK), 652, `${label} keeps the brick box`);
+      }
+    }
+  }
+  assert.equal(
+    Object.values(table).every((n) => n === 0),
+    true,
+  );
+
+  resetStroke(ui, timers);
+  heldMarks.length = 0;
+  const tapEngine = seedHold(ui, E.GOLD, false);
+  const tapBase = countMat(tapEngine.inspect().cells, E.GOLD);
+  fire('pointerdown', 1, scr.x, scr.y);
+  for (let i = 0; i < 2; i++) {
+    ui.pendingDt = frame;
+    ui.send();
+  }
+  assert.equal(
+    countMat(tapEngine.inspect().cells, E.GOLD),
+    tapBase,
+    'a quick tap sends nothing before the finger lifts',
+  );
+  assert.equal(heldMarks.length, 0);
+  fire('pointerup', 1, scr.x, scr.y);
+  assert.equal(ui.ops[0].mark, 1, 'lifting before 120 ms still flushes a tagged dab');
+  assert.equal(ui.ops[1].t, 'untag');
+  ui.pendingDt = frame;
+  ui.send();
+  assert.ok(countMat(tapEngine.inspect().cells, E.GOLD) > tapBase, 'the quick tap pours');
+  assert.ok(
+    [...tapEngine.inspect().pourMark].every((v) => v === 0),
+    'finger-up drops the tags so the grains stay',
+  );
+
+  resetStroke(ui, timers);
+  heldMarks.length = 0;
+  ui.state.tool = 'pour';
+  ui.state.brush = E.SAND;
+  ui.state.radius = 1;
+  ui.touchStroke = null;
+  fire('pointerdown', 1, scr.x, scr.y, 'mouse');
+  assert.equal(ui.ops.length, 1, 'a mouse dab is not held for 120 ms');
+  assert.equal(ui.ops[0].t, 'p');
+  assert.equal(ui.ops[0].mark, undefined, 'a mouse dab is not part of a touch stroke');
+  const mouseHeld = ui.toolTick();
+  assert.equal(mouseHeld.t, 'p');
+  assert.equal(mouseHeld.mark, undefined, 'a mouse held tick stays untagged');
+
+  resetStroke(ui, timers);
+  heldMarks.length = 0;
+  ui.state.tool = 'spray';
+  ui.state.brush = E.GOLD;
+  ui.state.radius = 1;
+  fire('pointerdown', 1, scr.x, scr.y);
+  assert.equal(ui.ops.length, 0, 'a spray dab waits out the same hold');
+  assert.equal(ui.touchHold[0].t, 'spray');
+  assert.equal(ui.toolTick(), null);
+  timers.find((tm) => tm.fn && tm.ms === 120).fn();
+  assert.equal(ui.ops[0].t, 'spray');
+  assert.equal(ui.ops[0].mark, 1);
+  const sprayHeld = ui.toolTick();
+  assert.equal(sprayHeld.t, 'spray');
+  assert.equal(sprayHeld.mark, 1, 'held spray ticks carry the stroke tag');
 });

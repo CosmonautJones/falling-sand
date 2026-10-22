@@ -1390,15 +1390,28 @@ class Component extends DCLogic {
   // A font set by the tap tool is already taught the brush element (air leaves it to learn).
   // The tap is only offered once the font has been transmuted: new things are made, not handed out.
   tapOp(c) { return this.known.has(this.M.FONT) ? { t: 'font', x: c.x, y: c.y, m: this.state.brush } : null; }
-  toolTick() {
-    if (this.state.walkerIn && this.painting) { this.useWalkerTool(); return null; }
-    if (!this.painting || !this.curCell) return null;
+  toolOp() {
     const s = this.state, c = this.curCell;
+    if (!c) return null;
     if (s.tool === 'pour') return { t: 'p', x: c.x, y: c.y, r: s.radius, m: s.brush, ...this.flingFields() };
     if (s.tool === 'spray') return { t: 'spray', x: c.x, y: c.y, r: Math.max(2, s.radius * 1.6), m: s.brush, n: 3 + s.radius * 2 };
     if (s.tool === 'heat') return { t: 'heat', x: c.x, y: c.y, r: s.radius };
     if (s.tool === 'cool') return { t: 'cool', x: c.x, y: c.y, r: s.radius };
     return null;
+  }
+  toolTick() {
+    if (this.state.walkerIn && this.painting) { this.useWalkerTool(); return null; }
+    if (!this.painting || !this.curCell) return null;
+    // The first dab is still buffered. Held ticks must not pour ahead of that
+    // 120 ms hold. Once it flushes, every held pour carries the stroke tag.
+    if (this.touchStroke && !this.touchLive) return null;
+    const op = this.toolOp();
+    if (op && this.touchStroke && (op.t === 'p' || op.t === 'spray')) {
+      op.mark = 1;
+      this.noteStroke(op);
+      this.touchMarked = true;
+    }
+    return op;
   }
 
   // ---------- view / input ----------
@@ -1807,7 +1820,8 @@ class Component extends DCLogic {
         let op = null;
         if (tool === 'pour') op = pour(c.x, c.y, px, py);
         else if (tool === 'tap') { if (starting) op = this.tapOp(c); }
-        else if (starting || this.state.paused) op = this.toolTick();
+        // toolTick stays silent until the hold flushes, so the first dab is built here and buffered.
+        else if (starting || this.state.paused) op = this.touchStroke && !this.touchLive ? this.toolOp() : this.toolTick();
         if (op) this.queueTouchPour(op);
       },
       probe: (px, py) => { const c = this.cellAt(px, py); this.showProbe(c.x, c.y, px, py); },
