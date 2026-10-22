@@ -63,7 +63,9 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
 /* touch-fill: the vessel is the screen; chrome sits in the safe area */
 @media(max-width:700px),(pointer:coarse){
 .root{padding:0!important;gap:0!important}
-.hd{display:none!important}
+.hd{position:fixed!important;z-index:13;top:max(8px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));right:110px;width:auto!important;display:flex!important;pointer-events:none;padding:0!important}
+.hd-title{display:none!important}
+.hd-line{min-height:0!important;max-height:2.6em;overflow:hidden;text-shadow:0 1px 2px #000}
 .fig{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;max-width:none!important;margin:0!important;padding:0!important;border-radius:0!important;background:#0b090e!important;box-shadow:none!important}
 .vp{position:absolute!important;inset:0!important;width:auto!important;height:auto!important;max-height:none!important;aspect-ratio:auto!important;border-radius:0!important}
 .phone-bar{position:fixed;z-index:12;left:0;right:0;bottom:0;width:auto;padding:8px max(10px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));background:linear-gradient(to top,rgba(16,12,9,.88),rgba(16,12,9,0));pointer-events:none}
@@ -76,6 +78,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
 }
 @media(orientation:landscape) and (max-height:520px){
 .phone-bar{top:0;bottom:0;left:0;right:auto;width:76px;padding:max(4px,env(safe-area-inset-top)) 0 max(4px,env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left));background:linear-gradient(to right,rgba(16,12,9,.88),rgba(16,12,9,0))}
+.hd{left:max(84px,env(safe-area-inset-left));top:max(4px,env(safe-area-inset-top));right:100px}
 .zoom-controls{top:max(8px,env(safe-area-inset-top))!important;right:max(8px,env(safe-area-inset-right))!important}
 }
 </style>
@@ -1198,7 +1201,11 @@ class Component extends DCLogic {
     let bw = this.M.W, bh = this.M.H;
     if ((this.props.quality ?? 'full') === 'full') {
       const s = Math.min(window.devicePixelRatio || 1, 2);
-      bw = Math.max(this.M.W, Math.round(r.width * s)); bh = Math.max(this.M.H, Math.round(r.height * s));
+      bw = Math.max(1, Math.round(r.width * s)); bh = Math.max(1, Math.round(r.height * s));
+      // A viewport smaller than the world still gets a pixel per grain on the fitted axis.
+      // Scale both axes together so a tall screen is not squeezed back to 480 wide.
+      const fit = Math.min(r.width / this.M.W, r.height / this.M.H);
+      if (fit > 0 && fit * s < 1) { const boost = 1 / (fit * s); bw = Math.max(1, Math.round(bw * boost)); bh = Math.max(1, Math.round(bh * boost)); }
       if (bw > 2560) { bh = Math.round(bh * 2560 / bw); bw = 2560; }
       cv.style.imageRendering = 'auto';
     } else cv.style.imageRendering = 'pixelated';
