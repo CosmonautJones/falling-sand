@@ -793,7 +793,7 @@ class Component extends DCLogic {
     const M = this.M;
     let saved = null; try { saved = JSON.parse(localStorage.getItem(DKEY) || 'null'); } catch (e) {}
     this.known = new Set([...M.STARTER, ...(Array.isArray(saved) ? saved.filter(id => id >= 0 && id < M.COUNT) : [])]);
-    this.ids = new Uint8Array(M.N); this.lastColor = new Uint8Array(M.N * 4);
+    this.lastColor = new Uint8Array(M.N * 4);
     this.bufs = [new ArrayBuffer(M.N * 4), new ArrayBuffer(M.N * 4), new ArrayBuffer(M.N * 4)]; this.have = true;
     this.initGL();
     this.initEngine();
@@ -885,7 +885,6 @@ class Component extends DCLogic {
     const c = new Uint8Array(this.bufs[0]), e = new Uint8Array(this.bufs[1]), fx = new Uint8Array(this.bufs[2]);
     this.lastColor.set(c);
     this.upload(c, e, fx);
-    const ids = this.ids; for (let i = 0, j = 3; i < ids.length; i++, j += 4) ids[i] = c[j];
     if (r.kick > 0) { if (typeof navigator !== 'undefined' && navigator.vibrate && !this.still && performance.now() - (this.lastBuzz || 0) > 250) { this.lastBuzz = performance.now(); navigator.vibrate(Math.round(10 + 30 * Math.min(1, r.kick / 6))); } }
     if (r.kick > 0) { if (!this.still) this.shake = Math.min(1, this.shake + Math.min(1, r.kick / 6)); this.boom(r.kick); }
     if (r.kick >= 4) { if (!this.still) this.punch = Math.min(1, (this.punch || 0) + r.kick / 8); }
@@ -1130,11 +1129,12 @@ class Component extends DCLogic {
   }
   stepParticles(dt) {
     const P = this.P, D = this.PD, k = dt * 60;
+    const dragX = Math.pow(0.975, k), dragY = Math.pow(0.985, k), gy = 0.09 * k;
     let n = this.pn, w = 0;
     for (let i = 0; i < n; i++) {
       const o = i * 10;
       P[o + 4] -= dt; if (P[o + 4] <= 0) continue;
-      P[o + 3] += 0.09 * k; P[o + 2] *= Math.pow(0.975, k); P[o + 3] *= Math.pow(0.985, k);
+      P[o + 3] += gy; P[o + 2] *= dragX; P[o + 3] *= dragY;
       P[o] += P[o + 2] * k; P[o + 1] += P[o + 3] * k;
       if (w !== i) for (let j = 0; j < 10; j++) P[w * 10 + j] = P[o + j];
       const d = w * 7, a = P[w * 10 + 4] / P[w * 10 + 5];
@@ -1221,7 +1221,12 @@ class Component extends DCLogic {
     }
     let bw = this.M.W, bh = this.M.H;
     if ((this.props.quality ?? 'full') === 'full') {
-      const s = Math.min(window.devicePixelRatio || 1, 2);
+      // A coarse pointer caps the backing store at 1. A fine pointer stays at 2.
+      // The fit boost below still applies, so a 390×844 touch view is not a 390×844 buffer:
+      // the narrow axis is shorter than the world, and both axes scale until that axis has
+      // one buffer pixel per grain. The result is 480×1039, about 3.85 buffer px per grain.
+      const dpr = window.devicePixelRatio || 1;
+      const s = Math.min(dpr, this.coarse ? 1 : 2);
       bw = Math.max(1, Math.round(r.width * s)); bh = Math.max(1, Math.round(r.height * s));
       // A viewport smaller than the world still gets a pixel per grain on the fitted axis.
       // Scale both axes together so a tall screen is not squeezed back to 480 wide.
@@ -1230,8 +1235,7 @@ class Component extends DCLogic {
       if (bw > 2560) { bh = Math.round(bh * 2560 / bw); bw = 2560; }
       cv.style.imageRendering = 'auto';
     } else cv.style.imageRendering = 'pixelated';
-    if (cv.width !== bw || cv.height !== bh) { cv.width = bw; cv.height = bh; }
-    this.gl.viewport(0, 0, bw, bh);
+    if (cv.width !== bw || cv.height !== bh) { cv.width = bw; cv.height = bh; this.gl.viewport(0, 0, bw, bh); }
     this.updateReticleSize();
   }
   upload(c, e, fx) {
@@ -1489,8 +1493,12 @@ class Component extends DCLogic {
     el.style.borderStyle = s.tool === 'spray' ? 'dashed' : 'solid';
     el.style.borderColor = s.tool === 'heat' ? 'rgba(255,140,60,.9)' : s.tool === 'cool' ? 'rgba(140,200,255,.9)' : 'rgba(232,201,122,.8)';
   }
+  grainId(x, y) {
+    const M = this.M, i = Math.max(0, Math.min(M.N - 1, y * M.W + x));
+    return this.lastColor[i * 4 + 3] || 0;
+  }
   showProbe(x, y, cx, cy) {
-    const id = this.ids[Math.max(0, Math.min(this.M.N - 1, y * this.M.W + x))];
+    const id = this.grainId(x, y);
     const r = this.vpRef.current.getBoundingClientRect();
     let px = cx - r.left + 14, py = cy - r.top + 16;
     if (px + 130 > r.width) px = cx - r.left - 118;
@@ -1605,7 +1613,7 @@ class Component extends DCLogic {
     this.centerOn(Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), Math.min(1, Math.max(0, (e.clientY - r.top) / r.height)), e.type === 'pointerdown');
   };
   pickAt(x, y) {
-    const M = this.M, id = this.ids[y * M.W + x] ?? 0;
+    const M = this.M, id = this.grainId(x, y);
     if (id === M.AIR) { this.setState({ brush: M.AIR }); return; }
     this.revealMany([id]); this.setState({ brush: id });
   }
