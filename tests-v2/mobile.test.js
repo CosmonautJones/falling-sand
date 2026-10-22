@@ -48,7 +48,8 @@ test('long-press probes the grain: timer plus movement threshold in bindInput', 
 });
 
 test('two-finger pinch also pans (midpoint tracked)', () => {
-  assert.match(bindInput, /panX: mx - pc\.gx/);
+  assert.match(bindInput, /pc\.mx = mx; pc\.my = my;/);
+  assert.match(bindInput, /viewFromAnchor\(this\.vw, this\.vh, zoom, mx, my, pc\.gx, pc\.gy\)/);
 });
 
 test('render DPR is capped at 2', () => {
