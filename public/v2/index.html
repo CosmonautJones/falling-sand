@@ -56,7 +56,9 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
 @media(orientation:landscape) and (max-height:520px){.root{flex-direction:row!important;align-items:stretch!important;padding:max(4px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))!important}.hd,.ctl,.zoom-buttons,[data-mobile-hud]{display:none!important}.sheet{display:flex}.fig{flex:1 1 0!important;padding:0!important;background:none!important;box-shadow:none!important}.rivet{display:none}
 .phone-bar{display:flex;flex-direction:column-reverse;justify-content:flex-end;width:76px;padding:0}.phone-row{flex-direction:column}.pb-el{flex:0 0 auto;flex-direction:column;justify-content:center;gap:2px;height:76px;padding:4px}.pb-el .pb-txt{align-items:center}.pb-el .caret,.pb-sub{display:none}.pb-name{font-size:12px;max-width:68px}.phone-hud{white-space:normal;font-size:10px;margin-top:auto}
 .sheet{left:auto;top:0;width:min(380px,58vw);max-height:none;border-radius:18px 0 0 18px;border-top:none;border-left:1px solid rgba(196,154,74,.55);padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) 0}}
-.pb-txt{flex:1;overflow:hidden}.pb-el .sw{flex-shrink:0}.pb-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pb-brush{flex-direction:column;gap:3px}.pb-brush .dot{max-width:12px;max-height:12px}.pb-size{font-size:12px;line-height:1;font-variant-numeric:tabular-nums}
+.pb-txt{flex:1;overflow:hidden}.pb-el .sw{flex-shrink:0}.pb-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pb-brush{flex-direction:column;gap:3px}.pb-brush .dot{max-width:12px;max-height:12px}
+.vp{position:relative;overflow:hidden;width:min(100cqw, calc(100cqh * 480 / 270));aspect-ratio:480 / 270;max-height:100%;background:#0b090e}
+@media(max-width:700px){.vp{position:absolute;inset:0;width:auto;height:auto;max-height:none;aspect-ratio:auto}}.pb-size{font-size:12px;line-height:1;font-variant-numeric:tabular-nums}
 @media(max-width:380px) and (orientation:portrait){.phone-row{gap:5px}.pb{min-width:44px;padding:0 8px}.pb-el{padding:0 7px;gap:6px}.pb-el .caret{display:none}.pb-el .sw{width:20px;height:20px}.pb-sub{letter-spacing:0}}
 </style>
 </helmet>
@@ -111,7 +113,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
     <div class="rivet" style="position:absolute; bottom:4px; left:4px; width:5px; height:5px; border-radius:50%; background:radial-gradient(circle at 35% 35%, #f0d38a, #6b5130);"></div>
     <div class="rivet" style="position:absolute; bottom:4px; right:4px; width:5px; height:5px; border-radius:50%; background:radial-gradient(circle at 35% 35%, #f0d38a, #6b5130);"></div>
 
-    <div ref="{{ vpRef }}" style="position:relative; overflow:hidden; width:min(100cqw, calc(100cqh * 480 / 270)); aspect-ratio:480 / 270; max-height:100%; background:#0b090e; touch-action:none; -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; cursor:none; border-radius:2px; pointer-events:{{ vesselEvents }};">
+    <div ref="{{ vpRef }}" class="vp" style="touch-action:none; -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; cursor:none; border-radius:2px; pointer-events:{{ vesselEvents }};">
       <canvas ref="{{ cvRef }}" style="position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none;"></canvas>
       <div ref="{{ frostRef }}" class="omen-frost" aria-hidden="true" style="position:absolute; inset:0; pointer-events:none; opacity:0; transition:opacity 1.2s linear; box-shadow:inset 0 0 0 2px rgba(230,244,255,.5), inset 0 0 22px 6px rgba(205,232,255,.42), inset 0 0 110px 16px rgba(170,205,240,.22); background:radial-gradient(120% 90% at 50% 45%, rgba(0,0,0,0) 62%, rgba(205,230,255,.10) 100%);"></div>
       <div ref="{{ warmRef }}" class="omen-warm" aria-hidden="true" style="position:absolute; inset:0; pointer-events:none; opacity:0; transition:opacity 1.2s linear; box-shadow:inset 0 -40px 70px -20px rgba(255,150,60,.26); background:linear-gradient(to top, rgba(255,140,50,.10), rgba(255,140,50,0) 38%);"></div>
@@ -510,7 +512,7 @@ const FRAG = `#version 300 es
 precision highp float;
 uniform sampler2D uMap; uniform sampler2D uEmis; uniform sampler2D uLut; uniform sampler2D uFx;
 uniform vec2 uGrid; uniform float uTime; uniform float uWonder; uniform float uShake;
-uniform float uPx; uniform float uBloom; uniform float uZoom; uniform vec2 uPan;
+uniform float uPx; uniform float uBloom; uniform vec4 uCamera;
 uniform float uFlash; uniform float uWipe; uniform float uLight; uniform vec4 uShip; uniform vec4 uWalker;
 in vec2 vUv; out vec4 o;
 float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
@@ -541,7 +543,11 @@ vec3 backdrop(vec2 st){
 }
 void main(){
   vec2 su = vec2(vUv.x, 1.0 - vUv.y);
-  vec2 st = (su - uPan) / uZoom;
+  vec2 st = (su - uCamera.xy) / max(uCamera.zw, vec2(0.0001));
+  if (st.x < -0.0004 || st.y < -0.0004 || st.x > 1.0004 || st.y > 1.0004) {
+    o = vec4(backdrop(clamp(st, 0.0, 1.0)) * 0.42, 1.0);
+    return;
+  }
   if (uShake > 0.001) st += (vec2(hash(vec2(uTime, 2.1)), hash(vec2(uTime, 7.7))) - 0.5) * uShake * 0.014;
   vec3 eLow = textureLod(uEmis, st, 3.0).rgb;
   float hz = dot(eLow, vec3(0.7, 0.25, 0.05));
@@ -686,9 +692,9 @@ void main(){
 }`;
 const PVERT = `#version 300 es
 in vec4 aP; in vec3 aC;
-uniform vec2 uGrid; uniform float uZoom; uniform vec2 uPan; uniform float uScale;
+uniform vec2 uGrid; uniform vec4 uCamera; uniform float uScale;
 out vec3 vC; out float vA;
-void main(){ vec2 su = (aP.xy / uGrid) * uZoom + uPan; gl_Position = vec4(su.x * 2.0 - 1.0, 1.0 - su.y * 2.0, 0.0, 1.0); gl_PointSize = max(1.0, aP.z * uScale * uZoom); vC = aC; vA = aP.w; }`;
+void main(){ vec2 su = (aP.xy / uGrid) * uCamera.zw + uCamera.xy; gl_Position = vec4(su.x * 2.0 - 1.0, 1.0 - su.y * 2.0, 0.0, 1.0); gl_PointSize = max(1.0, aP.z * uScale); vC = aC; vA = aP.w; }`;
 const PFRAG = `#version 300 es
 precision mediump float;
 in vec3 vC; in float vA; out vec4 o;
@@ -750,6 +756,8 @@ class Component extends DCLogic {
     this.alive = true;
     this.url = new URL('./alembic-engine-v2.js', document.baseURI).href;
     try { this.M = await import(this.url); } catch (e) { console.error('engine load failed', e); return; }
+    if (!this.alive) return;
+    this.cam = await import(new URL('./camera.js', document.baseURI).href);
     if (!this.alive) return;
     this.flaskStorage = await import(new URL('./engine/flask-storage.js', document.baseURI).href);
     if (!this.alive) return;
@@ -859,12 +867,11 @@ class Component extends DCLogic {
     if (this.wipe >= 0) for (let k = 0; k < 6; k++) this.spawn(this.wipe, Math.random() * this.M.H, (Math.random() - 0.3) * 2, (Math.random() - 0.5) * 2, 1, 0.72, 0.3, 0.6, 1.4);
     this.ship = r.ship;
     this.walker = r.walker;
-    if (this.state.walkerIn && this.walker && this.vw && this.vh) {
-      const v = this.view, z = v.zoom;
-      const tx = this.vw / 2 - this.walker.x * (this.vw / this.M.W) * z;
-      const ty = this.vh / 2 - this.walker.y * (this.vh / this.M.H) * z;
-      v.panX += (tx - v.panX) * 0.35;
-      v.panY += (ty - v.panY) * 0.35;
+    if (this.state.walkerIn && this.walker && this.vw && this.vh && this.cam) {
+      const v = this.view;
+      const target = this.cam.panToCenter(this.vw, this.vh, v, this.walker.x, this.walker.y);
+      v.panX += (target.panX - v.panX) * 0.35;
+      v.panY += (target.panY - v.panY) * 0.35;
       this.view = this.clampPan(v);
     }
     this.windE = r.wind || 0;
@@ -1141,11 +1148,11 @@ class Component extends DCLogic {
     const U = n => gl.getUniformLocation(prog, n);
     gl.uniform1i(U('uMap'), 0); gl.uniform1i(U('uEmis'), 1); gl.uniform1i(U('uLut'), 2); gl.uniform1i(U('uFx'), 3);
     gl.uniform2f(U('uGrid'), M.W, M.H);
-    this.u = { time: U('uTime'), wonder: U('uWonder'), shake: U('uShake'), px: U('uPx'), bloom: U('uBloom'), zoom: U('uZoom'), pan: U('uPan'), flash: U('uFlash'), wipe: U('uWipe'), light: U('uLight'), ship: U('uShip'), walker: U('uWalker') };
+    this.u = { time: U('uTime'), wonder: U('uWonder'), shake: U('uShake'), px: U('uPx'), bloom: U('uBloom'), camera: U('uCamera'), flash: U('uFlash'), wipe: U('uWipe'), light: U('uLight'), ship: U('uShip'), walker: U('uWalker') };
     gl.useProgram(pprog);
     const PU = n => gl.getUniformLocation(pprog, n);
     gl.uniform2f(PU('uGrid'), M.W, M.H);
-    this.pu = { zoom: PU('uZoom'), pan: PU('uPan'), scale: PU('uScale') };
+    this.pu = { camera: PU('uCamera'), scale: PU('uScale') };
     this.vaoP = gl.createVertexArray(); gl.bindVertexArray(this.vaoP);
     this.pbuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, this.pbuf); gl.bufferData(gl.ARRAY_BUFFER, this.PD.byteLength, gl.DYNAMIC_DRAW);
     const aP = gl.getAttribLocation(pprog, 'aP'), aC = gl.getAttribLocation(pprog, 'aC');
@@ -1158,8 +1165,18 @@ class Component extends DCLogic {
   observe() { this.ro = new ResizeObserver(() => this.resize()); this.ro.observe(this.vpRef.current); this.resize(); }
   resize() {
     const cv = this.cvRef.current, vp = this.vpRef.current; if (!cv || !vp || !this.M) return;
-    const r = vp.getBoundingClientRect(); this.vw = r.width; this.vh = r.height;
-    if (!this.gl) return;
+    const r = vp.getBoundingClientRect();
+    const prevW = this.vw || 0, prevH = this.vh || 0, prevView = this.view;
+    this.vw = r.width; this.vh = r.height;
+    this.fitCamera(prevW, prevH, prevView);
+    if (!this.gl) {
+      const bw = Math.max(1, Math.round(this.vw || this.M.W)), bh = Math.max(1, Math.round(this.vh || this.M.H));
+      if (cv.width !== bw || cv.height !== bh) { cv.width = bw; cv.height = bh; }
+      cv.style.imageRendering = 'pixelated';
+      this.paint2d();
+      this.updateReticleSize();
+      return;
+    }
     let bw = this.M.W, bh = this.M.H;
     if ((this.props.quality ?? 'full') === 'full') {
       const s = Math.min(window.devicePixelRatio || 1, 2);
@@ -1173,7 +1190,15 @@ class Component extends DCLogic {
   }
   upload(c, e, fx) {
     const gl = this.gl, M = this.M;
-    if (!gl) { if (this.ctx2d) { const d = this.img.data; d.set(c); for (let i = 3; i < d.length; i += 4) d[i] = 255; this.ctx2d.putImageData(this.img, 0, 0); } return; }
+    if (!gl) {
+      if (this.ctx2d) {
+        const d = this.img.data; d.set(c); for (let i = 3; i < d.length; i += 4) d[i] = 255;
+        if (!this.worldCanvas) { this.worldCanvas = document.createElement('canvas'); this.worldCanvas.width = M.W; this.worldCanvas.height = M.H; }
+        this.worldCanvas.getContext('2d').putImageData(this.img, 0, 0);
+        this.paint2d();
+      }
+      return;
+    }
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, this.tMap);
     gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, M.W, M.H, gl.RGBA, gl.UNSIGNED_BYTE, c);
     gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, this.tEmis);
@@ -1182,21 +1207,21 @@ class Component extends DCLogic {
     gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, M.W, M.H, gl.RGBA, gl.UNSIGNED_BYTE, fx); gl.generateMipmap(gl.TEXTURE_2D);
   }
   draw(now) {
-    const gl = this.gl; if (!gl) return;
-    const v = this.view, u = this.u, cv = this.cvRef.current;
+    const gl = this.gl; if (!gl || !this.cam) return;
+    const u = this.u, cv = this.cvRef.current;
     // A big blast punches the camera in a few percent, leaning toward where it went off.
-    const k = 1 + (this.punch || 0) * 0.05, zoom = v.zoom * k;
-    const px0 = this.vw ? v.panX / this.vw : 0, py0 = this.vh ? v.panY / this.vh : 0;
+    const k = 1 + (this.punch || 0) * 0.05;
     const ax = this.punchAt ? this.punchAt.x : 0.5, ay = this.punchAt ? this.punchAt.y : 0.5;
-    const sx = ax * v.zoom + px0, sy = ay * v.zoom + py0;
-    const panX = sx - (sx - px0) * k, panY = sy - (sy - py0) * k;
+    const cam = this.cam.punchCamera(this.screenCamera(), k, ax, ay);
+    const uCam = this.cam.shaderCamera(this.vw, this.vh, cam);
+    const pxPer = (cv.width / (this.vw || 1)) * cam.scale;
     gl.disable(gl.BLEND);
     gl.useProgram(this.prog); gl.bindVertexArray(this.vaoQ);
     gl.uniform1f(u.time, this.still ? 0 : now / 1000);
     gl.uniform1f(u.wonder, this.wonder); gl.uniform1f(u.shake, this.shake);
-    gl.uniform1f(u.px, cv.width / this.M.W * v.zoom);
+    gl.uniform1f(u.px, pxPer);
     gl.uniform1f(u.bloom, this.props.bloom ?? 1); gl.uniform1f(u.light, this.props.lighting ?? 1);
-    gl.uniform1f(u.zoom, zoom); gl.uniform2f(u.pan, panX, panY);
+    gl.uniform4f(u.camera, uCam.x, uCam.y, uCam.z, uCam.w);
     gl.uniform1f(u.flash, this.still ? 0 : this.flash);
     gl.uniform1f(u.wipe, this.wipe);
     const s = this.ship; gl.uniform4f(u.ship, s ? s.x : 0, s ? s.y : 0, s ? s.beam : 0, s ? 1 : 0);
@@ -1205,7 +1230,7 @@ class Component extends DCLogic {
     if (this.pn > 0 && (this.props.particles ?? true)) {
       gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
       gl.useProgram(this.pprog); gl.bindVertexArray(this.vaoP);
-      gl.uniform1f(this.pu.zoom, zoom); gl.uniform2f(this.pu.pan, panX, panY); gl.uniform1f(this.pu.scale, cv.width / this.M.W);
+      gl.uniform4f(this.pu.camera, uCam.x, uCam.y, uCam.z, uCam.w); gl.uniform1f(this.pu.scale, pxPer);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.pbuf); gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.PD, 0, this.pn * 7);
       gl.drawArrays(gl.POINTS, 0, this.pn);
       gl.bindVertexArray(null);
@@ -1327,16 +1352,46 @@ class Component extends DCLogic {
   }
 
   // ---------- view / input ----------
-  clampPan(v) { const minX = this.vw - this.vw * v.zoom, minY = this.vh - this.vh * v.zoom; return { zoom: v.zoom, panX: Math.min(0, Math.max(minX, v.panX)), panY: Math.min(0, Math.max(minY, v.panY)) }; }
-  cellAt(cx, cy) {
-    const r = this.vpRef.current.getBoundingClientRect(), v = this.view;
-    return { x: Math.floor(((cx - r.left - v.panX) / (r.width * v.zoom)) * this.M.W), y: Math.floor(((cy - r.top - v.panY) / (r.height * v.zoom)) * this.M.H) };
+  screenCamera(view) { return this.cam.cameraFromView(this.vw || 0, this.vh || 0, view || this.view); }
+  grainPx() { return this.cam && this.vw > 0 ? this.screenCamera().scale : (this.vw / this.M.W) * (this.view?.zoom || 1); }
+  // Until the player zooms or pans, a tall viewport crops to the world height and a desktop viewport shows the whole vessel.
+  fitCamera(prevW, prevH, prevView) {
+    if (!this.cam || !(this.vw > 0) || !(this.vh > 0)) return;
+    if (!this.viewUser) {
+      this.view = this.cam.defaultView(this.vw, this.vh);
+      this.viewT = this.view;
+    } else if (prevW > 0 && prevH > 0 && (Math.abs(prevW - this.vw) > 0.5 || Math.abs(prevH - this.vh) > 0.5)) {
+      const g = this.cam.screenToGrain(prevW, prevH, prevView, prevW / 2, prevH / 2);
+      const prevScale = this.cam.cameraFromView(prevW, prevH, prevView).scale;
+      const zoom = Math.min(this.cam.MAX_ZOOM, Math.max(this.cam.MIN_ZOOM, prevScale / this.cam.containScale(this.vw, this.vh)));
+      this.view = this.cam.panToCenter(this.vw, this.vh, { zoom, panX: 0, panY: 0 }, g.x, g.y);
+      this.viewT = this.view;
+    } else return;
+    this.syncViewUI();
   }
-  cellToPx(c) { const v = this.view; return { x: ((c.x + 0.5) / this.M.W) * this.vw * v.zoom + v.panX, y: ((c.y + 0.5) / this.M.H) * this.vh * v.zoom + v.panY }; }
+  paint2d() {
+    const cv = this.cvRef.current, ctx = this.ctx2d;
+    if (!cv || !ctx || !this.worldCanvas || !this.cam || !(this.vw > 0)) return;
+    const cam = this.screenCamera();
+    ctx.imageSmoothingEnabled = false;
+    ctx.fillStyle = '#0b090e';
+    ctx.fillRect(0, 0, cv.width, cv.height);
+    ctx.drawImage(this.worldCanvas, cam.x, cam.y, this.M.W * cam.scale, this.M.H * cam.scale);
+  }
+  clampPan(v) {
+    if (!this.cam || !(this.vw > 0) || !(this.vh > 0)) return v;
+    return this.cam.clampView(this.vw, this.vh, v);
+  }
+  cellAt(cx, cy) {
+    const r = this.vpRef.current.getBoundingClientRect();
+    const g = this.cam.screenToGrain(this.vw || r.width, this.vh || r.height, this.view, cx - r.left, cy - r.top);
+    return { x: Math.floor(g.x), y: Math.floor(g.y) };
+  }
+  cellToPx(c) { return this.cam.grainToScreen(this.vw, this.vh, this.view, c.x, c.y); }
   updateReticleSize() {
     const el = this.retRef.current; if (!el || !this.vw || !this.M) return;
     const s = this.state, r = s.tool === 'spray' ? Math.max(2, s.radius * 1.6) : s.tool === 'tap' ? 0 : s.radius;
-    const d = Math.max(8, (2 * r + 1) * (this.vw / this.M.W) * this.view.zoom);
+    const d = Math.max(8, (2 * r + 1) * this.grainPx());
     el.style.width = d + 'px'; el.style.height = d + 'px';
     el.style.borderStyle = s.tool === 'spray' ? 'dashed' : 'solid';
     el.style.borderColor = s.tool === 'heat' ? 'rgba(255,140,60,.9)' : s.tool === 'cool' ? 'rgba(140,200,255,.9)' : 'rgba(232,201,122,.8)';
@@ -1363,12 +1418,14 @@ class Component extends DCLogic {
       l.style.display = 'block'; b.style.display = 'none';
       const len = Math.hypot(c.x - a.x, c.y - a.y), ang = Math.atan2(c.y - a.y, c.x - a.x);
       l.style.left = a.x + 'px'; l.style.top = a.y + 'px'; l.style.width = len + 'px';
-      l.style.height = Math.max(2, (2 * s.radius + 1) * (this.vw / this.M.W) * this.view.zoom) + 'px';
-      l.style.marginTop = -Math.max(2, (2 * s.radius + 1) * (this.vw / this.M.W) * this.view.zoom) / 2 + 'px';
+      const thick = Math.max(2, (2 * s.radius + 1) * this.grainPx());
+      l.style.height = thick + 'px';
+      l.style.marginTop = -thick / 2 + 'px';
       l.style.transform = `rotate(${ang}rad)`; l.style.background = rgb(this.M.COLORS[s.brush]); l.style.opacity = '.7';
     }
   }
   setView(v, smooth, anchor) {
+    this.viewUser = true;
     v = this.clampPan(v); this.viewT = v; this.zoomAnchor = anchor || null;
     if (!smooth) { this.view = v; this.updateReticleSize(); this.syncViewUI(); return; }
     if (!this.viewRaf) this.viewRaf = requestAnimationFrame(this.stepView);
@@ -1377,10 +1434,9 @@ class Component extends DCLogic {
     this.viewRaf = 0;
     const a = this.view, b = this.viewT; if (!a || !b) return;
     const k = 0.3, z = a.zoom * Math.pow(b.zoom / a.zoom, k), an = this.zoomAnchor;
-    let px, py;
-    if (an) { px = an.sx - an.gx * this.vw * z; py = an.sy - an.gy * this.vh * z; }
-    else { px = a.panX + (b.panX - a.panX) * k; py = a.panY + (b.panY - a.panY) * k; }
-    let v = this.clampPan({ zoom: z, panX: px, panY: py });
+    let v;
+    if (an && this.cam) v = this.cam.viewFromAnchor(this.vw, this.vh, z, an.sx, an.sy, an.gx, an.gy);
+    else { const px = a.panX + (b.panX - a.panX) * k, py = a.panY + (b.panY - a.panY) * k; v = this.clampPan({ zoom: z, panX: px, panY: py }); }
     const done = Math.abs(v.zoom - b.zoom) < 0.003 && Math.abs(v.panX - b.panX) < 0.6 && Math.abs(v.panY - b.panY) < 0.6;
     if (done) { v = b; this.zoomAnchor = null; }
     this.view = v; this.updateReticleSize(); this.syncViewUI();
@@ -1404,12 +1460,12 @@ class Component extends DCLogic {
   zoomBy(f, sx, sy) {
     const base = this.viewT || this.view;
     if (sx == null) { sx = this.vw / 2; sy = this.vh / 2; }
-    const gx = (sx - base.panX) / (this.vw * base.zoom), gy = (sy - base.panY) / (this.vh * base.zoom);
-    const zoom = Math.min(12, Math.max(1, base.zoom * f));
-    this.setView({ zoom, panX: sx - gx * this.vw * zoom, panY: sy - gy * this.vh * zoom }, true, { sx, sy, gx, gy });
+    const g = this.cam.screenToGrain(this.vw, this.vh, base, sx, sy);
+    const next = this.cam.zoomAround(this.vw, this.vh, base, f, sx, sy);
+    this.setView(next, true, { sx, sy, gx: g.x / this.M.W, gy: g.y / this.M.H });
   }
-  panBy(dx, dy, smooth) { const b = smooth ? (this.viewT || this.view) : this.view; this.setView({ zoom: b.zoom, panX: b.panX + dx, panY: b.panY + dy }, smooth); }
-  centerOn(fx, fy, smooth) { const b = this.viewT || this.view; this.setView({ zoom: b.zoom, panX: this.vw / 2 - fx * this.vw * b.zoom, panY: this.vh / 2 - fy * this.vh * b.zoom }, smooth); }
+  panBy(dx, dy, smooth) { const b = smooth ? (this.viewT || this.view) : this.view; this.setView(this.cam.panView(this.vw, this.vh, b, dx, dy), smooth); }
+  centerOn(fx, fy, smooth) { const b = this.viewT || this.view; this.setView(this.cam.panToCenter(this.vw, this.vh, b, fx * this.M.W, fy * this.M.H), smooth); }
   syncViewUI() {
     const v = this.view; if (!v) return;
     const lab = this.zoomLabRef?.current; if (lab) lab.textContent = Math.round(v.zoom * 100) + '%';
@@ -1422,9 +1478,10 @@ class Component extends DCLogic {
       clearTimeout(this.miniHideT);
       if (on) this.miniHideT = setTimeout(() => show(false), 1600);
     }
-    if (rect && this.vw) {
-      rect.style.left = (-v.panX / (this.vw * v.zoom) * 100) + '%'; rect.style.top = (-v.panY / (this.vh * v.zoom) * 100) + '%';
-      rect.style.width = (100 / v.zoom) + '%'; rect.style.height = (100 / v.zoom) + '%';
+    if (rect && this.vw && this.cam) {
+      const box = this.cam.viewRect(this.vw, this.vh, v);
+      rect.style.left = (box.x * 100) + '%'; rect.style.top = (box.y * 100) + '%';
+      rect.style.width = (box.w * 100) + '%'; rect.style.height = (box.h * 100) + '%';
     }
   }
   miniPoint = e => {
@@ -1452,7 +1509,7 @@ class Component extends DCLogic {
       this.impactSound(s.brush);
       const lc = this.lastCell;
       const now = performance.now();
-      if (lc) this.trackFling((px - lc.px) * M.W / (this.vw * this.view.zoom), (py - lc.py) * M.H / (this.vh * this.view.zoom), now - lc.time);
+      if (lc) { const scale = this.grainPx(); this.trackFling((px - lc.px) / scale, (py - lc.py) / scale, now - lc.time); }
       else this.flingV = { x: 0, y: 0 };
       if (lc) this.ops.push({ t: 'l', x0: lc.x, y0: lc.y, x1: x, y1: y, r: s.radius, m: s.brush, ...this.flingFields() });
       else this.ops.push({ t: 'p', x, y, r: s.radius, m: s.brush, ...this.flingFields() });
@@ -1500,7 +1557,8 @@ class Component extends DCLogic {
         touch.cancel();
         this.painting = false; this.lastCell = null; this.dragStart = null; this.drawPreview();
         this.gesture = 'pinch'; cap(e);
-        this.pinch = { d: Math.hypot(p.x - q.x, p.y - q.y) || 1, zoom: v.zoom, gx: (mx - v.panX) / (this.vw * v.zoom), gy: (my - v.panY) / (this.vh * v.zoom), mx, my, mx0: mx, my0: my, at: performance.now(), moved: false };
+        const g = this.cam.screenToGrain(this.vw, this.vh, v, mx, my);
+        this.pinch = { d: Math.hypot(p.x - q.x, p.y - q.y) || 1, zoom: v.zoom, gx: g.x / M.W, gy: g.y / M.H, mx, my, mx0: mx, my0: my, at: performance.now(), moved: false };
         return;
       }
       if (ptrs.size > 2 || this.gesture === 'held') return;
@@ -1538,7 +1596,7 @@ class Component extends DCLogic {
         const ratio = Math.hypot(p.x - q.x, p.y - q.y) / pc.d, zoom = Math.min(12, Math.max(1, pc.zoom * ratio));
         pc.mx = mx; pc.my = my;
         if (Math.abs(ratio - 1) > 0.08 || Math.hypot(mx - pc.mx0, my - pc.my0) > 12) pc.moved = true;
-        this.setView({ zoom, panX: mx - pc.gx * this.vw * zoom, panY: my - pc.gy * this.vh * zoom }, false);
+        this.setView(this.cam.viewFromAnchor(this.vw, this.vh, zoom, mx, my, pc.gx, pc.gy), false);
         return;
       }
       if (this.gesture === 'held') return;
