@@ -23,6 +23,29 @@ test('vessel and canvas suppress browser touch gestures', () => {
   assert.match(html, /touch-action:manipulation/);
 });
 
+test('a touch screen fills the dynamic viewport and parks the minimap in the safe area', () => {
+  const at = html.indexOf('/* touch-fill');
+  const block = at < 0 ? '' : html.slice(at);
+  assert.ok(at >= 0, 'touch-fill layout is present');
+  assert.match(block, /\.fig\{[^}]*width:100vw/);
+  assert.match(block, /\.fig\{[^}]*height:100dvh/);
+  assert.match(block, /\.zoom-controls\{[^}]*env\(safe-area-inset-top\)/);
+  assert.match(block, /\.zoom-controls\{[^}]*env\(safe-area-inset-right\)/);
+  assert.match(block, /\.phone-bar\{[^}]*env\(safe-area-inset-bottom\)/);
+  assert.match(block, /\.phone-bar\{[^}]*env\(safe-area-inset-left\)/);
+  assert.match(block, /\.zoom-mini\{[^}]*opacity:1/);
+  assert.match(html, /viewport-fit=cover/);
+});
+
+test('a landscape rail grows by the left inset and the toast clears the whisper', () => {
+  assert.match(html, /\.phone-bar\{[^}]*width:calc\(76px \+ env\(safe-area-inset-left\)\)/);
+  assert.match(html, /\.hd\{[^}]*left:calc\(84px \+ env\(safe-area-inset-left\)\)/);
+  assert.match(html, /\.experiment-card\{[^}]*left:calc\(84px \+ env\(safe-area-inset-left\)\)/);
+  assert.match(html, /\.phone-bar \.pb\{[^}]*max-width:calc\(100% - 12px\)/);
+  assert.match(html, /data-safe-right/);
+  assert.match(html, /\.toast\{top:calc\(max\(8px, env\(safe-area-inset-top\)\) \+ 44px\)!important\}/);
+});
+
 test('layout respects safe-area insets and dynamic viewport height', () => {
   assert.match(html, /env\(safe-area-inset-top\)/);
   assert.match(html, /env\(safe-area-inset-bottom\)/);

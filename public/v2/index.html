@@ -60,9 +60,35 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
 .vp{position:relative;overflow:hidden;width:min(100cqw, calc(100cqh * 480 / 270));aspect-ratio:480 / 270;max-height:100%;background:#0b090e}
 @media(max-width:700px){.vp{position:absolute;inset:0;width:auto;height:auto;max-height:none;aspect-ratio:auto}}.pb-size{font-size:12px;line-height:1;font-variant-numeric:tabular-nums}
 @media(max-width:380px) and (orientation:portrait){.phone-row{gap:5px}.pb{min-width:44px;padding:0 8px}.pb-el{padding:0 7px;gap:6px}.pb-el .caret{display:none}.pb-el .sw{width:20px;height:20px}.pb-sub{letter-spacing:0}}
+/* touch-fill: the vessel is the screen; chrome sits in the safe area */
+@media(max-width:700px),(pointer:coarse){
+.root{padding:0!important;gap:0!important}
+.hd{position:fixed!important;z-index:13;top:max(8px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));right:110px;width:auto!important;display:flex!important;pointer-events:none;padding:0!important}
+.hd-title{display:none!important}
+.hd-line{min-height:0!important;max-height:2.6em;overflow:hidden;text-shadow:0 1px 2px #000}
+.toast{top:calc(max(8px, env(safe-area-inset-top)) + 44px)!important}
+.fig{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;max-width:none!important;margin:0!important;padding:0!important;border-radius:0!important;background:#0b090e!important;box-shadow:none!important}
+.vp{position:absolute!important;inset:0!important;width:auto!important;height:auto!important;max-height:none!important;aspect-ratio:auto!important;border-radius:0!important}
+.phone-bar{position:fixed;z-index:12;left:0;right:0;bottom:0;width:auto;padding:8px max(10px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));background:linear-gradient(to top,rgba(16,12,9,.88),rgba(16,12,9,0));pointer-events:none}
+.phone-bar .pb{pointer-events:auto}
+.zoom-controls{top:max(12px,env(safe-area-inset-top))!important;right:max(12px,env(safe-area-inset-right))!important;bottom:auto!important}
+.zoom-mini{opacity:1!important;pointer-events:auto!important}
+.rotate-hint{display:none!important}
+.flask-status{position:fixed;top:max(8px,env(safe-area-inset-top));z-index:13}
+.experiment-card{position:fixed;z-index:14;top:max(8px,env(safe-area-inset-top));left:max(8px,env(safe-area-inset-left));width:auto;max-width:calc(100vw - 110px)}
+}
+@media(orientation:landscape) and (max-height:520px){
+.phone-bar{top:0;bottom:0;left:0;right:auto;width:calc(76px + env(safe-area-inset-left));padding:max(4px,env(safe-area-inset-top)) 0 max(4px,env(safe-area-inset-bottom)) env(safe-area-inset-left);background:linear-gradient(to right,rgba(16,12,9,.88),rgba(16,12,9,0))}
+.hd{left:calc(84px + env(safe-area-inset-left));top:max(4px,env(safe-area-inset-top));right:calc(100px + env(safe-area-inset-right))}
+.zoom-controls{top:max(8px,env(safe-area-inset-top))!important;right:max(8px,env(safe-area-inset-right))!important}
+.experiment-card{left:calc(84px + env(safe-area-inset-left))!important;max-width:min(260px,calc(100vw - 120px - env(safe-area-inset-left) - env(safe-area-inset-right)))}
+.phone-bar{overflow:hidden}
+.phone-bar .pb{width:64px;min-width:0;max-width:calc(100% - 12px);padding:0 4px}
+}
 </style>
 </helmet>
 <div ref="{{ rootRef }}" class="root" style="height:100dvh; display:flex; flex-direction:column; align-items:center; gap:8px; padding:max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); overflow:hidden; color:#f0e2c4; font:15px/1.5 Palatino,'Palatino Linotype','Book Antiqua','EB Garamond',Georgia,serif; -webkit-font-smoothing:antialiased; background:radial-gradient(70% 45% at 50% -8%, rgba(176,137,72,.16), transparent 55%), #100c09;">
+  <div data-safe-right aria-hidden="true" style="position:fixed;top:0;right:0;width:env(safe-area-inset-right);height:0;pointer-events:none"></div>
 
   <header class="col hd" style="width:min(96vw,1440px); display:grid; grid-template-columns:minmax(150px,1fr) minmax(0,2.4fr) minmax(max-content,1fr); align-items:center; gap:16px; flex:0 0 auto;">
     <div class="hd-tally" style="display:flex; flex-direction:column; gap:1px; font-size:13px; font-style:italic; color:#8f7d62; letter-spacing:.02em; white-space:nowrap;">
@@ -251,7 +277,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
         <span class="caret" aria-hidden="true">▾</span>
       </button>
       <button data-phone="brush" class="pb pb-brush" aria-label="{{ brushAria }}" onClick="{{ cycleBrush }}"><span class="dot" style="width:{{ brushDot }}px; height:{{ brushDot }}px;"></span><span class="pb-size" aria-hidden="true">{{ radius }}</span></button>
-      <button data-phone="zoom" class="pb pb-zoom" aria-label="Zoom: steps to 2×, 4×, then the whole vessel" onClick="{{ cycleZoom }}"><span class="pb-zoom-lab" ref="{{ pbZoomRef }}">⊕</span></button>
+      <button data-phone="zoom" class="pb pb-zoom" aria-label="Zoom: 1× fills the glass. Each press doubles it, then the whole vessel, then back to 1×" onClick="{{ cycleZoom }}"><span class="pb-zoom-lab" ref="{{ pbZoomRef }}">1×</span></button>
       <button data-phone="pause" class="pb" aria-label="{{ pauseLabel }}" onClick="{{ togglePause }}">{{ pauseIcon }}</button>
       <button data-phone="options" class="pb" aria-haspopup="dialog" aria-expanded="{{ optionsOpen }}" aria-label="Options" onClick="{{ openOptions }}">☰</button>
     </div>
@@ -757,7 +783,8 @@ class Component extends DCLogic {
     this.url = new URL('./alembic-engine-v2.js', document.baseURI).href;
     try { this.M = await import(this.url); } catch (e) { console.error('engine load failed', e); return; }
     if (!this.alive) return;
-    this.cam = await import(new URL('./camera.js', document.baseURI).href);
+    this.camRaw = await import(new URL('./camera.js', document.baseURI).href);
+    this.cam = this.decorateCam(this.camRaw);
     if (!this.alive) return;
     this.flaskStorage = await import(new URL('./engine/flask-storage.js', document.baseURI).href);
     if (!this.alive) return;
@@ -1162,13 +1189,28 @@ class Component extends DCLogic {
     this.prog = prog; this.pprog = pprog; this.gl = gl;
     this.observe();
   }
-  observe() { this.ro = new ResizeObserver(() => this.resize()); this.ro.observe(this.vpRef.current); this.resize(); }
+  observe() {
+    this.ro = new ResizeObserver(() => this.resize());
+    this.ro.observe(this.vpRef.current);
+    const root = this.rootRef?.current;
+    const bar = root?.querySelector('.phone-bar');
+    if (bar) this.ro.observe(bar);
+    this.resize();
+  }
   resize() {
     const cv = this.cvRef.current, vp = this.vpRef.current; if (!cv || !vp || !this.M) return;
     const r = vp.getBoundingClientRect();
-    const prevW = this.vw || 0, prevH = this.vh || 0, prevView = this.view;
+    const prevW = this.vw || 0, prevH = this.vh || 0, prevView = this.view, prevCover = this.lastCover || 0;
     this.vw = r.width; this.vh = r.height;
     this.fitCamera(prevW, prevH, prevView);
+    const cover = this.chromeCover();
+    const sameSize = Math.abs(this.vw - prevW) <= 0.5 && Math.abs(this.vh - prevH) <= 0.5;
+    if (this.view && this.cam && sameSize && this.coverShift(cover, prevCover) > 0.5) {
+      if (!this.viewUser) { this.view = this.cam.defaultView(this.vw, this.vh); this.viewT = this.view; }
+      else { this.view = this.clampPan(this.view); this.viewT = this.clampPan(this.viewT || this.view); }
+      this.syncViewUI();
+    }
+    this.lastCover = cover;
     if (!this.gl) {
       const bw = Math.max(1, Math.round(this.vw || this.M.W)), bh = Math.max(1, Math.round(this.vh || this.M.H));
       if (cv.width !== bw || cv.height !== bh) { cv.width = bw; cv.height = bh; }
@@ -1180,7 +1222,11 @@ class Component extends DCLogic {
     let bw = this.M.W, bh = this.M.H;
     if ((this.props.quality ?? 'full') === 'full') {
       const s = Math.min(window.devicePixelRatio || 1, 2);
-      bw = Math.max(this.M.W, Math.round(r.width * s)); bh = Math.max(this.M.H, Math.round(r.height * s));
+      bw = Math.max(1, Math.round(r.width * s)); bh = Math.max(1, Math.round(r.height * s));
+      // A viewport smaller than the world still gets a pixel per grain on the fitted axis.
+      // Scale both axes together so a tall screen is not squeezed back to 480 wide.
+      const fit = Math.min(r.width / this.M.W, r.height / this.M.H);
+      if (fit > 0 && fit * s < 1) { const boost = 1 / (fit * s); bw = Math.max(1, Math.round(bw * boost)); bh = Math.max(1, Math.round(bh * boost)); }
       if (bw > 2560) { bh = Math.round(bh * 2560 / bw); bw = 2560; }
       cv.style.imageRendering = 'auto';
     } else cv.style.imageRendering = 'pixelated';
@@ -1255,7 +1301,7 @@ class Component extends DCLogic {
       const phoneHud = this.phoneHudRef.current;
       if (phoneHud) {
         const z = this.view.zoom;
-        phoneHud.textContent = `${this.almanac ? almanacText(this.almanac, this.state.speed) + ' · ' : ''}${this.fps.toFixed(0)} fps · sim ${this.simMs.toFixed(1)} ms${z === 1 ? '' : ` · ${z.toFixed(1)}×`}${this.storming ? ' · storm' : ''}${this.almanac ? '' : climateLabel(this.climate)}${this.ship ? ' · visitation' : ''}`;
+        phoneHud.textContent = `${this.almanac ? almanacText(this.almanac, this.state.speed) + ' · ' : ''}${this.fps.toFixed(0)} fps · sim ${this.simMs.toFixed(1)} ms${this.zoomSuffix(z)}${this.storming ? ' · storm' : ''}${this.almanac ? '' : climateLabel(this.climate)}${this.ship ? ' · visitation' : ''}`;
       }
       const alm = this.almanacRef.current;
       if (alm) {
@@ -1264,7 +1310,7 @@ class Component extends DCLogic {
       }
       if (hud) {
         const s = this.state, v = this.view;
-        hud.textContent = `${this.M.W}×${this.M.H} · ${this.fps.toFixed(0)} fps · sim ${this.simMs.toFixed(1)} ms${this.mode === 'worker' ? ' (worker)' : ''} · ${s.tool} · ${this.M.NAMES[s.brush]} · size ${s.radius}${s.speed === 1 ? '' : ` · ${s.speed}×`}${v.zoom === 1 ? '' : ` · ${v.zoom.toFixed(1)}×`}${this.storming ? ' · storm' : ''}${this.almanac ? '' : climateLabel(this.climate)}${this.ship ? ' · visitation' : ''}${s.paused ? ' · paused' : ''}`;
+        hud.textContent = `${this.M.W}×${this.M.H} · ${this.fps.toFixed(0)} fps · sim ${this.simMs.toFixed(1)} ms${this.mode === 'worker' ? ' (worker)' : ''} · ${s.tool} · ${this.M.NAMES[s.brush]} · size ${s.radius}${s.speed === 1 ? '' : ` · ${s.speed}×`}${this.zoomSuffix(v.zoom)}${this.storming ? ' · storm' : ''}${this.almanac ? '' : climateLabel(this.climate)}${this.ship ? ' · visitation' : ''}${s.paused ? ' · paused' : ''}`;
       }
     }
   }
@@ -1354,6 +1400,52 @@ class Component extends DCLogic {
   // ---------- view / input ----------
   screenCamera(view) { return this.cam.cameraFromView(this.vw || 0, this.vh || 0, view || this.view); }
   grainPx() { return this.cam && this.vw > 0 ? this.screenCamera().scale : (this.vw / this.M.W) * (this.view?.zoom || 1); }
+  // Chrome overlapping the glass. A wide bottom bar covers the floor; a tall
+  // left rail covers the wall. The right safe area covers the other wall the
+  // same way. Desktop (the bar is hidden, no notch) covers nothing.
+  chromeCover() {
+    const none = { left: 0, right: 0, bottom: 0 };
+    const vp = this.vpRef?.current, root = this.rootRef?.current;
+    if (!vp || !root) return none;
+    const probe = root.querySelector('[data-safe-right]');
+    const safeRight = probe ? probe.offsetWidth : 0;
+    const withRight = cover => ({ ...cover, right: Math.max(cover.right || 0, safeRight) });
+    const bar = root.querySelector('.phone-bar');
+    if (!bar) return withRight(none);
+    const cs = getComputedStyle(bar);
+    if (cs.display === 'none' || cs.visibility === 'hidden') return withRight(none);
+    const vr = vp.getBoundingClientRect(), br = bar.getBoundingClientRect();
+    if (br.width < 1 || br.height < 1) return withRight(none);
+    if (br.width >= vr.width * 0.6 && br.top >= vr.top + vr.height * 0.4) {
+      const cover = vr.bottom - br.top;
+      if (cover > 0) return withRight({ left: 0, right: 0, bottom: Math.min(vr.height * 0.45, cover) });
+    }
+    if (br.height >= vr.height * 0.6 && br.left <= vr.left + 4 && br.right < vr.left + vr.width * 0.45) {
+      const cover = br.right - vr.left;
+      if (cover > 0) return withRight({ left: Math.min(vr.width * 0.45, cover), right: 0, bottom: 0 });
+    }
+    return withRight(none);
+  }
+  coverShift(a, b) {
+    const box = (e) => typeof e === 'number' ? { left: 0, right: 0, bottom: e } : { left: e?.left || 0, right: e?.right || 0, bottom: e?.bottom || 0 };
+    const A = box(a), B = box(b);
+    return Math.abs(A.left - B.left) + Math.abs(A.right - B.right) + Math.abs(A.bottom - B.bottom);
+  }
+  decorateCam(cam) {
+    const edge = () => this.chromeCover();
+    return {
+      ...cam,
+      clampView: (vw, vh, view) => cam.clampView(vw, vh, view, edge()),
+      screenToGrain: (vw, vh, view, sx, sy) => cam.screenToGrain(vw, vh, view, sx, sy, edge()),
+      grainToScreen: (vw, vh, view, gx, gy) => cam.grainToScreen(vw, vh, view, gx, gy, edge()),
+      viewFromAnchor: (vw, vh, zoom, sx, sy, gx, gy) => cam.viewFromAnchor(vw, vh, zoom, sx, sy, gx, gy, edge()),
+      zoomAround: (vw, vh, view, factor, sx, sy) => cam.zoomAround(vw, vh, view, factor, sx, sy, edge()),
+      panView: (vw, vh, view, dx, dy) => cam.panView(vw, vh, view, dx, dy, edge()),
+      panToCenter: (vw, vh, view, gx, gy) => cam.panToCenter(vw, vh, view, gx, gy, edge()),
+      defaultView: (vw, vh) => cam.defaultView(vw, vh, edge()),
+      viewRect: (vw, vh, view) => cam.viewRect(vw, vh, view, edge()),
+    };
+  }
   // Until the player zooms or pans, a tall viewport crops to the world height and a desktop viewport shows the whole vessel.
   fitCamera(prevW, prevH, prevView) {
     if (!this.cam || !(this.vw > 0) || !(this.vh > 0)) return;
@@ -1361,8 +1453,9 @@ class Component extends DCLogic {
       this.view = this.cam.defaultView(this.vw, this.vh);
       this.viewT = this.view;
     } else if (prevW > 0 && prevH > 0 && (Math.abs(prevW - this.vw) > 0.5 || Math.abs(prevH - this.vh) > 0.5)) {
-      const g = this.cam.screenToGrain(prevW, prevH, prevView, prevW / 2, prevH / 2);
-      const prevScale = this.cam.cameraFromView(prevW, prevH, prevView).scale;
+      const raw = this.camRaw || this.cam;
+      const g = raw.screenToGrain(prevW, prevH, prevView, prevW / 2, prevH / 2, this.lastCover || 0);
+      const prevScale = raw.cameraFromView(prevW, prevH, prevView).scale;
       const zoom = Math.min(this.cam.MAX_ZOOM, Math.max(this.cam.MIN_ZOOM, prevScale / this.cam.containScale(this.vw, this.vh)));
       this.view = this.cam.panToCenter(this.vw, this.vh, { zoom, panX: 0, panY: 0 }, g.x, g.y);
       this.viewT = this.view;
@@ -1443,10 +1536,31 @@ class Component extends DCLogic {
     if (!done) this.viewRaf = requestAnimationFrame(this.stepView);
   };
   // Phones: a quick two-finger tap toggles fit and a close-up at the tap; a pinch released near a whole zoom snaps to it so grains stay crisp.
-  // Phone bar: one thumb button steps 1× → 2× → 4× → fit, around the middle of what you are looking at.
+  // 1× is the height-filling view. Each press doubles it when that step fits
+  // under the zoom cap, then shows the whole vessel (⊕). The next press restores 1×.
   cycleZoom() {
-    const v = this.viewT || this.view, next = ZOOM_STEPS.find(z => z > v.zoom + 0.05) || 1;
-    if (next === 1) this.setView({ zoom: 1, panX: 0, panY: 0 }, true); else this.zoomBy(next / v.zoom, this.vw / 2, this.vh / 2);
+    const v = this.viewT || this.view;
+    const fill = this.cam.defaultView(this.vw, this.vh), base = fill.zoom;
+    const cap = this.cam.MAX_ZOOM;
+    const steps = [1, ...ZOOM_STEPS].map(z => base * z).filter(z => z <= cap + 1e-3);
+    const next = steps.find(z => z > v.zoom + Math.max(0.05, base * 0.04)) || 1;
+    if (base > 1.05 && Math.abs(next - base) <= Math.max(0.08, base * 0.04)) this.setView(fill, true);
+    else if (next === 1) this.setView({ zoom: 1, panX: 0, panY: 0 }, true);
+    else this.zoomBy(next / v.zoom, this.vw / 2, this.vh / 2);
+  }
+  // The same words on the zoom button and the status line. 1× is the fill, ⊕ is the whole vessel.
+  zoomLabel(zoom) {
+    const z = Number.isFinite(zoom) ? zoom : 1;
+    const fillZ = this.cam && this.vw ? this.cam.defaultView(this.vw, this.vh).zoom : 1;
+    if (!(z >= 1.05)) return '⊕';
+    if (fillZ > 1.05 && Math.abs(z - fillZ) <= Math.max(0.08, fillZ * 0.04)) return '1×';
+    const rel = fillZ > 1.05 ? z / fillZ : z;
+    return (Math.round(rel * 10) / 10) + '×';
+  }
+  zoomSuffix(zoom) {
+    const fillZ = this.cam && this.vw ? this.cam.defaultView(this.vw, this.vh).zoom : 1;
+    if (!(fillZ > 1.05) && !(zoom >= 1.05)) return '';
+    return ' · ' + this.zoomLabel(zoom);
   }
   pinchEnd(pc) {
     const v = this.view;
@@ -1469,7 +1583,8 @@ class Component extends DCLogic {
   syncViewUI() {
     const v = this.view; if (!v) return;
     const lab = this.zoomLabRef?.current; if (lab) lab.textContent = Math.round(v.zoom * 100) + '%';
-    const pz = this.pbZoomRef?.current; if (pz) pz.textContent = v.zoom < 1.05 ? '⊕' : (Math.round(v.zoom * 10) / 10) + '×';
+    const pz = this.pbZoomRef?.current;
+    if (pz) pz.textContent = this.zoomLabel(v.zoom);
     const mini = this.miniRef?.current, rect = this.miniRectRef?.current;
     if (mini) {
       const on = v.zoom > 1.02, show = o => { mini.style.opacity = o ? '1' : '0'; mini.style.pointerEvents = o ? 'auto' : 'none'; };
@@ -1593,7 +1708,7 @@ class Component extends DCLogic {
         if (ptrs.size < 2) return;
         const [p, q] = [...ptrs.values()], pc = this.pinch;
         const mx = (p.x + q.x) / 2 - r.left, my = (p.y + q.y) / 2 - r.top;
-        const ratio = Math.hypot(p.x - q.x, p.y - q.y) / pc.d, zoom = Math.min(12, Math.max(1, pc.zoom * ratio));
+        const ratio = Math.hypot(p.x - q.x, p.y - q.y) / pc.d, zoom = Math.min(this.cam.MAX_ZOOM, Math.max(this.cam.MIN_ZOOM, pc.zoom * ratio));
         pc.mx = mx; pc.my = my;
         if (Math.abs(ratio - 1) > 0.08 || Math.hypot(mx - pc.mx0, my - pc.my0) > 12) pc.moved = true;
         this.setView(this.cam.viewFromAnchor(this.vw, this.vh, zoom, mx, my, pc.gx, pc.gy), false);

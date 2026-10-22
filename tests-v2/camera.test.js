@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { W, H } from '../public/v2/engine/world.js';
 import {
+  MAX_ZOOM,
   WORLD_W,
   WORLD_H,
   cameraFromView,
@@ -172,6 +173,51 @@ test('pointer mapping round-trips at every zoom and offset on a tall screen', ()
   assert.ok(fitCam.y > 0, 'fit on a phone letterboxes the short world inside the tall screen');
 });
 
+test('a bottom bar lifts the floor into view and still lets it pan back down', () => {
+  const vw = 390, vh = 844, bar = 96;
+  const plain = defaultView(vw, vh);
+  const lifted = defaultView(vw, vh, bar);
+  const a = cameraFromView(vw, vh, plain);
+  const b = cameraFromView(vw, vh, lifted);
+  assert.ok(Math.abs(a.scale - b.scale) < 1e-9, 'grain size stays the fill-height size');
+  assert.ok(Math.abs(b.y - (a.y - bar)) < 1e-6, 'the world rises by the bar');
+  assert.ok(Math.abs(b.y + WORLD_H * b.scale - (vh - bar)) < 1e-6, 'the floor sits on top of the bar');
+  const floor = screenToGrain(vw, vh, lifted, vw / 2, vh - bar - 1, bar);
+  assert.ok(floor.y > WORLD_H - 2 && floor.y < WORLD_H, `floor grain ${floor.y}`);
+  const back = panView(vw, vh, lifted, 0, bar, bar);
+  assert.ok(Math.abs(cameraFromView(vw, vh, back).y) < 1e-6, 'panning down brings the top of the world back');
+  const tooFar = panView(vw, vh, lifted, 0, -400, bar);
+  assert.ok(Math.abs(cameraFromView(vw, vh, tooFar).y - b.y) < 1e-6, 'the floor cannot rise past the bar');
+  assert.deepEqual(defaultView(vw, vh, 0), plain);
+  assert.deepEqual(defaultView(1280, 720), { zoom: 1, panX: 0, panY: 0 });
+});
+
+test('a left rail shifts the world so its left edge clears the buttons', () => {
+  const vw = 844, vh = 390, rail = 123;
+  const plain = defaultView(vw, vh);
+  const shifted = defaultView(vw, vh, { left: rail });
+  const cam = cameraFromView(vw, vh, shifted);
+  assert.equal(shifted.zoom, 1, 'the landscape default is still the whole vessel');
+  assert.ok(cam.x >= rail - 0.01, `left edge ${cam.x} is not under the rail`);
+  assert.ok(cam.x + WORLD_W * cam.scale <= vw + 0.01, 'the right edge stays on screen');
+  const edge = screenToGrain(vw, vh, shifted, cam.x + 1, vh / 2, { left: rail });
+  assert.ok(edge.x >= 0 && edge.x < 1, `the left edge grain is reachable (${edge.x})`);
+  const wall = grainToScreen(vw, vh, shifted, 0, WORLD_H / 2, { left: rail });
+  assert.ok(wall.x > rail, 'the wall sits to the right of the rail');
+  const panned = panView(vw, vh, shifted, -80, 0, { left: rail });
+  assert.ok(Math.abs(cameraFromView(vw, vh, panned).x - cam.x) < 1e-6, 'a world that fits beside the rail stays fully visible');
+  assert.deepEqual(plain, { zoom: 1, panX: 0, panY: 0 });
+  const wide = 200;
+  const pinned = cameraFromView(vw, vh, defaultView(vw, vh, { left: wide }));
+  assert.ok(Math.abs(pinned.x - wide) < 1e-6, 'when the world no longer fits, the default still shows the left edge');
+  const revealed = panView(vw, vh, defaultView(vw, vh, { left: wide }), -400, 0, { left: wide });
+  const right = cameraFromView(vw, vh, revealed);
+  assert.ok(Math.abs(right.x + WORLD_W * right.scale - vw) < 1e-4, 'panning reaches the right edge');
+  assert.ok(right.x < wide, 'reaching the right edge may slide the left under the rail');
+  const past = panView(vw, vh, defaultView(vw, vh, { left: wide }), 400, 0, { left: wide });
+  assert.ok(Math.abs(cameraFromView(vw, vh, past).x - wide) < 1e-6, 'the left edge cannot move past the rail');
+});
+
 test('a landscape phone that is wider than the world shows the whole vessel', () => {
   const view = defaultView(844, 390);
   assert.deepEqual(view, { zoom: 1, panX: 0, panY: 0 });
@@ -191,6 +237,42 @@ test('the blast punch stays stuck to the grain it leans toward', () => {
   assert.ok(Math.abs(before.x - after.x) < 1e-6);
   assert.ok(Math.abs(before.y - after.y) < 1e-6);
   assert.equal(punchCamera(cam, 1, ax, ay), cam);
+});
+
+test('4× of a 390×844 fill fits the zoom cap, and 5× does not', () => {
+  const fill = defaultView(390, 844);
+  assert.ok(fill.zoom * 2 <= MAX_ZOOM);
+  assert.ok(fill.zoom * 4 <= MAX_ZOOM, `4× fill ${fill.zoom * 4} should fit under ${MAX_ZOOM}`);
+  assert.ok(fill.zoom * 5 > MAX_ZOOM);
+});
+
+test('a right inset keeps the landscape wall out of the safe area', () => {
+  const vw = 844, vh = 390, rail = 76, notch = 47;
+  const view = defaultView(vw, vh, { left: rail, right: notch });
+  const cam = cameraFromView(vw, vh, view);
+  assert.ok(cam.x >= rail - 0.01, `left edge ${cam.x} is under the rail`);
+  assert.ok(cam.x + WORLD_W * cam.scale <= vw - notch + 0.01, 'the right wall clears the notch');
+  // 47px of safe area on both sides, plus the 76px rail: the zoom-1 world is
+  // about 693px and the gap is about 674px. Fit the zoom in that gap.
+  const both = { left: rail + notch, right: notch };
+  const fitted = defaultView(vw, vh, both);
+  const fitCam = cameraFromView(vw, vh, fitted);
+  const room = vw - both.left - both.right;
+  assert.ok(fitted.zoom < 1, 'the whole vessel shrinks to fit between both covers');
+  assert.ok(Math.abs(fitCam.x - both.left) < 1e-3, `left wall ${fitCam.x} clears the rail and the notch`);
+  assert.ok(Math.abs(fitCam.x + WORLD_W * fitCam.scale - (vw - notch)) < 1e-3, 'the right wall clears the notch');
+  assert.ok(Math.abs(WORLD_W * fitCam.scale - room) < 0.05, 'the world uses the gap between the covers');
+  const asked = clampView(vw, vh, { zoom: 1, panX: 0, panY: 0 }, both);
+  assert.ok(Math.abs(asked.zoom - fitted.zoom) < 1e-9, 'asking for zoom 1 is the same fit');
+  const close = clampView(vw, vh, { zoom: 2, panX: 0, panY: 0 }, both);
+  assert.equal(close.zoom, 2, 'a closer view is not pulled back to the fit');
+  const tight = defaultView(vw, vh, { left: 200, right: notch });
+  const pinned = cameraFromView(vw, vh, tight);
+  assert.ok(tight.zoom < 1, 'a rail and a notch that cannot both clear at zoom 1 shrink the vessel');
+  assert.ok(Math.abs(pinned.x - 200) < 1e-3, 'the left wall sits on the rail');
+  assert.ok(Math.abs(pinned.x + WORLD_W * pinned.scale - (vw - notch)) < 1e-3, 'the right wall sits on the notch');
+  const pulled = panView(vw, vh, tight, -400, 0, { left: 200, right: notch });
+  assert.ok(Math.abs(cameraFromView(vw, vh, pulled).x - pinned.x) < 1e-3, 'a vessel that fits between both covers does not slide under either');
 });
 
 test('the page renders through the camera, not a single uZoom', () => {
