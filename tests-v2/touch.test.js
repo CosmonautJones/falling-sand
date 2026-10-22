@@ -125,7 +125,35 @@ test('a glide pans, decays, and stops', () => {
   assert.equal(held.moving, false, 'a glide that the camera clamp rejects stops');
 });
 
-test('undo drops a queued pour and paints air once the worker has taken it', () => {
+test('a pinch puts a moved stroke back and does not punch holes', () => {
+  const buffers = () => [new Uint8Array(E.N * 4), new Uint8Array(E.N * 4), new Uint8Array(E.N * 4)];
+  const engine = E.createEngine({ seed: 3, scene: 'empty' });
+  const stone = 30 * E.W + 12, water = 26 * E.W + 12;
+  engine.tick({ paused: true, ops: [
+    { t: 'p', x: 12, y: 30, r: 0, m: E.STONE },
+    { t: 'p', x: 12, y: 26, r: 0, m: E.WATER },
+  ] }, ...buffers());
+  const w = engine.inspect();
+  const shade = w.shades[stone];
+  w.VX[stone] = 2.5;
+  const before = engine.tick({ paused: true, ops: [{ t: 'snap' }] }, ...buffers()).snap.cells.slice();
+  engine.tick({ paused: true, ops: [{ t: 'p', x: 12, y: 26, r: 1, m: E.GOLD }] }, ...buffers());
+  assert.equal(w.cells[water], E.GOLD);
+  engine.tick({ dt: 250, speed: 1 }, ...buffers());
+  let gold = 0;
+  w.cells.forEach(c => { if (c === E.GOLD) gold++; });
+  assert.ok(gold > 0, 'the dab has somewhere to come back from');
+  engine.tick({ paused: true, ops: [{ t: 'revert', cells: before }] }, ...buffers());
+  assert.equal(w.cells[water], E.WATER, 'the cell under the dab is restored');
+  assert.equal(w.cells[stone], E.STONE);
+  assert.equal(w.shades[stone], shade, 'a cell the stroke never touched keeps its shade');
+  assert.equal(w.VX[stone], 2.5, 'and its velocity');
+  gold = 0;
+  w.cells.forEach(c => { if (c === E.GOLD) gold++; });
+  assert.equal(gold, 0, 'grains that already fell are gone');
+});
+
+test('undo drops a queued pour and restores the grid once the worker has taken it', () => {
   const html = readFileSync(new URL('../public/v2/index.html', import.meta.url), 'utf8');
   const script = html.match(/<script type="text\/x-dc" data-dc-script[^>]*>([\s\S]*?)<\/script>/)[1];
   const context = { DCLogic: class { constructor() { this.props = {}; } },
@@ -145,9 +173,14 @@ test('undo drops a queued pour and paints air once the worker has taken it', () 
   assert.equal(ui.touchStroke, null);
 
   const sent = { t: 'l', x0: 4, y0: 5, x1: 8, y1: 5, r: 2, m: E.SAND };
+  const cells = new Uint8Array(E.N); cells[5 * E.W + 4] = E.WATER;
   ui.ops = [];
   ui.pending = [];
   ui.touchStroke = [sent];
+  ui.strokeCells = cells;
   ui.undoTouchPour();
-  assert.deepEqual(JSON.parse(JSON.stringify(ui.ops)), [{ t: 'l', x0: 4, y0: 5, x1: 8, y1: 5, r: 2, m: E.AIR }]);
+  assert.equal(ui.ops.length, 1);
+  assert.equal(ui.ops[0].t, 'revert');
+  assert.equal(ui.ops[0].cells[5 * E.W + 4], E.WATER);
+  assert.equal(JSON.stringify(ui.ops).includes('"m":0'), false, 'the stroke is not painted back as air');
 });

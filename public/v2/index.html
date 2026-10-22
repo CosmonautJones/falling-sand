@@ -883,7 +883,7 @@ class Component extends DCLogic {
   onFrame(r) {
     if (this.flingV && r.steps) { const decay = 0.85 ** r.steps; this.flingV.x *= decay; this.flingV.y *= decay; }
     const c = new Uint8Array(this.bufs[0]), e = new Uint8Array(this.bufs[1]), fx = new Uint8Array(this.bufs[2]);
-    this.lastColor.set(c);
+    this.lastColor.set(c); this.sawFrame = true;
     this.upload(c, e, fx);
     if (r.kick > 0) { if (typeof navigator !== 'undefined' && navigator.vibrate && !this.still && performance.now() - (this.lastBuzz || 0) > 250) { this.lastBuzz = performance.now(); navigator.vibrate(Math.round(10 + 30 * Math.min(1, r.kick / 6))); } }
     if (r.kick > 0) { if (!this.still) this.shake = Math.min(1, this.shake + Math.min(1, r.kick / 6)); this.boom(r.kick); }
@@ -1573,7 +1573,10 @@ class Component extends DCLogic {
   pinchEnd(pc) {
     const v = this.view;
     if (!pc.moved && performance.now() - pc.at < 320) {
-      if (v.zoom < 1.5) this.zoomBy(TAP_ZOOM / v.zoom, pc.mx, pc.my); else this.setView({ zoom: 1, panX: 0, panY: 0 }, true);
+      // Close-up is TAP_ZOOM times the fill. On a tall phone the fill is already ~3.8, so an absolute 3 would be a wider view.
+      const fill = this.cam.defaultView(this.vw, this.vh), fillZ = fill.zoom || 1;
+      const close = Math.min(this.cam.MAX_ZOOM, fillZ * TAP_ZOOM);
+      if (v.zoom < fillZ * 1.5) this.zoomBy(close / v.zoom, pc.mx, pc.my); else this.setView({ zoom: 1, panX: 0, panY: 0 }, true);
       return;
     }
     const whole = Math.round(v.zoom);
@@ -1591,11 +1594,21 @@ class Component extends DCLogic {
     this.syncViewUI();
     return Math.hypot(this.view.panX - prevX, this.view.panY - prevY) > 0.05;
   }
-  // A second finger lands after the dab is already queued. Drop it if the worker has not taken it;
-  // otherwise paint air over the same stroke. A finished pour is not in touchStroke, so this cannot reach back.
+  // The grid as the last frame drew it, before this finger's dab. Null until a frame has arrived.
+  cellSnapshot() {
+    const n = this.M && this.M.N, src = this.lastColor;
+    if (!this.sawFrame || !n || !src) return null;
+    const cells = new Uint8Array(n);
+    for (let i = 0; i < n; i++) cells[i] = src[i * 4 + 3];
+    return cells;
+  }
+  // A second finger lands after the dab is queued. Drop it if the worker has not taken it.
+  // If it has, put the pre-stroke grid back: grains that already fell disappear, and cells
+  // under the dab are restored instead of being painted to air.
   undoTouchPour() {
     const stroke = this.touchStroke || [];
-    this.touchStroke = null;
+    const snapshot = this.strokeCells;
+    this.touchStroke = null; this.strokeCells = null;
     const queued = new Set(stroke);
     const stillQueued = new Set();
     const keep = list => (list || []).filter(op => {
@@ -1605,13 +1618,7 @@ class Component extends DCLogic {
     });
     this.ops = keep(this.ops);
     this.pending = keep(this.pending);
-    const air = this.M && this.M.AIR;
-    for (const op of stroke) {
-      if (stillQueued.has(op) || air == null) continue;
-      if (op.t === 'p') this.ops.push({ t: 'p', x: op.x, y: op.y, r: op.r, m: air });
-      else if (op.t === 'l') this.ops.push({ t: 'l', x0: op.x0, y0: op.y0, x1: op.x1, y1: op.y1, r: op.r, m: air });
-      else if (op.t === 'box') this.ops.push({ t: 'box', x0: op.x0, y0: op.y0, x1: op.x1, y1: op.y1, m: air });
-    }
+    if (snapshot && stroke.some(op => !stillQueued.has(op))) this.ops.push({ t: 'revert', cells: snapshot });
     this.painting = false; this.lastCell = null; this.dragStart = null;
     if (this.drawPreview) this.drawPreview();
     if (this.state?.probe?.on) this.setState({ probe: { on: false } });
@@ -1684,7 +1691,7 @@ class Component extends DCLogic {
     const touch = this.touchMod.createTouchPour({
       setTimer: fn => (lpTimer = setTimeout(fn, 450)), clearTimer: cancelLongPress,
       moved: (dx, dy) => Math.hypot(dx, dy) > 8,
-      begin: () => { this.touchStroke = []; },
+      begin: () => { this.touchStroke = []; this.strokeCells = this.cellSnapshot(); },
       undo: () => this.undoTouchPour(),
       pour: (px, py) => {
         const c = this.cellAt(px, py), tool = this.state.tool;
@@ -1699,7 +1706,7 @@ class Component extends DCLogic {
         if (this.touchStroke && this.ops.length > before) this.touchStroke.push(this.ops[this.ops.length - 1]);
       },
       probe: (px, py) => { const c = this.cellAt(px, py); this.showProbe(c.x, c.y, px, py); },
-      end: () => { this.touchStroke = null; },
+      end: () => { this.touchStroke = null; this.strokeCells = null; },
     });
     const ptrs = this.ptrs = new Map();
     const isUi = e => e.target && e.target.closest && e.target.closest('[data-ui]');
@@ -2164,7 +2171,7 @@ class Component extends DCLogic {
       const on = s.brush === id, tip = id === suggest && !on;
       return { name: tip ? M.NAMES[id] + ' ✦' : M.NAMES[id], swatch: rgb(M.COLORS[id]), on: on ? 'true' : 'false', bg: on ? '#2a2119' : '#1c1612', border: on ? '#c49a4a' : tip ? '#e8c97a' : '#3a3128', onClick: this.hnd('pk' + id, () => this.pickElement(id)) };
     };
-    base.pourHintText = `${this.coarse ? 'Drag a finger' : 'Click and drag'} to pour ${M.NAMES[s.brush]}`;
+    base.pourHintText = `${this.coarse ? 'Touch' : 'Click and drag'} to pour ${M.NAMES[s.brush]}`;
     const found = M.TRANSMUTED.filter(id => this.known.has(id)), blank = M.TRANSMUTED.length - found.length;
     base.starterTiles = M.STARTER.map(tile);
     base.foundTiles = found.map(tile);

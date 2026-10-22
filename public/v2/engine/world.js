@@ -1927,6 +1927,16 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
         break;
       }
       case 'load': { dropSparks(); clearGrid(); cells.set(op.cells); for (let i = 0; i < N; i++) { shades[i] = grain(cells[i]); heat[i] = SEEDHEAT[cells[i]]; } break; }
+      // Put back the cells a touch stroke replaced, including grains that already fell.
+      // Cells the stroke never touched keep their shade, heat, and velocity.
+      case 'revert': {
+        const next = op.cells;
+        for (let i = 0; i < N; i++) {
+          if (cells[i] === next[i]) continue;
+          setc(i % W, (i / W) | 0, next[i], grain(next[i]));
+        }
+        break;
+      }
       case 'snap': return { cells: cells.slice() };
       case 'poke': {
         const m = get(op.x, op.y);

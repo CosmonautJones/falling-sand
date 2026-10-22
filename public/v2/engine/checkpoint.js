@@ -143,7 +143,7 @@ const OPS = {
   l: ['x0', 'y0', 'x1', 'y1', 'r', 'm'], p: ['x', 'y', 'r', 'm'],
   spray: ['x', 'y', 'r', 'm', 'n'], box: ['x0', 'y0', 'x1', 'y1', 'm'],
   heat: ['x', 'y', 'r'], cool: ['x', 'y', 'r'], rain: ['m', 'n'],
-  tempest: [], clear: [], reset: [], snap: [], wipe: ['mode'], load: ['cells'],
+  tempest: [], clear: [], reset: [], snap: [], wipe: ['mode'], load: ['cells'], revert: ['cells'],
   spark: ['x', 'y'], poke: ['x', 'y', 'dx', 'dy'], font: ['x', 'y', 'm'],
 };
 function operation(op, mode) {

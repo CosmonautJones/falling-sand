@@ -26,7 +26,7 @@ test('all_accepted_scheduled_operation_variants_are_detached_and_exportable', ()
     { t: 'heat', x: 10, y: 10, r: 2 }, { t: 'cool', x: 10, y: 10, r: 2 },
     { t: 'rain', m: E.SAND, n: 3 }, { t: 'tempest' }, { t: 'clear' }, { t: 'reset' },
     { t: 'wipe', mode: 'clear' }, { t: 'wipe', mode: 'reset' }, { t: 'wipe', mode: 'load', cells },
-    { t: 'load', cells }, { t: 'snap' },
+    { t: 'load', cells }, { t: 'snap' }, { t: 'revert', cells },
   ];
   const commands = ops.map((op, sequence) => ({ tick: 1, sequence, op }));
   engine.advanceTicks(0, commands);

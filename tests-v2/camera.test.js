@@ -239,6 +239,12 @@ test('the blast punch stays stuck to the grain it leans toward', () => {
   assert.equal(punchCamera(cam, 1, ax, ay), cam);
 });
 
+test('3× of a 390×844 fill is a closer view than the fill itself', () => {
+  const fill = defaultView(390, 844).zoom;
+  const close = Math.min(MAX_ZOOM, fill * 3);
+  assert.ok(close / fill > 2.5, `close-up ${close} is not 3× the fill ${fill}`);
+});
+
 test('4× of a 390×844 fill fits the zoom cap, and 5× does not', () => {
   const fill = defaultView(390, 844);
   assert.ok(fill.zoom * 2 <= MAX_ZOOM);
