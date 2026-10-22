@@ -1927,13 +1927,22 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
         break;
       }
       case 'load': { dropSparks(); clearGrid(); cells.set(op.cells); for (let i = 0; i < N; i++) { shades[i] = grain(cells[i]); heat[i] = SEEDHEAT[cells[i]]; } break; }
-      // Put back the cells a touch stroke replaced, including grains that already fell.
-      // Cells the stroke never touched keep their shade, heat, and velocity.
+      // Put back the stroke's footprint. A cell still holding the dab returns to its
+      // prior material, including dab that fell down a touched column. A brush cell
+      // the dab left empty is filled again. Anything else — a brick placed during
+      // the stroke, a cell outside the columns — keeps its shade, heat, and velocity.
       case 'revert': {
-        const next = op.cells;
-        for (let i = 0; i < N; i++) {
-          if (cells[i] === next[i]) continue;
-          setc(i % W, (i / W) | 0, next[i], grain(next[i]));
+        const idx = op.idx, prior = op.prior, span = op.span, m = op.m | 0;
+        if (!idx || !prior || !span) break;
+        const n = Math.min(idx.length, prior.length, span.length);
+        for (let k = 0; k < n; k++) {
+          const i = idx[k];
+          if (i < 0 || i >= N) continue;
+          const cur = cells[i], was = prior[k];
+          const dabHere = cur === m && was !== m;
+          const hole = span[k] === 1 && m !== AIR && cur === AIR && was !== AIR;
+          if (!dabHere && !hole) continue;
+          setc(i % W, (i / W) | 0, was, grain(was));
         }
         break;
       }

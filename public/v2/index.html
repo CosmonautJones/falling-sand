@@ -1594,21 +1594,66 @@ class Component extends DCLogic {
     this.syncViewUI();
     return Math.hypot(this.view.panX - prevX, this.view.panY - prevY) > 0.05;
   }
-  // The grid as the last frame drew it, before this finger's dab. Null until a frame has arrived.
-  cellSnapshot() {
-    const n = this.M && this.M.N, src = this.lastColor;
-    if (!this.sawFrame || !n || !src) return null;
-    const cells = new Uint8Array(n);
-    for (let i = 0; i < n; i++) cells[i] = src[i * 4 + 3];
-    return cells;
+  // Priors for this finger's dab, from the last frame, the first time a cell is covered.
+  // The brush disc is the footprint. The rest of each touched column is the fall path,
+  // so a grain that drops out of the disc can be put back without copying the grid.
+  noteStroke(op) {
+    if (!op || (op.t !== 'p' && op.t !== 'l' && op.t !== 'spray')) return;
+    const M = this.M, src = this.lastColor;
+    if (!this.sawFrame || !M || !src || src.length < M.N * 4) return;
+    const W = M.W, H = M.H, N = M.N;
+    const foot = this.strokeFoot || (this.strokeFoot = { m: op.m, idx: [], prior: [], span: [], at: new Map(), cols: new Set() });
+    if (foot.m !== op.m) return;
+    const add = (i, brush) => {
+      if (i < 0 || i >= N) return;
+      const at = foot.at.get(i);
+      if (at !== undefined) { if (brush) foot.span[at] = 1; return; }
+      foot.at.set(i, foot.idx.length);
+      foot.idx.push(i);
+      foot.prior.push(src[i * 4 + 3] | 0);
+      foot.span.push(brush ? 1 : 0);
+    };
+    const columns = (x0, x1) => {
+      const a = Math.max(0, Math.min(x0, x1)), b = Math.min(W - 1, Math.max(x0, x1));
+      for (let x = a; x <= b; x++) {
+        if (foot.cols.has(x)) continue;
+        foot.cols.add(x);
+        for (let y = 0; y < H; y++) add(y * W + x, false);
+      }
+    };
+    const disc = (cx, cy, r) => {
+      const r2 = r * r;
+      const x0 = Math.max(0, cx - r), x1 = Math.min(W - 1, cx + r);
+      const y0 = Math.max(0, cy - r), y1 = Math.min(H - 1, cy + r);
+      // A falling grain can step sideways off the disc. A couple of columns covers
+      // that slide; anything further is no longer this stroke.
+      columns(x0 - 2, x1 + 2);
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+        const dx = x - cx, dy = y - cy;
+        if (dx * dx + dy * dy <= r2) add(y * W + x, true);
+      }
+    };
+    const rad = Math.max(0, Math.ceil(op.r || 0));
+    if (op.t !== 'l') { disc(op.x | 0, op.y | 0, rad); return; }
+    let x = op.x0 | 0, y = op.y0 | 0, x1 = op.x1 | 0, y1 = op.y1 | 0;
+    const dx = Math.abs(x1 - x), dy = Math.abs(y1 - y), sx = x < x1 ? 1 : -1, sy = y < y1 ? 1 : -1;
+    let err = dx - dy, guard = 0;
+    for (;;) {
+      disc(x, y, rad);
+      if ((x === x1 && y === y1) || ++guard > 2000) break;
+      const e2 = 2 * err;
+      if (e2 > -dy) { err -= dy; x += sx; }
+      if (e2 < dx) { err += dx; y += sy; }
+    }
   }
   // A second finger lands after the dab is queued. Drop it if the worker has not taken it.
-  // If it has, put the pre-stroke grid back: grains that already fell disappear, and cells
-  // under the dab are restored instead of being painted to air.
+  // If it has, put the footprint back: a cell still holding the dab returns to what was
+  // there, a dab that fell down the column goes with it, and anything else placed since
+  // (a brick box, a cell the dab has left that something else now fills) stays.
   undoTouchPour() {
     const stroke = this.touchStroke || [];
-    const snapshot = this.strokeCells;
-    this.touchStroke = null; this.strokeCells = null;
+    const foot = this.strokeFoot;
+    this.touchStroke = null; this.strokeFoot = null;
     const queued = new Set(stroke);
     const stillQueued = new Set();
     const keep = list => (list || []).filter(op => {
@@ -1618,7 +1663,14 @@ class Component extends DCLogic {
     });
     this.ops = keep(this.ops);
     this.pending = keep(this.pending);
-    if (snapshot && stroke.some(op => !stillQueued.has(op))) this.ops.push({ t: 'revert', cells: snapshot });
+    if (foot && foot.idx.length && stroke.some(op => !stillQueued.has(op))) {
+      this.ops.push({
+        t: 'revert', m: foot.m,
+        idx: Uint32Array.from(foot.idx),
+        prior: Uint8Array.from(foot.prior),
+        span: Uint8Array.from(foot.span),
+      });
+    }
     this.painting = false; this.lastCell = null; this.dragStart = null;
     if (this.drawPreview) this.drawPreview();
     if (this.state?.probe?.on) this.setState({ probe: { on: false } });
@@ -1691,7 +1743,7 @@ class Component extends DCLogic {
     const touch = this.touchMod.createTouchPour({
       setTimer: fn => (lpTimer = setTimeout(fn, 450)), clearTimer: cancelLongPress,
       moved: (dx, dy) => Math.hypot(dx, dy) > 8,
-      begin: () => { this.touchStroke = []; this.strokeCells = this.cellSnapshot(); },
+      begin: () => { this.touchStroke = []; this.strokeFoot = null; },
       undo: () => this.undoTouchPour(),
       pour: (px, py) => {
         const c = this.cellAt(px, py), tool = this.state.tool;
@@ -1703,10 +1755,14 @@ class Component extends DCLogic {
         if (tool === 'pour') pour(c.x, c.y, px, py);
         else if (tool === 'tap') { const op = starting && this.tapOp(c); if (op) this.ops.push(op); }
         else if (starting || this.state.paused) { const op = this.toolTick(); if (op) this.ops.push(op); }
-        if (this.touchStroke && this.ops.length > before) this.touchStroke.push(this.ops[this.ops.length - 1]);
+        if (this.touchStroke && this.ops.length > before) {
+          const op = this.ops[this.ops.length - 1];
+          this.touchStroke.push(op);
+          this.noteStroke(op);
+        }
       },
       probe: (px, py) => { const c = this.cellAt(px, py); this.showProbe(c.x, c.y, px, py); },
-      end: () => { this.touchStroke = null; this.strokeCells = null; },
+      end: () => { this.touchStroke = null; this.strokeFoot = null; },
     });
     const ptrs = this.ptrs = new Map();
     const isUi = e => e.target && e.target.closest && e.target.closest('[data-ui]');

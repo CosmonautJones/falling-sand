@@ -18,6 +18,9 @@ const requireCheckpoints = engine => {
 test('all_accepted_scheduled_operation_variants_are_detached_and_exportable', () => {
   const engine = E.createEngine({ seed: 11, scene: 'empty' });
   const cells = new Uint8Array(E.N); cells[100] = E.GLASS;
+  const idx = new Uint32Array([100]);
+  const prior = new Uint8Array([E.WATER]);
+  const span = new Uint8Array([1]);
   const ops = [
     { t: 'l', x0: 10, y0: 10, x1: 15, y1: 15, r: 1, m: E.STONE, vx: 1, vy: -1 },
     { t: 'p', x: 10, y: 10, r: 1, m: E.GLASS },
@@ -26,7 +29,7 @@ test('all_accepted_scheduled_operation_variants_are_detached_and_exportable', ()
     { t: 'heat', x: 10, y: 10, r: 2 }, { t: 'cool', x: 10, y: 10, r: 2 },
     { t: 'rain', m: E.SAND, n: 3 }, { t: 'tempest' }, { t: 'clear' }, { t: 'reset' },
     { t: 'wipe', mode: 'clear' }, { t: 'wipe', mode: 'reset' }, { t: 'wipe', mode: 'load', cells },
-    { t: 'load', cells }, { t: 'snap' }, { t: 'revert', cells },
+    { t: 'load', cells }, { t: 'snap' }, { t: 'revert', m: E.GOLD, idx, prior, span },
   ];
   const commands = ops.map((op, sequence) => ({ tick: 1, sequence, op }));
   engine.advanceTicks(0, commands);

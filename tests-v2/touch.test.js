@@ -125,32 +125,49 @@ test('a glide pans, decays, and stops', () => {
   assert.equal(held.moving, false, 'a glide that the camera clamp rejects stops');
 });
 
-test('a pinch puts a moved stroke back and does not punch holes', () => {
+test('a pinch puts the stroke footprint back and leaves the rest of the world', () => {
   const buffers = () => [new Uint8Array(E.N * 4), new Uint8Array(E.N * 4), new Uint8Array(E.N * 4)];
   const engine = E.createEngine({ seed: 3, scene: 'empty' });
   const stone = 30 * E.W + 12, water = 26 * E.W + 12;
   engine.tick({ paused: true, ops: [
     { t: 'p', x: 12, y: 30, r: 0, m: E.STONE },
     { t: 'p', x: 12, y: 26, r: 0, m: E.WATER },
+    { t: 'box', x0: 200, y0: 80, x1: 239, y1: 99, m: E.BRICK },
   ] }, ...buffers());
   const w = engine.inspect();
   const shade = w.shades[stone];
   w.VX[stone] = 2.5;
-  const before = engine.tick({ paused: true, ops: [{ t: 'snap' }] }, ...buffers()).snap.cells.slice();
+  const prior = w.cells.slice();
   engine.tick({ paused: true, ops: [{ t: 'p', x: 12, y: 26, r: 1, m: E.GOLD }] }, ...buffers());
   assert.equal(w.cells[water], E.GOLD);
   engine.tick({ dt: 250, speed: 1 }, ...buffers());
   let gold = 0;
   w.cells.forEach(c => { if (c === E.GOLD) gold++; });
   assert.ok(gold > 0, 'the dab has somewhere to come back from');
-  engine.tick({ paused: true, ops: [{ t: 'revert', cells: before }] }, ...buffers());
+  // A brick laid on the stroke after the dab is not the dab, so the revert leaves it.
+  w.setc(13, 26, E.BRICK, 4);
+  const idx = [], was = [], span = [], brush = new Set();
+  for (let y = 25; y <= 27; y++) for (let x = 11; x <= 13; x++) {
+    if ((x - 12) * (x - 12) + (y - 26) * (y - 26) <= 1) brush.add(y * E.W + x);
+  }
+  for (let x = 9; x <= 15; x++) for (let y = 0; y < E.H; y++) {
+    const i = y * E.W + x;
+    idx.push(i); was.push(prior[i]); span.push(brush.has(i) ? 1 : 0);
+  }
+  engine.tick({ paused: true, ops: [{
+    t: 'revert', m: E.GOLD,
+    idx: Uint32Array.from(idx), prior: Uint8Array.from(was), span: Uint8Array.from(span),
+  }] }, ...buffers());
   assert.equal(w.cells[water], E.WATER, 'the cell under the dab is restored');
   assert.equal(w.cells[stone], E.STONE);
-  assert.equal(w.shades[stone], shade, 'a cell the stroke never touched keeps its shade');
+  assert.equal(w.shades[stone], shade, 'a cell the dab never replaced keeps its shade');
   assert.equal(w.VX[stone], 2.5, 'and its velocity');
+  assert.equal(w.cells[26 * E.W + 13], E.BRICK, 'a brick placed on the stroke stays');
   gold = 0;
-  w.cells.forEach(c => { if (c === E.GOLD) gold++; });
-  assert.equal(gold, 0, 'grains that already fell are gone');
+  let bricks = 0;
+  w.cells.forEach(c => { if (c === E.GOLD) gold++; if (c === E.BRICK) bricks++; });
+  assert.equal(gold, 0, 'grains that fell down the touched columns are gone');
+  assert.equal(bricks, 801, 'the box elsewhere is still there');
 });
 
 test('undo drops a queued pour and restores the grid once the worker has taken it', () => {
@@ -158,7 +175,7 @@ test('undo drops a queued pour and restores the grid once the worker has taken i
   const script = html.match(/<script type="text\/x-dc" data-dc-script[^>]*>([\s\S]*?)<\/script>/)[1];
   const context = { DCLogic: class { constructor() { this.props = {}; } },
     React: { createRef: () => ({ current: null }) }, performance: { now: () => 0 },
-    localStorage: { getItem: () => null }, requestAnimationFrame: () => 1, Float32Array,
+    localStorage: { getItem: () => null }, requestAnimationFrame: () => 1, Float32Array, Uint32Array, Uint8Array,
     window: {}, clearTimeout() {} };
   vm.createContext(context);
   vm.runInContext(script + '\nthis.Component = Component;', context);
@@ -173,14 +190,18 @@ test('undo drops a queued pour and restores the grid once the worker has taken i
   assert.equal(ui.touchStroke, null);
 
   const sent = { t: 'l', x0: 4, y0: 5, x1: 8, y1: 5, r: 2, m: E.SAND };
-  const cells = new Uint8Array(E.N); cells[5 * E.W + 4] = E.WATER;
+  const at = 5 * E.W + 4;
   ui.ops = [];
   ui.pending = [];
   ui.touchStroke = [sent];
-  ui.strokeCells = cells;
+  ui.strokeFoot = { m: E.SAND, idx: [at], prior: [E.WATER], span: [1] };
   ui.undoTouchPour();
   assert.equal(ui.ops.length, 1);
   assert.equal(ui.ops[0].t, 'revert');
-  assert.equal(ui.ops[0].cells[5 * E.W + 4], E.WATER);
+  assert.equal(ui.ops[0].m, E.SAND);
+  assert.equal(ui.ops[0].idx[0], at);
+  assert.equal(ui.ops[0].prior[0], E.WATER);
+  assert.equal(ui.ops[0].span[0], 1);
+  assert.ok(ui.ops[0].idx.length < E.N, 'the revert is the footprint, not the grid');
   assert.equal(JSON.stringify(ui.ops).includes('"m":0'), false, 'the stroke is not painted back as air');
 });
