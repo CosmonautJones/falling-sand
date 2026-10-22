@@ -56,6 +56,8 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
 @media(orientation:landscape) and (max-height:520px){.root{flex-direction:row!important;align-items:stretch!important;padding:max(4px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))!important}.hd,.ctl,.zoom-buttons,[data-mobile-hud]{display:none!important}.sheet{display:flex}.fig{flex:1 1 0!important;padding:0!important;background:none!important;box-shadow:none!important}.rivet{display:none}
 .phone-bar{display:flex;flex-direction:column-reverse;justify-content:flex-end;width:76px;padding:0}.phone-row{flex-direction:column}.pb-el{flex:0 0 auto;flex-direction:column;justify-content:center;gap:2px;height:76px;padding:4px}.pb-el .pb-txt{align-items:center}.pb-el .caret,.pb-sub{display:none}.pb-name{font-size:12px;max-width:68px}.phone-hud{white-space:normal;font-size:10px;margin-top:auto}
 .sheet{left:auto;top:0;width:min(380px,58vw);max-height:none;border-radius:18px 0 0 18px;border-top:none;border-left:1px solid rgba(196,154,74,.55);padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) 0}}
+.pb-txt{flex:1;overflow:hidden}.pb-el .sw{flex-shrink:0}.pb-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pb-brush{flex-direction:column;gap:3px}.pb-brush .dot{max-width:12px;max-height:12px}.pb-size{font-size:12px;line-height:1;font-variant-numeric:tabular-nums}
+@media(max-width:380px) and (orientation:portrait){.phone-row{gap:5px}.pb{min-width:44px;padding:0 8px}.pb-el{padding:0 7px;gap:6px}.pb-el .caret{display:none}.pb-el .sw{width:20px;height:20px}.pb-sub{letter-spacing:0}}
 </style>
 </helmet>
 <div ref="{{ rootRef }}" class="root" style="height:100dvh; display:flex; flex-direction:column; align-items:center; gap:8px; padding:max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); overflow:hidden; color:#f0e2c4; font:15px/1.5 Palatino,'Palatino Linotype','Book Antiqua','EB Garamond',Georgia,serif; -webkit-font-smoothing:antialiased; background:radial-gradient(70% 45% at 50% -8%, rgba(176,137,72,.16), transparent 55%), #100c09;">
@@ -71,6 +73,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
       <div class="hd-line" style="min-height:1.4em; max-width:42rem; width:100%; font-size:14px; font-style:italic; line-height:1.35; color:{{ lineColor }}; text-wrap:pretty;">{{ line }}</div>
     </div>
     <div class="hd-btns" style="display:flex; justify-content:flex-end; align-items:center; gap:6px;">
+      <a href="./catch/" target="_blank" rel="noopener" title="Try a finite-resource water puzzle in a separate tab" style="color:#dbc18b; font-size:13px; padding:10px 6px;">catch the pour</a>
       <a href="../" title="Back to Alembic v1" style="color:#8f7d62; font-size:13px; letter-spacing:.06em; margin-right:6px; text-decoration:none;">v1</a>
       <button onClick="{{ openCodex }}" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:6px 12px; font-size:13px; letter-spacing:.06em; cursor:pointer;" style-hover="border-color:#c49a4a;" class="hb">codex</button>
       <button onClick="{{ openRites }}" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:6px 12px; font-size:13px; letter-spacing:.06em; cursor:pointer;" style-hover="border-color:#c49a4a;" class="hb">rites</button>
@@ -245,7 +248,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
         <span class="pb-txt"><span class="pb-name">{{ brushName }}</span><span class="pb-sub">{{ toolHint }}</span></span>
         <span class="caret" aria-hidden="true">▾</span>
       </button>
-      <button data-phone="brush" class="pb" aria-label="{{ brushAria }}" onClick="{{ cycleBrush }}"><span class="dot" style="width:{{ brushDot }}px; height:{{ brushDot }}px;"></span></button>
+      <button data-phone="brush" class="pb pb-brush" aria-label="{{ brushAria }}" onClick="{{ cycleBrush }}"><span class="dot" style="width:{{ brushDot }}px; height:{{ brushDot }}px;"></span><span class="pb-size" aria-hidden="true">{{ radius }}</span></button>
       <button data-phone="zoom" class="pb pb-zoom" aria-label="Zoom: steps to 2×, 4×, then the whole vessel" onClick="{{ cycleZoom }}"><span class="pb-zoom-lab" ref="{{ pbZoomRef }}">⊕</span></button>
       <button data-phone="pause" class="pb" aria-label="{{ pauseLabel }}" onClick="{{ togglePause }}">{{ pauseIcon }}</button>
       <button data-phone="options" class="pb" aria-haspopup="dialog" aria-expanded="{{ optionsOpen }}" aria-label="Options" onClick="{{ openOptions }}">☰</button>
@@ -279,6 +282,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
     <section class="sheet" data-sheet="options" role="dialog" aria-modal="true" aria-label="Options">
       <div class="sheet-head"><span>Options</span><button class="sheet-x" onClick="{{ closeSheet }}" aria-label="Close">✕</button></div>
       <div class="sheet-body" data-scroll>
+        <a href="./catch/" target="_blank" rel="noopener" style="display:flex; align-items:center; min-height:44px; color:#dbc18b;">Catch the Pour · finite-resource puzzle</a>
         <div class="sheet-label">Tool</div>
         <div class="seg seg-3">
           <sc-for list="{{ tools }}" as="t" hint-placeholder-count="7">

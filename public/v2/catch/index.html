@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#17131b"><title>Catch the Pour · Alembic</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<header><a href="../" class="back">Alembic sandbox</a><span class="edition">An experiment in finite things</span></header>
+<main>
+ <div class="intro"><h1>Catch the Pour</h1><p>One reservoir. Two ways down. Build a route to the blue cistern.</p></div>
+ <div class="workbench">
+  <section class="vessel" aria-label="The split cistern puzzle">
+   <div class="vessel-heading"><strong id="phase">Preparing the vessel…</strong><span id="clock">15 seconds to catch it</span></div>
+   <canvas id="vessel" width="544" height="474" tabindex="0" role="img" aria-label="Puzzle vessel. Draw a straight line in the dotted build area. Keyboard: arrows move the cursor, Shift moves ten cells, Space places a stamp." aria-describedby="canvas-help"></canvas>
+   <div class="legend"><span><i class="build-key"></i>Build area</span><span><i class="water-key"></i>Catch here</span><output id="cursor">Cursor 210, 110</output></div>
+  </section>
+  <aside class="instruments" aria-label="Construction and goal">
+   <section class="goal"><h2>Keep the water</h2><p>Hold at least <strong>1,320 water cells</strong> for one flowing second.</p>
+    <label for="caught">In the blue cistern <output id="caught-count">0 / 1,320</output></label><progress id="caught" max="1320" value="0"></progress>
+    <label for="hold">Hold <output id="hold-count">0 / 60 ticks</output></label><progress id="hold" max="60" value="0"></progress>
+   </section>
+   <fieldset id="materials"><legend>Build with what you have</legend>
+    <button type="button" data-material="stone" aria-pressed="true"><i class="stone-chip"></i>Stone <strong id="stone">160</strong></button>
+    <button type="button" data-material="sand" aria-pressed="false"><i class="sand-chip"></i>Sand <strong id="sand">240</strong></button>
+   </fieldset>
+   <fieldset id="brushes"><legend>Line width</legend><div class="brushes">
+    <button type="button" data-radius="0" aria-pressed="true">1 cell</button><button type="button" data-radius="1" aria-pressed="false">3</button><button type="button" data-radius="2" aria-pressed="false">5</button><button type="button" data-radius="4" aria-pressed="false">9</button>
+   </div></fieldset>
+   <p id="preview" class="preview">Drag a line. Only new cells cost material.</p>
+   <div class="actions"><button id="release" class="release" disabled>Release water</button><button id="undo" disabled>Undo</button><button id="pause" disabled>Pause</button><button id="step" disabled>Step</button><button id="retry">Retry from the start</button></div>
+   <p id="message" role="status" aria-live="polite" aria-atomic="true">Preparing the vessel…</p>
+   <p id="records" class="records">Try different routes. Fewer cells and faster catches are separate records.</p>
+  </aside>
+ </div>
+ <details><summary>How this vessel works</summary>
+  <p id="canvas-help">Drag to build a straight line, or tap for a stamp. Stone holds its shape; sand falls when released. You can build only in empty space inside the dotted region. The reservoir, walls and receiver are protected. An unaffordable line places nothing. Undo returns its full cost.</p>
+  <p>Release opens the valve and locks construction. The cistern must stay above its quota for 60 simulation ticks by tick 900. Pause and hidden tabs stop flowing time; Step advances one tick. Retry restores this exact vessel and inventory. Your sandbox saves and discoveries stay in the sandbox.</p>
+  <p>Keyboard: focus the vessel, use arrows to move the cursor, Shift for ten cells, and Space to place a stamp. Standard buttons control release, pause, step and retry.</p>
+ </details>
+</main>
+<script type="module" src="./app.js"></script>
+</body></html>
