@@ -23,6 +23,20 @@ test('vessel and canvas suppress browser touch gestures', () => {
   assert.match(html, /touch-action:manipulation/);
 });
 
+test('a touch screen fills the dynamic viewport and parks the minimap in the safe area', () => {
+  const at = html.indexOf('/* touch-fill');
+  const block = at < 0 ? '' : html.slice(at);
+  assert.ok(at >= 0, 'touch-fill layout is present');
+  assert.match(block, /\.fig\{[^}]*width:100vw/);
+  assert.match(block, /\.fig\{[^}]*height:100dvh/);
+  assert.match(block, /\.zoom-controls\{[^}]*env\(safe-area-inset-top\)/);
+  assert.match(block, /\.zoom-controls\{[^}]*env\(safe-area-inset-right\)/);
+  assert.match(block, /\.phone-bar\{[^}]*env\(safe-area-inset-bottom\)/);
+  assert.match(block, /\.phone-bar\{[^}]*env\(safe-area-inset-left\)/);
+  assert.match(block, /\.zoom-mini\{[^}]*opacity:1/);
+  assert.match(html, /viewport-fit=cover/);
+});
+
 test('layout respects safe-area insets and dynamic viewport height', () => {
   assert.match(html, /env\(safe-area-inset-top\)/);
   assert.match(html, /env\(safe-area-inset-bottom\)/);

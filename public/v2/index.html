@@ -60,6 +60,24 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
 .vp{position:relative;overflow:hidden;width:min(100cqw, calc(100cqh * 480 / 270));aspect-ratio:480 / 270;max-height:100%;background:#0b090e}
 @media(max-width:700px){.vp{position:absolute;inset:0;width:auto;height:auto;max-height:none;aspect-ratio:auto}}.pb-size{font-size:12px;line-height:1;font-variant-numeric:tabular-nums}
 @media(max-width:380px) and (orientation:portrait){.phone-row{gap:5px}.pb{min-width:44px;padding:0 8px}.pb-el{padding:0 7px;gap:6px}.pb-el .caret{display:none}.pb-el .sw{width:20px;height:20px}.pb-sub{letter-spacing:0}}
+/* touch-fill: the vessel is the screen; chrome sits in the safe area */
+@media(max-width:700px),(pointer:coarse){
+.root{padding:0!important;gap:0!important}
+.hd{display:none!important}
+.fig{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;max-width:none!important;margin:0!important;padding:0!important;border-radius:0!important;background:#0b090e!important;box-shadow:none!important}
+.vp{position:absolute!important;inset:0!important;width:auto!important;height:auto!important;max-height:none!important;aspect-ratio:auto!important;border-radius:0!important}
+.phone-bar{position:fixed;z-index:12;left:0;right:0;bottom:0;width:auto;padding:8px max(10px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));background:linear-gradient(to top,rgba(16,12,9,.88),rgba(16,12,9,0));pointer-events:none}
+.phone-bar .pb{pointer-events:auto}
+.zoom-controls{top:max(12px,env(safe-area-inset-top))!important;right:max(12px,env(safe-area-inset-right))!important;bottom:auto!important}
+.zoom-mini{opacity:1!important;pointer-events:auto!important}
+.rotate-hint{display:none!important}
+.flask-status{position:fixed;top:max(8px,env(safe-area-inset-top));z-index:13}
+.experiment-card{position:fixed;z-index:14;top:max(8px,env(safe-area-inset-top));left:max(8px,env(safe-area-inset-left));width:auto;max-width:calc(100vw - 110px)}
+}
+@media(orientation:landscape) and (max-height:520px){
+.phone-bar{top:0;bottom:0;left:0;right:auto;width:76px;padding:max(4px,env(safe-area-inset-top)) 0 max(4px,env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left));background:linear-gradient(to right,rgba(16,12,9,.88),rgba(16,12,9,0))}
+.zoom-controls{top:max(8px,env(safe-area-inset-top))!important;right:max(8px,env(safe-area-inset-right))!important}
+}
 </style>
 </helmet>
 <div ref="{{ rootRef }}" class="root" style="height:100dvh; display:flex; flex-direction:column; align-items:center; gap:8px; padding:max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); overflow:hidden; color:#f0e2c4; font:15px/1.5 Palatino,'Palatino Linotype','Book Antiqua','EB Garamond',Georgia,serif; -webkit-font-smoothing:antialiased; background:radial-gradient(70% 45% at 50% -8%, rgba(176,137,72,.16), transparent 55%), #100c09;">
