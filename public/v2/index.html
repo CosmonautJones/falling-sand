@@ -81,10 +81,14 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
 .phone-bar{top:0;bottom:0;left:0;right:auto;width:calc(76px + env(safe-area-inset-left));padding:max(4px,env(safe-area-inset-top)) 0 max(4px,env(safe-area-inset-bottom)) env(safe-area-inset-left);background:linear-gradient(to right,rgba(16,12,9,.88),rgba(16,12,9,0))}
 .hd{left:calc(84px + env(safe-area-inset-left));top:max(4px,env(safe-area-inset-top));right:calc(100px + env(safe-area-inset-right))}
 .zoom-controls{top:max(8px,env(safe-area-inset-top))!important;right:max(8px,env(safe-area-inset-right))!important}
+.experiment-card{left:calc(84px + env(safe-area-inset-left))!important;max-width:min(260px,calc(100vw - 120px - env(safe-area-inset-left) - env(safe-area-inset-right)))}
+.phone-bar{overflow:hidden}
+.phone-bar .pb{width:64px;min-width:0;max-width:calc(100% - 12px);padding:0 4px}
 }
 </style>
 </helmet>
 <div ref="{{ rootRef }}" class="root" style="height:100dvh; display:flex; flex-direction:column; align-items:center; gap:8px; padding:max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); overflow:hidden; color:#f0e2c4; font:15px/1.5 Palatino,'Palatino Linotype','Book Antiqua','EB Garamond',Georgia,serif; -webkit-font-smoothing:antialiased; background:radial-gradient(70% 45% at 50% -8%, rgba(176,137,72,.16), transparent 55%), #100c09;">
+  <div data-safe-right aria-hidden="true" style="position:fixed;top:0;right:0;width:env(safe-area-inset-right);height:0;pointer-events:none"></div>
 
   <header class="col hd" style="width:min(96vw,1440px); display:grid; grid-template-columns:minmax(150px,1fr) minmax(0,2.4fr) minmax(max-content,1fr); align-items:center; gap:16px; flex:0 0 auto;">
     <div class="hd-tally" style="display:flex; flex-direction:column; gap:1px; font-size:13px; font-style:italic; color:#8f7d62; letter-spacing:.02em; white-space:nowrap;">
@@ -1397,26 +1401,30 @@ class Component extends DCLogic {
   screenCamera(view) { return this.cam.cameraFromView(this.vw || 0, this.vh || 0, view || this.view); }
   grainPx() { return this.cam && this.vw > 0 ? this.screenCamera().scale : (this.vw / this.M.W) * (this.view?.zoom || 1); }
   // Chrome overlapping the glass. A wide bottom bar covers the floor; a tall
-  // left rail covers the wall. Desktop (the bar is hidden) covers nothing.
+  // left rail covers the wall. The right safe area covers the other wall the
+  // same way. Desktop (the bar is hidden, no notch) covers nothing.
   chromeCover() {
     const none = { left: 0, right: 0, bottom: 0 };
     const vp = this.vpRef?.current, root = this.rootRef?.current;
     if (!vp || !root) return none;
+    const probe = root.querySelector('[data-safe-right]');
+    const safeRight = probe ? probe.offsetWidth : 0;
+    const withRight = cover => ({ ...cover, right: Math.max(cover.right || 0, safeRight) });
     const bar = root.querySelector('.phone-bar');
-    if (!bar) return none;
+    if (!bar) return withRight(none);
     const cs = getComputedStyle(bar);
-    if (cs.display === 'none' || cs.visibility === 'hidden') return none;
+    if (cs.display === 'none' || cs.visibility === 'hidden') return withRight(none);
     const vr = vp.getBoundingClientRect(), br = bar.getBoundingClientRect();
-    if (br.width < 1 || br.height < 1) return none;
+    if (br.width < 1 || br.height < 1) return withRight(none);
     if (br.width >= vr.width * 0.6 && br.top >= vr.top + vr.height * 0.4) {
       const cover = vr.bottom - br.top;
-      if (cover > 0) return { left: 0, right: 0, bottom: Math.min(vr.height * 0.45, cover) };
+      if (cover > 0) return withRight({ left: 0, right: 0, bottom: Math.min(vr.height * 0.45, cover) });
     }
     if (br.height >= vr.height * 0.6 && br.left <= vr.left + 4 && br.right < vr.left + vr.width * 0.45) {
       const cover = br.right - vr.left;
-      if (cover > 0) return { left: Math.min(vr.width * 0.45, cover), right: 0, bottom: 0 };
+      if (cover > 0) return withRight({ left: Math.min(vr.width * 0.45, cover), right: 0, bottom: 0 });
     }
-    return none;
+    return withRight(none);
   }
   coverShift(a, b) {
     const box = (e) => typeof e === 'number' ? { left: 0, right: 0, bottom: e } : { left: e?.left || 0, right: e?.right || 0, bottom: e?.bottom || 0 };

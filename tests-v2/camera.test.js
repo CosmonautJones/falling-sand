@@ -239,10 +239,25 @@ test('the blast punch stays stuck to the grain it leans toward', () => {
   assert.equal(punchCamera(cam, 1, ax, ay), cam);
 });
 
-test('4× of a 390×844 fill is past the zoom cap, and 2× is not', () => {
+test('4× of a 390×844 fill fits the zoom cap, and 5× does not', () => {
   const fill = defaultView(390, 844);
   assert.ok(fill.zoom * 2 <= MAX_ZOOM);
-  assert.ok(fill.zoom * 4 > MAX_ZOOM);
+  assert.ok(fill.zoom * 4 <= MAX_ZOOM, `4× fill ${fill.zoom * 4} should fit under ${MAX_ZOOM}`);
+  assert.ok(fill.zoom * 5 > MAX_ZOOM);
+});
+
+test('a right inset keeps the landscape wall out of the safe area', () => {
+  const vw = 844, vh = 390, rail = 76, notch = 47;
+  const view = defaultView(vw, vh, { left: rail, right: notch });
+  const cam = cameraFromView(vw, vh, view);
+  assert.ok(cam.x >= rail - 0.01, `left edge ${cam.x} is under the rail`);
+  assert.ok(cam.x + WORLD_W * cam.scale <= vw - notch + 0.01, 'the right wall clears the notch');
+  const tight = defaultView(vw, vh, { left: 200, right: notch });
+  const pinned = cameraFromView(vw, vh, tight);
+  assert.ok(Math.abs(pinned.x - 200) < 1e-6, 'a rail the world cannot clear still wins the default');
+  const pulled = panView(vw, vh, tight, -400, 0, { left: 200, right: notch });
+  const cleared = cameraFromView(vw, vh, pulled);
+  assert.ok(Math.abs(cleared.x + WORLD_W * cleared.scale - (vw - notch)) < 1e-3, 'panning still reaches the right safe edge');
 });
 
 test('the page renders through the camera, not a single uZoom', () => {

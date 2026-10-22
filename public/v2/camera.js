@@ -15,7 +15,9 @@
 export const WORLD_W = 480;
 export const WORLD_H = 270;
 export const MIN_ZOOM = 1;
-export const MAX_ZOOM = 12;
+// 4× a tall phone's height-fill is about 15.4 (390×844). 16 keeps that stop, and the
+// one past it, inside the same cap the pinch and the zoom button share.
+export const MAX_ZOOM = 16;
 
 const finite = (n, fallback) => (Number.isFinite(n) ? n : fallback);
 
@@ -130,7 +132,8 @@ export function panToCenter(vw, vh, view, gx, gy, edge = 0) {
 // Whole world on a desktop-shaped viewport. Height-filling crop when the
 // viewport is taller than 480:270 (a phone held upright). A bottom inset lifts
 // that crop so the floor clears a bar. A left inset shifts a fitted world
-// sideways so its left edge clears a rail.
+// sideways so its left edge clears a rail. A right inset keeps the right wall
+// out of that safe area when the world still fits beside the rail.
 export function defaultView(vw, vh, edge = 0) {
   if (!(vw > 0) || !(vh > 0)) return { zoom: 1, panX: 0, panY: 0 };
   const worldAspect = WORLD_W / WORLD_H;
@@ -144,6 +147,7 @@ export function defaultView(vw, vh, edge = 0) {
   let originX = (vw - WORLD_W * scale) / 2;
   let originY = (vh - WORLD_H * scale) / 2;
   if (insets.bottom > 0) originY = Math.min(originY, (vh - insets.bottom) - WORLD_H * scale);
+  if (insets.right > 0) originX = Math.min(originX, (vw - insets.right) - WORLD_W * scale);
   if (insets.left > 0) originX = Math.max(originX, insets.left);
   return clampView(vw, vh, { zoom, panX: originX - frame.x, panY: originY - frame.y }, edge);
 }
