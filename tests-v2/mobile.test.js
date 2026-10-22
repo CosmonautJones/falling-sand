@@ -83,6 +83,8 @@ test('a wide coarse screen caps the sheet and fills tile columns', () => {
   assert.match(html, /onClick="\{\{ orbClick \}\}"/);
   assert.match(html, /onClick="\{\{ handleClick \}\}"/);
   assert.match(html, /armSheetTap\(tab\)/);
+  assert.match(html, /componentDidUpdate\(prev\) \{[\s\S]{0,400}?this\.fitCover\(\)/);
+  assert.match(html, /fitCover\(\) \{[\s\S]{0,500}?this\.coverShift\(cover, this\.lastCover/);
   assert.match(html, /chromeCover\(\) \{[\s\S]*?\.orb, \.size-orb, \.rb, \.rec, \.sheet-handle/);
   assert.match(html, /\.pour-hint\{left:auto;right:max\(84px,calc\(env\(safe-area-inset-right\) \+ 72px\)\)/);
 });

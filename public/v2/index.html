@@ -919,6 +919,17 @@ class Component extends DCLogic {
     if ((prev.quality ?? 'full') !== (this.props.quality ?? 'full')) this.resize();
     const sheet = this.rootRef.current?.querySelector('.sheet');
     if (sheet) sheet.inert = this.state.sheet !== 'studio';
+    // Recents paint after the first fit. Lift the floor once they do.
+    this.fitCover();
+  }
+  fitCover() {
+    if (!this.view || !this.cam || !(this.vw > 0)) return;
+    const cover = this.chromeCover();
+    if (this.coverShift(cover, this.lastCover || 0) <= 0.5) return;
+    if (!this.viewUser) { this.view = this.cam.defaultView(this.vw, this.vh); this.viewT = this.view; }
+    else { this.view = this.clampPan(this.view); this.viewT = this.clampPan(this.viewT || this.view); }
+    this.lastCover = cover;
+    this.syncViewUI();
   }
 
   // ---------- engine ----------
