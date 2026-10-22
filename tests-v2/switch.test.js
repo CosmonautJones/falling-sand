@@ -18,7 +18,7 @@ test('start over: two taps erase every Alembic v2 key and reload to a first run'
   const keys = html.match(/const DKEY[^\n]*/)[0];
   const names = [...keys.matchAll(/'(alembic-[a-z-]+-v2)'/g)].map(m => m[1]);
   assert.ok(names.length >= 8);
-  assert.match(html, /const SAVE_KEYS = \[DKEY, RKEY, FKEY, SKEY, TKEY, PKEY, AKEY, GKEY\];/);
+  assert.match(html, /const SAVE_KEYS = \[DKEY, RKEY, FKEY, SKEY, TKEY, PKEY, AKEY, GKEY, HKEY\];/);
   assert.match(html, /startOver\(\) \{[^}]*if \(!this\.state\.wipeArmed\)/);
   assert.match(html, /for \(const k of SAVE_KEYS\) localStorage\.removeItem\(k\)/);
   assert.match(html, /location\.replace\(location\.pathname\)/);

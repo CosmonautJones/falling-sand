@@ -78,6 +78,8 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
 .rb{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;color:#f0e2c4;pointer-events:auto;touch-action:manipulation}
 .sheet-handle{position:absolute;left:50%;width:120px;height:28px;transform:translateX(-50%);border:none;background:transparent;pointer-events:auto;touch-action:none}
 .sheet-handle i{display:block;width:120px;height:5px;margin:16px auto 0;border-radius:3px;background:rgba(240,226,196,.55)}
+.home-hint{position:absolute;z-index:3;display:flex;gap:10px;align-items:center;padding:8px 8px 8px 14px;border-radius:16px;pointer-events:auto;color:#f0e2c4;font-size:13px;line-height:1.35}
+.home-hint p{margin:0;flex:1}.home-hint button{flex:0 0 auto;min-width:44px;min-height:44px;border:none;background:transparent;color:#e8c97a;font-size:14px;cursor:pointer}
 .root[data-idle] .top-pills,.root[data-idle] .top-pills .pill{opacity:0;pointer-events:none}
 /* touch-fill: the vessel is the screen; chrome sits in the safe area */
 @media(max-width:700px),(pointer:coarse){
@@ -89,6 +91,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
 .fig{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;max-width:none!important;margin:0!important;padding:0!important;border-radius:0!important;background:#0b090e!important;box-shadow:none!important}
 .vp{position:absolute!important;inset:0!important;width:auto!important;height:auto!important;max-height:none!important;aspect-ratio:auto!important;border-radius:0!important}
 .top-pills{top:max(10px,calc(env(safe-area-inset-top) + 6px));left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right))}
+.home-hint{top:calc(max(10px,env(safe-area-inset-top)) + 48px);left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right))}
 .orb-wrap{left:max(14px,env(safe-area-inset-left));bottom:max(16px,calc(env(safe-area-inset-bottom) + 8px))}
 .rbtns{right:max(14px,env(safe-area-inset-right));bottom:max(28px,calc(env(safe-area-inset-bottom) + 18px))}
 .sheet-handle{bottom:max(6px,env(safe-area-inset-bottom))}
@@ -102,6 +105,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
 @media(orientation:landscape) and (max-height:520px){
 .orb-wrap{left:env(safe-area-inset-left);bottom:max(8px,env(safe-area-inset-bottom))}
 .top-pills{left:calc(172px + env(safe-area-inset-left));top:max(6px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right))}
+.home-hint{left:calc(172px + env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right));top:calc(max(6px,env(safe-area-inset-top)) + 44px)}
 .hd{left:calc(172px + env(safe-area-inset-left));top:calc(max(4px,env(safe-area-inset-top)) + 36px);right:calc(100px + env(safe-area-inset-right))}
 .sheet{left:calc(172px + env(safe-area-inset-left));overflow:hidden}
 .sheet-foot{display:none}
@@ -308,6 +312,12 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
       <div class="pill glass" data-phone="almanac"><span class="almanac" ref="{{ phoneAlmanacRef }}"></span></div>
       <button class="pill glass pill-count" data-phone="tally" aria-label="{{ foundAria }}" onClick="{{ openCodex }}">{{ foundCount }}</button>
     </div>
+    <sc-if value="{{ homeHint }}" hint-placeholder-val="{{ false }}">
+      <div class="home-hint glass" data-ui="1" role="status">
+        <p>For true fullscreen: Share → Add to Home Screen.</p>
+        <button type="button" data-phone="home-dismiss" onClick="{{ dismissHomeHint }}">Dismiss</button>
+      </div>
+    </sc-if>
     <div class="orb-wrap" data-radial="{{ radialFlag }}">
       <sc-for list="{{ recents }}" as="c" hint-placeholder-count="3">
         <button class="rec" data-phone="recent" title="{{ c.name }}" aria-label="{{ c.name }}" onClick="{{ c.onClick }}" style="left:{{ c.left }};bottom:{{ c.bottom }};background:{{ c.swatch }};"></button>
@@ -407,7 +417,9 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
             <button onClick="{{ onShot }}">shot</button>
             <button onClick="{{ onClip }}">clip</button>
             <button onClick="{{ toggleSound }}" style="color:{{ soundColor }};">{{ soundLabel }}</button>
-            <button onClick="{{ toggleScreen }}"><span class="enter-screen">fullscreen</span><span class="exit-screen">exit screen</span></button>
+            <sc-if value="{{ fullscreenReady }}" hint-placeholder-val="{{ true }}">
+              <button data-phone="fullscreen" onClick="{{ toggleScreen }}"><span class="enter-screen">fullscreen</span><span class="exit-screen">exit screen</span></button>
+            </sc-if>
           </div>
           <div class="sheet-label">Version</div>
           <div class="seg">
@@ -574,7 +586,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;quality&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;full&quot;,&quot;grain&quot;],&quot;default&quot;:&quot;full&quot;,&quot;tsType&quot;:&quot;'full' | 'grain'&quot;,&quot;section&quot;:&quot;Render&quot;},&quot;lighting&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:0,&quot;max&quot;:2,&quot;step&quot;:0.05,&quot;default&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Render&quot;},&quot;bloom&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:0,&quot;max&quot;:2,&quot;step&quot;:0.05,&quot;default&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Render&quot;},&quot;particles&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Render&quot;},&quot;hud&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Render&quot;}}">
-const DKEY = 'alembic-discovered-v2', RKEY = 'alembic-rites-v2', FKEY = 'alembic-flasks-v2', SKEY = 'alembic-sound-v2', TKEY = 'alembic-tempest-v2', PKEY = 'alembic-poured-v2', AKEY = 'alembic-ambitions-v2', GKEY = 'alembic-gallery-v2', CKEY = 'alembic-speed-v2';
+const DKEY = 'alembic-discovered-v2', RKEY = 'alembic-rites-v2', FKEY = 'alembic-flasks-v2', SKEY = 'alembic-sound-v2', TKEY = 'alembic-tempest-v2', PKEY = 'alembic-poured-v2', AKEY = 'alembic-ambitions-v2', GKEY = 'alembic-gallery-v2', CKEY = 'alembic-speed-v2', HKEY = 'alembic-home-v2';
 const CLIMATE_WHISPER = { 1: 'A warm spell. Ice weeps; snow will not keep.', '-1': 'A cold snap. Still water skins over; the rain turns to snow.', 0: 'The air settles.' };
 const climateLabel = c => c >= 0.5 ? ' · warm spell' : c <= -0.5 ? ' · cold snap' : '';
 const SEASON_NAME = ['spring', 'summer', 'autumn', 'winter'];
@@ -610,7 +622,7 @@ function almanacDial(a) {
 }
 const TAP_ZOOM = 3, SNAP_ZOOM = 0.12, ZOOM_STEPS = [2, 4];
 const CLOCKS = [0.25, 0.5, 1, 2], CLOCK_LABEL = { 0.25: '¼×', 0.5: '½×', 1: '1×', 2: '2×' };
-const SAVE_KEYS = [DKEY, RKEY, FKEY, SKEY, TKEY, PKEY, AKEY, GKEY];
+const SAVE_KEYS = [DKEY, RKEY, FKEY, SKEY, TKEY, PKEY, AKEY, GKEY, HKEY];
 const today = () => { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
 const safeThumb = t => typeof t === 'string' && t.startsWith('data:image/png;base64,') ? `url(${t})` : 'none';
 const VERT = `#version 300 es
@@ -845,8 +857,9 @@ class Component extends DCLogic {
     this.recents = []; this.sessionFinds = new Set();
     this.kills = 0; this.toastQ = []; this.pending = [];
     this.checkpointJobs = new Map(); this.checkpointRequests = []; this.checkpointId = 0;
+    this.homeDismissed = false;
     let rites = [], flasks = [null, null, null], sound = true, tempest = false, poured = false, ambitions = [], gallery = [], speed = 1;
-    try { rites = JSON.parse(localStorage.getItem(RKEY) || '[]'); sound = localStorage.getItem(SKEY) !== '0'; tempest = localStorage.getItem(TKEY) === '1'; poured = localStorage.getItem(PKEY) === '1'; const c = Number(localStorage.getItem(CKEY)); if (CLOCKS.includes(c)) speed = c; } catch (e) {}
+    try { rites = JSON.parse(localStorage.getItem(RKEY) || '[]'); sound = localStorage.getItem(SKEY) !== '0'; tempest = localStorage.getItem(TKEY) === '1'; poured = localStorage.getItem(PKEY) === '1'; this.homeDismissed = localStorage.getItem(HKEY) === '1'; const c = Number(localStorage.getItem(CKEY)); if (CLOCKS.includes(c)) speed = c; } catch (e) {}
     try { ambitions = JSON.parse(localStorage.getItem(AKEY) || '[]'); gallery = JSON.parse(localStorage.getItem(GKEY) || '[]'); } catch (e) {}
     this.ambDone = new Set(Array.isArray(ambitions) ? ambitions : []);
     this.coarse = typeof matchMedia === 'function' && matchMedia('(pointer:coarse)').matches;
@@ -1003,7 +1016,7 @@ class Component extends DCLogic {
     const c = new Uint8Array(this.bufs[0]), e = new Uint8Array(this.bufs[1]), fx = new Uint8Array(this.bufs[2]);
     this.lastColor.set(c); this.sawFrame = true;
     this.upload(c, e, fx);
-    if (r.kick > 0) { if (typeof navigator !== 'undefined' && navigator.vibrate && !this.still && performance.now() - (this.lastBuzz || 0) > 250) { this.lastBuzz = performance.now(); navigator.vibrate(Math.round(10 + 30 * Math.min(1, r.kick / 6))); } }
+    if (r.kick > 0 || this.buzzMs) { if (typeof navigator !== 'undefined' && navigator.vibrate && !this.still && (r.kick > 0 || this.coarse) && performance.now() - (this.lastBuzz || 0) > 250) { this.lastBuzz = performance.now(); navigator.vibrate(r.kick > 0 ? Math.round(10 + 30 * Math.min(1, r.kick / 6)) : this.buzzMs); this.buzzMs = 0; } }
     if (r.kick > 0) { if (!this.still) this.shake = Math.min(1, this.shake + Math.min(1, r.kick / 6)); this.boom(r.kick); }
     if (r.kick >= 4) { if (!this.still) this.punch = Math.min(1, (this.punch || 0) + r.kick / 8); }
     this.flash = Math.max(this.flash * 0.85, r.flash || 0);
@@ -1066,6 +1079,7 @@ class Component extends DCLogic {
     });
     this.toast({ kind: 'find', names: [M.NAMES[lastId]], label: 'TRANSMUTED · ' + M.NAMES[lastId].toUpperCase(), text: w, swatch: rgb(M.COLORS[lastId]), rite: false });
     this.fanfare();
+    this.buzzMs = 18;
     if (this.nudgeGoal !== undefined && list.includes(this.nudgeGoal)) this.setState({ suggest: -1 });
     const map = { [M.GLASS]: 'first-light', [M.BLOOM]: 'garden', [M.VOID]: 'nigredo', [M.RIFT]: 'door', [M.GOLD]: 'king', [M.AZOTH]: 'opus', [M.PEARL]: 'pearl' };
     for (const id of list) if (map[id]) this.unlock(map[id]);
@@ -1100,17 +1114,16 @@ class Component extends DCLogic {
     this.setState({ gallery });
   }
   isIPhoneBrowser() { return typeof navigator !== 'undefined' && /iPhone|iPod/.test(navigator.userAgent) && !navigator.standalone; }
-  // iPhone Safari cannot go truly fullscreen; the layout still takes over, and a tip points at the Home Screen.
+  // iPhone Safari has no Fullscreen API. The hint offers Add to Home Screen once; dismissing it is remembered.
+  dismissHomeHint() {
+    this.homeDismissed = true;
+    try { localStorage.setItem(HKEY, '1'); } catch (e) {}
+    this.setState({});
+  }
   async goFullscreen() {
     if (!this.screen) return;
     this.setState({ sheet: '' });
-    const mode = await this.screen.toggleScreen(this.rootRef.current);
-    if (mode === 'immersive' && this.isIPhoneBrowser() && !this.homeTipShown) {
-      this.homeTipShown = true;
-      const text = 'For true fullscreen: Share → Add to Home Screen.';
-      this.setState({ whisper: text });
-      this.toast({ kind: 'tip', label: 'FULLSCREEN TIP', text, swatch: '#c49a4a', rite: true });
-    }
+    await this.screen.toggleScreen(this.rootRef.current);
   }
   // Two taps: the first arms it for four seconds, the second erases every Alembic v2 save and starts fresh.
   startOver() {
@@ -1922,7 +1935,12 @@ class Component extends DCLogic {
     if (id !== this.state.brush && this.touchUi) this.recents = this.touchUi.rememberRecent(this.recents || [], this.state.brush, 8);
     this.sessionFinds?.delete(id);
   }
-  pickElement(id) { this.noteBrush(id); this.setState({ brush: id, sheet: '', radial: false, radialHot: -1 }); }
+  pickElement(id) {
+    const changed = id !== this.state.brush;
+    this.noteBrush(id);
+    this.setState({ brush: id, sheet: '', radial: false, radialHot: -1 });
+    if (changed) this.buzzMs = 12;
+  }
   armSheetTap(tab) {
     this.sheetTap = tab;
     clearTimeout(this.sheetTapT);
@@ -2472,6 +2490,9 @@ class Component extends DCLogic {
       showElements: this.hnd('tabEl', () => this.setState({ sheetTab: 'elements' })), showTools: this.hnd('tabTl', () => this.setState({ sheetTab: 'tools' })),
       showVessel: this.hnd('tabVs', () => this.setState({ sheetTab: 'vessel' })), showCodexTab: this.hnd('tabCx', () => this.setState({ sheetTab: 'codex' })),
       openOptions: () => this.openSheet('tools'), closeSheet: () => this.closeSheet(),
+      homeHint: !!(this.phone && this.isIPhoneBrowser() && !this.homeDismissed),
+      dismissHomeHint: () => this.dismissHomeHint(),
+      fullscreenReady: typeof document !== 'undefined' && !!(document.fullscreenEnabled || document.webkitFullscreenEnabled) && !this.isIPhoneBrowser(),
       orbDown: this.hnd('orbDown', e => this.onOrbDown(e)), orbMove: this.hnd('orbMove', e => this.onOrbMove(e)), orbUp: this.hnd('orbUp', e => this.onOrbUp(e)), orbCancel: this.hnd('orbCancel', () => this.onOrbCancel()), orbClick: this.hnd('orbClick', () => this.onOrbClick()),
       handleDown: this.hnd('handleDown', e => this.onHandleDown(e)), handleUp: this.hnd('handleUp', e => this.onHandleUp(e)), handleClick: this.hnd('handleClick', () => this.onHandleClick()),
       grabDown: this.hnd('grabDown', e => this.onGrabDown(e)), grabUp: this.hnd('grabUp', e => this.onGrabUp(e)),
