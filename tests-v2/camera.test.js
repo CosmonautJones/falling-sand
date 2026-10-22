@@ -252,12 +252,27 @@ test('a right inset keeps the landscape wall out of the safe area', () => {
   const cam = cameraFromView(vw, vh, view);
   assert.ok(cam.x >= rail - 0.01, `left edge ${cam.x} is under the rail`);
   assert.ok(cam.x + WORLD_W * cam.scale <= vw - notch + 0.01, 'the right wall clears the notch');
+  // 47px of safe area on both sides, plus the 76px rail: the zoom-1 world is
+  // about 693px and the gap is about 674px. Fit the zoom in that gap.
+  const both = { left: rail + notch, right: notch };
+  const fitted = defaultView(vw, vh, both);
+  const fitCam = cameraFromView(vw, vh, fitted);
+  const room = vw - both.left - both.right;
+  assert.ok(fitted.zoom < 1, 'the whole vessel shrinks to fit between both covers');
+  assert.ok(Math.abs(fitCam.x - both.left) < 1e-3, `left wall ${fitCam.x} clears the rail and the notch`);
+  assert.ok(Math.abs(fitCam.x + WORLD_W * fitCam.scale - (vw - notch)) < 1e-3, 'the right wall clears the notch');
+  assert.ok(Math.abs(WORLD_W * fitCam.scale - room) < 0.05, 'the world uses the gap between the covers');
+  const asked = clampView(vw, vh, { zoom: 1, panX: 0, panY: 0 }, both);
+  assert.ok(Math.abs(asked.zoom - fitted.zoom) < 1e-9, 'asking for zoom 1 is the same fit');
+  const close = clampView(vw, vh, { zoom: 2, panX: 0, panY: 0 }, both);
+  assert.equal(close.zoom, 2, 'a closer view is not pulled back to the fit');
   const tight = defaultView(vw, vh, { left: 200, right: notch });
   const pinned = cameraFromView(vw, vh, tight);
-  assert.ok(Math.abs(pinned.x - 200) < 1e-6, 'a rail the world cannot clear still wins the default');
+  assert.ok(tight.zoom < 1, 'a rail and a notch that cannot both clear at zoom 1 shrink the vessel');
+  assert.ok(Math.abs(pinned.x - 200) < 1e-3, 'the left wall sits on the rail');
+  assert.ok(Math.abs(pinned.x + WORLD_W * pinned.scale - (vw - notch)) < 1e-3, 'the right wall sits on the notch');
   const pulled = panView(vw, vh, tight, -400, 0, { left: 200, right: notch });
-  const cleared = cameraFromView(vw, vh, pulled);
-  assert.ok(Math.abs(cleared.x + WORLD_W * cleared.scale - (vw - notch)) < 1e-3, 'panning still reaches the right safe edge');
+  assert.ok(Math.abs(cameraFromView(vw, vh, pulled).x - pinned.x) < 1e-3, 'a vessel that fits between both covers does not slide under either');
 });
 
 test('the page renders through the camera, not a single uZoom', () => {

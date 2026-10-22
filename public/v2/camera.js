@@ -50,6 +50,19 @@ function edgeInsets(edge) {
   };
 }
 
+// Whole-vessel zoom that fits between a left and a right cover. Zoom 1 is the
+// world fitted to the viewport; two covers can make that wider than the gap
+// (a landscape phone with a rail and a notch). Shrinking only applies at the
+// whole-vessel zoom. A closer view stays where the player put it and may pan
+// one edge under a cover. One cover alone does not shrink the world.
+function sideFitZoom(vw, base, insets) {
+  if (!(insets.left > 0) || !(insets.right > 0) || !(base > 0) || !(vw > 0)) return MIN_ZOOM;
+  const room = vw - insets.left - insets.right;
+  const need = WORLD_W * base;
+  if (!(room > 1) || need <= room + 0.001) return MIN_ZOOM;
+  return room / need;
+}
+
 // Place the world along one axis. When it fits between the insets, center it
 // there. When it does not, `origin` may slide until either inset edge shows,
 // and no further.
@@ -78,7 +91,11 @@ export function cameraFromView(vw, vh, view) {
 export function clampView(vw, vh, view, edge = 0) {
   const frame = frameOffset(vw, vh);
   const insets = edgeInsets(edge);
-  const zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, finite(view.zoom, 1)));
+  let zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, finite(view.zoom, 1)));
+  const fitted = sideFitZoom(vw, frame.base, insets);
+  // The whole vessel (zoom 1, and anything the cap rounded up to it) shrinks
+  // until both covers clear. A zoom above that is a closer look and stays.
+  if (fitted < MIN_ZOOM && zoom <= MIN_ZOOM + 1e-4) zoom = fitted;
   const scale = frame.base * zoom;
   const worldW = WORLD_W * scale;
   const worldH = WORLD_H * scale;
@@ -133,7 +150,8 @@ export function panToCenter(vw, vh, view, gx, gy, edge = 0) {
 // viewport is taller than 480:270 (a phone held upright). A bottom inset lifts
 // that crop so the floor clears a bar. A left inset shifts a fitted world
 // sideways so its left edge clears a rail. A right inset keeps the right wall
-// out of that safe area when the world still fits beside the rail.
+// out of that safe area. When both side covers are set and the world is wider
+// than the gap, the whole-vessel zoom shrinks until it fits between them.
 export function defaultView(vw, vh, edge = 0) {
   if (!(vw > 0) || !(vh > 0)) return { zoom: 1, panX: 0, panY: 0 };
   const worldAspect = WORLD_W / WORLD_H;
