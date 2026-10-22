@@ -34,19 +34,29 @@ function frameOffset(vw, vh) {
   return { base, x: (vw - WORLD_W * base) / 2, y: (vh - WORLD_H * base) / 2 };
 }
 
-// Optional last argument: CSS pixels of the bottom edge covered by a bar.
-// Zero keeps the old clamp. A positive value lets the floor slide up until it
-// clears that bar, and no further.
-function bottomEdge(edge) {
-  if (typeof edge === 'number') return Math.max(0, finite(edge, 0));
-  if (edge && typeof edge.bottom === 'number') return Math.max(0, finite(edge.bottom, 0));
-  return 0;
+// Optional last argument: CSS pixels covered by chrome. A number is the bottom
+// edge, kept so older callers stay valid. An object may set `left`, `right`,
+// and `bottom`. Zero insets keep the old clamp. A positive inset lets that
+// edge of the world slide until it clears the chrome, and no further.
+function edgeInsets(edge) {
+  if (typeof edge === 'number') return { left: 0, right: 0, bottom: Math.max(0, finite(edge, 0)) };
+  if (!edge || typeof edge !== 'object') return { left: 0, right: 0, bottom: 0 };
+  return {
+    left: Math.max(0, finite(edge.left, 0)),
+    right: Math.max(0, finite(edge.right, 0)),
+    bottom: Math.max(0, finite(edge.bottom, 0)),
+  };
 }
 
-function verticalOrigin(vh, worldH, originY, bottom) {
-  const limit = Math.max(0, vh - bottom);
-  if (worldH <= limit + 0.001) return (limit - worldH) / 2;
-  return Math.min(0, Math.max(limit - worldH, originY));
+// Place the world along one axis. When it fits between the insets, center it
+// there. When it does not, `origin` may slide until either inset edge shows,
+// and no further.
+function axisOrigin(span, world, origin, insetStart, insetEnd) {
+  const start = Math.max(0, insetStart);
+  const end = Math.max(start, span - Math.max(0, insetEnd));
+  const room = end - start;
+  if (world <= room + 0.001) return start + (room - world) / 2;
+  return Math.min(start, Math.max(end - world, origin));
 }
 
 // Pixel camera: world origin (grain 0,0) at (x, y), `scale` CSS pixels per grain.
@@ -65,16 +75,13 @@ export function cameraFromView(vw, vh, view) {
 
 export function clampView(vw, vh, view, edge = 0) {
   const frame = frameOffset(vw, vh);
-  const bottom = bottomEdge(edge);
+  const insets = edgeInsets(edge);
   const zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, finite(view.zoom, 1)));
   const scale = frame.base * zoom;
   const worldW = WORLD_W * scale;
   const worldH = WORLD_H * scale;
-  let originX = frame.x + finite(view.panX, 0);
-  let originY = frame.y + finite(view.panY, 0);
-  if (worldW <= vw + 0.001) originX = (vw - worldW) / 2;
-  else originX = Math.min(0, Math.max(vw - worldW, originX));
-  originY = verticalOrigin(vh, worldH, originY, bottom);
+  const originX = axisOrigin(vw, worldW, frame.x + finite(view.panX, 0), insets.left, insets.right);
+  const originY = axisOrigin(vh, worldH, frame.y + finite(view.panY, 0), 0, insets.bottom);
   return { zoom, panX: originX - frame.x, panY: originY - frame.y };
 }
 
@@ -121,20 +128,23 @@ export function panToCenter(vw, vh, view, gx, gy, edge = 0) {
 }
 
 // Whole world on a desktop-shaped viewport. Height-filling crop when the
-// viewport is taller than 480:270 (a phone held upright). A bottom edge lifts
-// that crop so the floor clears a bar covering the bottom of the screen.
+// viewport is taller than 480:270 (a phone held upright). A bottom inset lifts
+// that crop so the floor clears a bar. A left inset shifts a fitted world
+// sideways so its left edge clears a rail.
 export function defaultView(vw, vh, edge = 0) {
   if (!(vw > 0) || !(vh > 0)) return { zoom: 1, panX: 0, panY: 0 };
   const worldAspect = WORLD_W / WORLD_H;
-  const bottom = bottomEdge(edge);
-  if (vw / vh >= worldAspect * 0.995 && !(bottom > 0)) return { zoom: 1, panX: 0, panY: 0 };
+  const insets = edgeInsets(edge);
+  const wide = vw / vh >= worldAspect * 0.995;
+  if (wide && !(insets.bottom > 0) && !(insets.left > 0) && !(insets.right > 0)) return { zoom: 1, panX: 0, panY: 0 };
   const base = containScale(vw, vh);
-  const zoom = vw / vh >= worldAspect * 0.995 ? 1 : Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, fillHeightScale(vh) / base));
+  const zoom = wide ? 1 : Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, fillHeightScale(vh) / base));
   const scale = base * zoom;
   const frame = frameOffset(vw, vh);
-  const originX = (vw - WORLD_W * scale) / 2;
+  let originX = (vw - WORLD_W * scale) / 2;
   let originY = (vh - WORLD_H * scale) / 2;
-  if (bottom > 0) originY = Math.min(originY, (vh - bottom) - WORLD_H * scale);
+  if (insets.bottom > 0) originY = Math.min(originY, (vh - insets.bottom) - WORLD_H * scale);
+  if (insets.left > 0) originX = Math.max(originX, insets.left);
   return clampView(vw, vh, { zoom, panX: originX - frame.x, panY: originY - frame.y }, edge);
 }
 

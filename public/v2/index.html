@@ -273,7 +273,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
         <span class="caret" aria-hidden="true">▾</span>
       </button>
       <button data-phone="brush" class="pb pb-brush" aria-label="{{ brushAria }}" onClick="{{ cycleBrush }}"><span class="dot" style="width:{{ brushDot }}px; height:{{ brushDot }}px;"></span><span class="pb-size" aria-hidden="true">{{ radius }}</span></button>
-      <button data-phone="zoom" class="pb pb-zoom" aria-label="Zoom: 1× fills the glass, then 2×, 4×, then the whole vessel" onClick="{{ cycleZoom }}"><span class="pb-zoom-lab" ref="{{ pbZoomRef }}">1×</span></button>
+      <button data-phone="zoom" class="pb pb-zoom" aria-label="Zoom: 1× fills the glass. Each press doubles it, then the whole vessel, then back to 1×" onClick="{{ cycleZoom }}"><span class="pb-zoom-lab" ref="{{ pbZoomRef }}">1×</span></button>
       <button data-phone="pause" class="pb" aria-label="{{ pauseLabel }}" onClick="{{ togglePause }}">{{ pauseIcon }}</button>
       <button data-phone="options" class="pb" aria-haspopup="dialog" aria-expanded="{{ optionsOpen }}" aria-label="Options" onClick="{{ openOptions }}">☰</button>
     </div>
@@ -1199,9 +1199,9 @@ class Component extends DCLogic {
     const prevW = this.vw || 0, prevH = this.vh || 0, prevView = this.view, prevCover = this.lastCover || 0;
     this.vw = r.width; this.vh = r.height;
     this.fitCamera(prevW, prevH, prevView);
-    const cover = this.floorCover();
+    const cover = this.chromeCover();
     const sameSize = Math.abs(this.vw - prevW) <= 0.5 && Math.abs(this.vh - prevH) <= 0.5;
-    if (this.view && this.cam && sameSize && Math.abs(cover - prevCover) > 0.5) {
+    if (this.view && this.cam && sameSize && this.coverShift(cover, prevCover) > 0.5) {
       if (!this.viewUser) { this.view = this.cam.defaultView(this.vw, this.vh); this.viewT = this.view; }
       else { this.view = this.clampPan(this.view); this.viewT = this.clampPan(this.viewT || this.view); }
       this.syncViewUI();
@@ -1297,7 +1297,7 @@ class Component extends DCLogic {
       const phoneHud = this.phoneHudRef.current;
       if (phoneHud) {
         const z = this.view.zoom;
-        phoneHud.textContent = `${this.almanac ? almanacText(this.almanac, this.state.speed) + ' · ' : ''}${this.fps.toFixed(0)} fps · sim ${this.simMs.toFixed(1)} ms${z === 1 ? '' : ` · ${z.toFixed(1)}×`}${this.storming ? ' · storm' : ''}${this.almanac ? '' : climateLabel(this.climate)}${this.ship ? ' · visitation' : ''}`;
+        phoneHud.textContent = `${this.almanac ? almanacText(this.almanac, this.state.speed) + ' · ' : ''}${this.fps.toFixed(0)} fps · sim ${this.simMs.toFixed(1)} ms${this.zoomSuffix(z)}${this.storming ? ' · storm' : ''}${this.almanac ? '' : climateLabel(this.climate)}${this.ship ? ' · visitation' : ''}`;
       }
       const alm = this.almanacRef.current;
       if (alm) {
@@ -1306,7 +1306,7 @@ class Component extends DCLogic {
       }
       if (hud) {
         const s = this.state, v = this.view;
-        hud.textContent = `${this.M.W}×${this.M.H} · ${this.fps.toFixed(0)} fps · sim ${this.simMs.toFixed(1)} ms${this.mode === 'worker' ? ' (worker)' : ''} · ${s.tool} · ${this.M.NAMES[s.brush]} · size ${s.radius}${s.speed === 1 ? '' : ` · ${s.speed}×`}${v.zoom === 1 ? '' : ` · ${v.zoom.toFixed(1)}×`}${this.storming ? ' · storm' : ''}${this.almanac ? '' : climateLabel(this.climate)}${this.ship ? ' · visitation' : ''}${s.paused ? ' · paused' : ''}`;
+        hud.textContent = `${this.M.W}×${this.M.H} · ${this.fps.toFixed(0)} fps · sim ${this.simMs.toFixed(1)} ms${this.mode === 'worker' ? ' (worker)' : ''} · ${s.tool} · ${this.M.NAMES[s.brush]} · size ${s.radius}${s.speed === 1 ? '' : ` · ${s.speed}×`}${this.zoomSuffix(v.zoom)}${this.storming ? ' · storm' : ''}${this.almanac ? '' : climateLabel(this.climate)}${this.ship ? ' · visitation' : ''}${s.paused ? ' · paused' : ''}`;
       }
     }
   }
@@ -1396,22 +1396,35 @@ class Component extends DCLogic {
   // ---------- view / input ----------
   screenCamera(view) { return this.cam.cameraFromView(this.vw || 0, this.vh || 0, view || this.view); }
   grainPx() { return this.cam && this.vw > 0 ? this.screenCamera().scale : (this.vw / this.M.W) * (this.view?.zoom || 1); }
-  // The phone bar covers the floor. Zero on the desktop and on the landscape rail.
-  floorCover() {
+  // Chrome overlapping the glass. A wide bottom bar covers the floor; a tall
+  // left rail covers the wall. Desktop (the bar is hidden) covers nothing.
+  chromeCover() {
+    const none = { left: 0, right: 0, bottom: 0 };
     const vp = this.vpRef?.current, root = this.rootRef?.current;
-    if (!vp || !root) return 0;
+    if (!vp || !root) return none;
     const bar = root.querySelector('.phone-bar');
-    if (!bar) return 0;
+    if (!bar) return none;
     const cs = getComputedStyle(bar);
-    if (cs.display === 'none' || cs.visibility === 'hidden') return 0;
+    if (cs.display === 'none' || cs.visibility === 'hidden') return none;
     const vr = vp.getBoundingClientRect(), br = bar.getBoundingClientRect();
-    if (br.height < 1 || br.width < vr.width * 0.6) return 0;
-    const cover = vr.bottom - br.top;
-    if (cover <= 0 || br.top < vr.top + vr.height * 0.4) return 0;
-    return Math.min(vr.height * 0.45, cover);
+    if (br.width < 1 || br.height < 1) return none;
+    if (br.width >= vr.width * 0.6 && br.top >= vr.top + vr.height * 0.4) {
+      const cover = vr.bottom - br.top;
+      if (cover > 0) return { left: 0, right: 0, bottom: Math.min(vr.height * 0.45, cover) };
+    }
+    if (br.height >= vr.height * 0.6 && br.left <= vr.left + 4 && br.right < vr.left + vr.width * 0.45) {
+      const cover = br.right - vr.left;
+      if (cover > 0) return { left: Math.min(vr.width * 0.45, cover), right: 0, bottom: 0 };
+    }
+    return none;
+  }
+  coverShift(a, b) {
+    const box = (e) => typeof e === 'number' ? { left: 0, right: 0, bottom: e } : { left: e?.left || 0, right: e?.right || 0, bottom: e?.bottom || 0 };
+    const A = box(a), B = box(b);
+    return Math.abs(A.left - B.left) + Math.abs(A.right - B.right) + Math.abs(A.bottom - B.bottom);
   }
   decorateCam(cam) {
-    const edge = () => this.floorCover();
+    const edge = () => this.chromeCover();
     return {
       ...cam,
       clampView: (vw, vh, view) => cam.clampView(vw, vh, view, edge()),
@@ -1515,15 +1528,31 @@ class Component extends DCLogic {
     if (!done) this.viewRaf = requestAnimationFrame(this.stepView);
   };
   // Phones: a quick two-finger tap toggles fit and a close-up at the tap; a pinch released near a whole zoom snaps to it so grains stay crisp.
-  // Phone bar: 1× is the height-filling view, then 2× and 4× of that, then the whole vessel. Fit comes back to 1×.
+  // 1× is the height-filling view. Each press doubles it when that step fits
+  // under the zoom cap, then shows the whole vessel (⊕). The next press restores 1×.
   cycleZoom() {
     const v = this.viewT || this.view;
     const fill = this.cam.defaultView(this.vw, this.vh), base = fill.zoom;
-    const steps = [1, ...ZOOM_STEPS].map(z => Math.min(this.cam.MAX_ZOOM, base * z)).sort((a, b) => a - b);
+    const cap = this.cam.MAX_ZOOM;
+    const steps = [1, ...ZOOM_STEPS].map(z => base * z).filter(z => z <= cap + 1e-3);
     const next = steps.find(z => z > v.zoom + Math.max(0.05, base * 0.04)) || 1;
     if (base > 1.05 && Math.abs(next - base) <= Math.max(0.08, base * 0.04)) this.setView(fill, true);
     else if (next === 1) this.setView({ zoom: 1, panX: 0, panY: 0 }, true);
     else this.zoomBy(next / v.zoom, this.vw / 2, this.vh / 2);
+  }
+  // The same words on the zoom button and the status line. 1× is the fill, ⊕ is the whole vessel.
+  zoomLabel(zoom) {
+    const z = Number.isFinite(zoom) ? zoom : 1;
+    const fillZ = this.cam && this.vw ? this.cam.defaultView(this.vw, this.vh).zoom : 1;
+    if (!(z >= 1.05)) return '⊕';
+    if (fillZ > 1.05 && Math.abs(z - fillZ) <= Math.max(0.08, fillZ * 0.04)) return '1×';
+    const rel = fillZ > 1.05 ? z / fillZ : z;
+    return (Math.round(rel * 10) / 10) + '×';
+  }
+  zoomSuffix(zoom) {
+    const fillZ = this.cam && this.vw ? this.cam.defaultView(this.vw, this.vh).zoom : 1;
+    if (!(fillZ > 1.05) && !(zoom >= 1.05)) return '';
+    return ' · ' + this.zoomLabel(zoom);
   }
   pinchEnd(pc) {
     const v = this.view;
@@ -1547,12 +1576,7 @@ class Component extends DCLogic {
     const v = this.view; if (!v) return;
     const lab = this.zoomLabRef?.current; if (lab) lab.textContent = Math.round(v.zoom * 100) + '%';
     const pz = this.pbZoomRef?.current;
-    if (pz) {
-      const fillZ = this.cam && this.vw ? this.cam.defaultView(this.vw, this.vh).zoom : 1;
-      const atFill = fillZ > 1.05 && Math.abs(v.zoom - fillZ) <= Math.max(0.08, fillZ * 0.04);
-      const rel = fillZ > 1.05 ? v.zoom / fillZ : v.zoom;
-      pz.textContent = v.zoom < 1.05 ? '⊕' : atFill ? '1×' : (Math.round(rel * 10) / 10) + '×';
-    }
+    if (pz) pz.textContent = this.zoomLabel(v.zoom);
     const mini = this.miniRef?.current, rect = this.miniRectRef?.current;
     if (mini) {
       const on = v.zoom > 1.02, show = o => { mini.style.opacity = o ? '1' : '0'; mini.style.pointerEvents = o ? 'auto' : 'none'; };
@@ -1676,7 +1700,7 @@ class Component extends DCLogic {
         if (ptrs.size < 2) return;
         const [p, q] = [...ptrs.values()], pc = this.pinch;
         const mx = (p.x + q.x) / 2 - r.left, my = (p.y + q.y) / 2 - r.top;
-        const ratio = Math.hypot(p.x - q.x, p.y - q.y) / pc.d, zoom = Math.min(12, Math.max(1, pc.zoom * ratio));
+        const ratio = Math.hypot(p.x - q.x, p.y - q.y) / pc.d, zoom = Math.min(this.cam.MAX_ZOOM, Math.max(this.cam.MIN_ZOOM, pc.zoom * ratio));
         pc.mx = mx; pc.my = my;
         if (Math.abs(ratio - 1) > 0.08 || Math.hypot(mx - pc.mx0, my - pc.my0) > 12) pc.moved = true;
         this.setView(this.cam.viewFromAnchor(this.vw, this.vh, zoom, mx, my, pc.gx, pc.gy), false);

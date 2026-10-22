@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { W, H } from '../public/v2/engine/world.js';
 import {
+  MAX_ZOOM,
   WORLD_W,
   WORLD_H,
   cameraFromView,
@@ -191,6 +192,32 @@ test('a bottom bar lifts the floor into view and still lets it pan back down', (
   assert.deepEqual(defaultView(1280, 720), { zoom: 1, panX: 0, panY: 0 });
 });
 
+test('a left rail shifts the world so its left edge clears the buttons', () => {
+  const vw = 844, vh = 390, rail = 123;
+  const plain = defaultView(vw, vh);
+  const shifted = defaultView(vw, vh, { left: rail });
+  const cam = cameraFromView(vw, vh, shifted);
+  assert.equal(shifted.zoom, 1, 'the landscape default is still the whole vessel');
+  assert.ok(cam.x >= rail - 0.01, `left edge ${cam.x} is not under the rail`);
+  assert.ok(cam.x + WORLD_W * cam.scale <= vw + 0.01, 'the right edge stays on screen');
+  const edge = screenToGrain(vw, vh, shifted, cam.x + 1, vh / 2, { left: rail });
+  assert.ok(edge.x >= 0 && edge.x < 1, `the left edge grain is reachable (${edge.x})`);
+  const wall = grainToScreen(vw, vh, shifted, 0, WORLD_H / 2, { left: rail });
+  assert.ok(wall.x > rail, 'the wall sits to the right of the rail');
+  const panned = panView(vw, vh, shifted, -80, 0, { left: rail });
+  assert.ok(Math.abs(cameraFromView(vw, vh, panned).x - cam.x) < 1e-6, 'a world that fits beside the rail stays fully visible');
+  assert.deepEqual(plain, { zoom: 1, panX: 0, panY: 0 });
+  const wide = 200;
+  const pinned = cameraFromView(vw, vh, defaultView(vw, vh, { left: wide }));
+  assert.ok(Math.abs(pinned.x - wide) < 1e-6, 'when the world no longer fits, the default still shows the left edge');
+  const revealed = panView(vw, vh, defaultView(vw, vh, { left: wide }), -400, 0, { left: wide });
+  const right = cameraFromView(vw, vh, revealed);
+  assert.ok(Math.abs(right.x + WORLD_W * right.scale - vw) < 1e-4, 'panning reaches the right edge');
+  assert.ok(right.x < wide, 'reaching the right edge may slide the left under the rail');
+  const past = panView(vw, vh, defaultView(vw, vh, { left: wide }), 400, 0, { left: wide });
+  assert.ok(Math.abs(cameraFromView(vw, vh, past).x - wide) < 1e-6, 'the left edge cannot move past the rail');
+});
+
 test('a landscape phone that is wider than the world shows the whole vessel', () => {
   const view = defaultView(844, 390);
   assert.deepEqual(view, { zoom: 1, panX: 0, panY: 0 });
@@ -210,6 +237,12 @@ test('the blast punch stays stuck to the grain it leans toward', () => {
   assert.ok(Math.abs(before.x - after.x) < 1e-6);
   assert.ok(Math.abs(before.y - after.y) < 1e-6);
   assert.equal(punchCamera(cam, 1, ax, ay), cam);
+});
+
+test('4× of a 390×844 fill is past the zoom cap, and 2× is not', () => {
+  const fill = defaultView(390, 844);
+  assert.ok(fill.zoom * 2 <= MAX_ZOOM);
+  assert.ok(fill.zoom * 4 > MAX_ZOOM);
 });
 
 test('the page renders through the camera, not a single uZoom', () => {

@@ -6,16 +6,24 @@ const html = readFileSync(new URL('../public/v2/index.html', import.meta.url), '
 const bar = html.slice(html.indexOf('<nav class="phone-bar"'), html.indexOf('</nav>'));
 const method = name => { const i = html.indexOf(`  ${name}(`); return html.slice(i, html.indexOf('\n  }\n', i)); };
 
-test('the phone bar has a thumb zoom button that steps 1×, 2×, 4×, then fits', () => {
+test('the phone bar doubles the fill, skips a step past the cap, then returns to 1×', () => {
   assert.match(bar, /data-phone="zoom"[^>]*onClick="\{\{ cycleZoom \}\}"/);
   assert.match(html, /ZOOM_STEPS = \[2, 4\]/);
   const m = method('cycleZoom');
-  assert.match(m, /defaultView\(this\.vw, this\.vh\)/, '1× is the height-filling view, so fit can return to it');
+  assert.match(m, /defaultView\(this\.vw, this\.vh\)/, '1× is the height-filling view');
   assert.match(m, /\[\s*1,\s*\.\.\.ZOOM_STEPS\s*\]/);
+  assert.match(m, /filter\(z => z <= cap \+ 1e-3\)/, 'a double past the cap is not a stop');
   assert.match(m, /this\.zoomBy\(next \/ v\.zoom, this\.vw \/ 2, this\.vh \/ 2\)/, 'zooms around the middle of the view');
-  assert.match(m, /this\.setView\(fill, true\)/);
-  assert.match(html, /pz\.textContent = v\.zoom < 1\.05 \? '⊕'/, 'a fitted world still reads as fit');
-  assert.match(html, /atFill \? '1×'/, 'the height-filling view reads as 1×');
+  assert.match(m, /this\.setView\(fill, true\)/, 'the press after the whole vessel restores the 1× fill');
+  assert.match(m, /setView\(\{ zoom: 1, panX: 0, panY: 0 \}, true\)/, 'the whole vessel is still a stop');
+  const label = method('zoomLabel');
+  assert.match(label, /return '⊕'/, 'the whole vessel reads ⊕');
+  assert.match(label, /return '1×'/, 'the height-filling view reads 1×');
+  assert.match(html, /pz\.textContent = this\.zoomLabel\(v\.zoom\)/);
+  assert.match(html, /this\.zoomSuffix\(z\)/);
+  assert.match(html, /this\.zoomSuffix\(v\.zoom\)/);
+  assert.match(html, /Math\.min\(this\.cam\.MAX_ZOOM, Math\.max\(this\.cam\.MIN_ZOOM, pc\.zoom \* ratio\)\)/);
+  assert.equal(html.includes('Math.min(12, Math.max(1, pc.zoom * ratio))'), false, 'pinch uses the camera cap');
 });
 
 test('a quick two-finger tap toggles fit and a close-up; a slow or moving pinch does not', () => {
