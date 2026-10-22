@@ -65,6 +65,8 @@ test('iPhone Safari gets a dismissable Add to Home Screen hint, remembered on th
   assert.match(html, /localStorage\.setItem\(HKEY, '1'\)/);
   assert.match(html, /data-phone="home-dismiss"/);
   assert.match(html, /this\.phone && this\.isIPhoneBrowser\(\) && !this\.homeDismissed/);
+  assert.match(html, /data-home-hint="\{\{ homeHintFlag \}\}"/);
+  assert.match(html, /\.root\[data-home-hint="true"\] \.experiment-card\{top:/);
 });
 
 test('Android and Chromium get a real fullscreen toggle; a pick or a discovery can buzz once', () => {

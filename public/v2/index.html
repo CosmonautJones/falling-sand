@@ -101,6 +101,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
 .rotate-hint{display:none!important}
 .flask-status{position:fixed;top:max(8px,env(safe-area-inset-top));z-index:13}
 .experiment-card{position:fixed;z-index:14;top:calc(max(8px,env(safe-area-inset-top)) + 92px);left:max(8px,env(safe-area-inset-left));width:auto;max-width:calc(100vw - 120px)}
+.root[data-home-hint="true"] .experiment-card{top:calc(max(8px,env(safe-area-inset-top)) + 132px)}
 }
 @media(orientation:landscape) and (max-height:520px){
 .orb-wrap{left:env(safe-area-inset-left);bottom:max(8px,env(safe-area-inset-bottom))}
@@ -114,6 +115,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
 .zoom-controls{top:calc(max(8px,env(safe-area-inset-top)) + 40px)!important;right:max(8px,env(safe-area-inset-right))!important}
 .experiment-card{left:calc(172px + env(safe-area-inset-left))!important;max-width:min(260px,calc(100vw - 200px - env(safe-area-inset-left) - env(safe-area-inset-right)))}
 .pour-hint{left:auto;right:max(84px,calc(env(safe-area-inset-right) + 72px));top:42%;transform:translateY(-50%)}
+.root[data-home-hint="true"] .experiment-card{top:calc(max(4px,env(safe-area-inset-top)) + 120px)!important}
 .rbtns{right:max(10px,env(safe-area-inset-right));bottom:max(10px,env(safe-area-inset-bottom))}
 }
 @media (pointer:coarse) and (min-width:701px) and (min-height:521px){
@@ -123,7 +125,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
 }
 </style>
 </helmet>
-<div ref="{{ rootRef }}" class="root" style="height:100dvh; display:flex; flex-direction:column; align-items:center; gap:8px; padding:max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); overflow:hidden; color:#f0e2c4; font:15px/1.5 Palatino,'Palatino Linotype','Book Antiqua','EB Garamond',Georgia,serif; -webkit-font-smoothing:antialiased; background:radial-gradient(70% 45% at 50% -8%, rgba(176,137,72,.16), transparent 55%), #100c09;">
+<div ref="{{ rootRef }}" data-home-hint="{{ homeHintFlag }}" class="root" style="height:100dvh; display:flex; flex-direction:column; align-items:center; gap:8px; padding:max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); overflow:hidden; color:#f0e2c4; font:15px/1.5 Palatino,'Palatino Linotype','Book Antiqua','EB Garamond',Georgia,serif; -webkit-font-smoothing:antialiased; background:radial-gradient(70% 45% at 50% -8%, rgba(176,137,72,.16), transparent 55%), #100c09;">
   <div data-safe-top aria-hidden="true" style="position:fixed;top:0;left:0;width:0;height:env(safe-area-inset-top);pointer-events:none"></div>
   <div data-safe-right aria-hidden="true" style="position:fixed;top:0;right:0;width:env(safe-area-inset-right);height:0;pointer-events:none"></div>
   <div data-safe-bottom aria-hidden="true" style="position:fixed;bottom:0;left:0;width:0;height:env(safe-area-inset-bottom);pointer-events:none"></div>
@@ -2491,6 +2493,7 @@ class Component extends DCLogic {
       showVessel: this.hnd('tabVs', () => this.setState({ sheetTab: 'vessel' })), showCodexTab: this.hnd('tabCx', () => this.setState({ sheetTab: 'codex' })),
       openOptions: () => this.openSheet('tools'), closeSheet: () => this.closeSheet(),
       homeHint: !!(this.phone && this.isIPhoneBrowser() && !this.homeDismissed),
+      homeHintFlag: this.phone && this.isIPhoneBrowser() && !this.homeDismissed ? 'true' : 'false',
       dismissHomeHint: () => this.dismissHomeHint(),
       fullscreenReady: typeof document !== 'undefined' && !!(document.fullscreenEnabled || document.webkitFullscreenEnabled) && !this.isIPhoneBrowser(),
       orbDown: this.hnd('orbDown', e => this.onOrbDown(e)), orbMove: this.hnd('orbMove', e => this.onOrbMove(e)), orbUp: this.hnd('orbUp', e => this.onOrbUp(e)), orbCancel: this.hnd('orbCancel', () => this.onOrbCancel()), orbClick: this.hnd('orbClick', () => this.onOrbClick()),
