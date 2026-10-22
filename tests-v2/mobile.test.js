@@ -42,6 +42,10 @@ test('a landscape rail grows by the left inset and the toast clears the whisper'
   assert.match(html, /\.hd\{[^}]*left:calc\(172px \+ env\(safe-area-inset-left\)\)/);
   assert.match(html, /\.sheet\{[^}]*left:calc\(172px \+ env\(safe-area-inset-left\)\)/);
   assert.match(html, /\.experiment-card\{[^}]*left:calc\(172px \+ env\(safe-area-inset-left\)\)/);
+  assert.match(html, /\.sheet-foot\{display:none\}/);
+  assert.match(html, /\.sheet-body\{min-height:120px\}/);
+  assert.match(html, /\.sheet-brush-land\{display:block\}/);
+  assert.match(html, /\.experiment-card\{position:fixed;[^}]*top:calc\(max\(8px,env\(safe-area-inset-top\)\) \+ 92px\)/);
   assert.match(html, /data-safe-right/);
   assert.match(html, /\.toast\{top:calc\(max\(8px, env\(safe-area-inset-top\)\) \+ 86px\)!important\}/);
 });

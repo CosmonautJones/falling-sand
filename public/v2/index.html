@@ -42,6 +42,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
 .sheet-tabs{display:flex;gap:8px;padding:0 16px 8px;overflow:auto}.sheet-tabs button{flex:0 0 auto;padding:6px 12px;border-radius:999px;border:1px solid #3a3128;background:transparent;color:#cbb89a;font-size:12px;cursor:pointer}.sheet-tabs button[aria-selected="true"]{border-color:#c49a4a;color:#e8c97a;background:#2a2119}
 .sheet-search{width:100%;margin:0 0 8px;border:1px solid #3a3128;border-radius:12px;padding:9px 12px;background:#1c1612;color:#f0e2c4;font:italic 13px/1.3 inherit;user-select:text;-webkit-user-select:text}.sheet-search::placeholder{color:#7d6c55}
 .sheet-foot{flex:0 0 auto;display:flex;flex-direction:column;gap:8px;padding:8px 16px 12px;border-top:1px solid #2a2218}
+.sheet-brush-land{display:none}
 .grab{display:flex;align-items:center;justify-content:center;width:100%;height:28px;margin:0;padding:0;border:none;background:transparent;cursor:grab;touch-action:none}.grab i{width:44px;height:5px;border-radius:3px;background:#5a4a38;display:block}
 .seg{display:flex;flex-wrap:wrap;gap:8px}.seg > button,.seg-b{flex:1 1 0;min-width:72px;height:46px;display:flex;align-items:center;justify-content:center;background:#1c1612;color:#f0e2c4;border:1px solid #3a3128;border-radius:12px;font-size:15px;cursor:pointer}.seg-3 > button{flex:1 1 calc(33% - 8px)}
 .seg > a,.seg > span{flex:1 1 0;min-width:72px;height:46px;display:flex;align-items:center;justify-content:center;background:#1c1612;color:#f0e2c4;border:1px solid #3a3128;border-radius:12px;font-size:15px;text-decoration:none}.seg > span[aria-current]{border-color:#c49a4a;color:#e8c97a;background:#2a2119}
@@ -96,13 +97,16 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
 .root[data-idle] .zoom-mini{opacity:0!important;pointer-events:none!important}
 .rotate-hint{display:none!important}
 .flask-status{position:fixed;top:max(8px,env(safe-area-inset-top));z-index:13}
-.experiment-card{position:fixed;z-index:14;top:calc(max(8px,env(safe-area-inset-top)) + 42px);left:max(8px,env(safe-area-inset-left));width:auto;max-width:calc(100vw - 120px)}
+.experiment-card{position:fixed;z-index:14;top:calc(max(8px,env(safe-area-inset-top)) + 92px);left:max(8px,env(safe-area-inset-left));width:auto;max-width:calc(100vw - 120px)}
 }
 @media(orientation:landscape) and (max-height:520px){
 .orb-wrap{left:env(safe-area-inset-left);bottom:max(8px,env(safe-area-inset-bottom))}
 .top-pills{left:calc(172px + env(safe-area-inset-left));top:max(6px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right))}
 .hd{left:calc(172px + env(safe-area-inset-left));top:calc(max(4px,env(safe-area-inset-top)) + 36px);right:calc(100px + env(safe-area-inset-right))}
-.sheet{left:calc(172px + env(safe-area-inset-left))}
+.sheet{left:calc(172px + env(safe-area-inset-left));overflow:hidden}
+.sheet-foot{display:none}
+.sheet-body{min-height:120px}
+.sheet-brush-land{display:block}
 .zoom-controls{top:calc(max(8px,env(safe-area-inset-top)) + 40px)!important;right:max(8px,env(safe-area-inset-right))!important}
 .experiment-card{left:calc(172px + env(safe-area-inset-left))!important;max-width:min(260px,calc(100vw - 200px - env(safe-area-inset-left) - env(safe-area-inset-right)))}
 .pour-hint{left:auto;right:max(84px,calc(env(safe-area-inset-right) + 72px));top:42%;transform:translateY(-50%)}
@@ -370,6 +374,21 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
           </div>
           <div class="sheet-label">Step</div>
           <div class="seg"><button onClick="{{ onStep }}" aria-label="Step one tick">step</button></div>
+          <div class="sheet-brush-land">
+            <div class="sheet-label">Brush</div>
+            <div class="seg seg-5">
+              <sc-for list="{{ sizes }}" as="s" hint-placeholder-count="5">
+                <button onClick="{{ s.onClick }}" aria-label="{{ s.title }}" style="border-color:{{ s.border }};"><span class="dot" style="width:{{ s.dot }}px; height:{{ s.dot }}px; background:{{ s.color }};"></span></button>
+              </sc-for>
+              <button data-phone="zoom" aria-label="Zoom: 1× fills the glass. Each press doubles it, then the whole vessel, then back to 1×" onClick="{{ cycleZoom }}"><span class="pb-zoom-lab">1×</span></button>
+            </div>
+            <div class="sheet-label">Speed</div>
+            <div class="seg">
+              <sc-for list="{{ clocks }}" as="k" hint-placeholder-count="4">
+                <button onClick="{{ k.onClick }}" style="background:{{ k.bg }}; color:{{ k.color }};">{{ k.label }}</button>
+              </sc-for>
+            </div>
+          </div>
         </div>
       </sc-if>
       <sc-if value="{{ tabVessel }}" hint-placeholder-val="{{ false }}">
@@ -1869,8 +1888,11 @@ class Component extends DCLogic {
   syncViewUI() {
     const v = this.view; if (!v) return;
     const lab = this.zoomLabRef?.current; if (lab) lab.textContent = Math.round(v.zoom * 100) + '%';
+    const zoomText = this.zoomLabel(v.zoom);
     const pz = this.pbZoomRef?.current;
-    if (pz) pz.textContent = this.zoomLabel(v.zoom);
+    if (pz) pz.textContent = zoomText;
+    const zoomRoot = this.rootRef?.current;
+    if (zoomRoot) zoomRoot.querySelectorAll('.pb-zoom-lab').forEach(el => { if (el !== pz) el.textContent = zoomText; });
     const mini = this.miniRef?.current, rect = this.miniRectRef?.current;
     if (mini && !this.phone) {
       const on = v.zoom > 1.02, show = o => { mini.style.opacity = o ? '1' : '0'; mini.style.pointerEvents = o ? 'auto' : 'none'; };
