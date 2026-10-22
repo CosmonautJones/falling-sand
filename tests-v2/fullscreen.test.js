@@ -59,7 +59,30 @@ test('the page itself refuses touch gestures; menus opt back in to scrolling', (
   assert.match(html, /lockPageGestures\(document\)/);
 });
 
-test('iPhone Safari gets a one-time tip about Add to Home Screen', () => {
+test('iPhone Safari gets a dismissable Add to Home Screen hint, remembered on the device', () => {
   assert.match(html, /Share → Add to Home Screen/);
-  assert.match(html, /=== 'immersive' && this\.isIPhoneBrowser\(\)/);
+  assert.match(html, /HKEY = 'alembic-home-v2'/);
+  assert.match(html, /localStorage\.setItem\(HKEY, '1'\)/);
+  assert.match(html, /componentDidMount\(\) \{[\s\S]{0,80}this\.rememberHomeHint\(\)/);
+  assert.match(html, /rememberHomeHint\(\) \{[\s\S]{0,240}setItem\(HKEY, '1'\)/);
+  assert.match(html, /\.root\[data-home-hint="true"\] \.hd\{top:/);
+  assert.match(html, /data-phone="home-dismiss"/);
+  assert.match(html, /this\.phone && this\.isIPhoneBrowser\(\) && !this\.homeDismissed/);
+  assert.match(html, /data-home-hint="\{\{ homeHintFlag \}\}"/);
+  assert.match(html, /\.root\[data-home-hint="true"\] \.experiment-card\{top:/);
+  assert.match(html, /\.root\[data-home-hint="true"\] \.pour-hint\{top:62%\}/);
+});
+
+test('Android and Chromium get a real fullscreen toggle; a pick or a discovery can buzz once', () => {
+  assert.match(html, /data-phone="fullscreen"[^>]*onClick="\{\{ toggleScreen \}\}"/);
+  assert.match(html, /fullscreenEnabled \|\| document\.webkitFullscreenEnabled/);
+  assert.match(html, /!this\.isIPhoneBrowser\(\)/);
+  const calls = html.match(/navigator\.vibrate\(/g) || [];
+  assert.equal(calls.length, 1, 'haptics share the one vibrate call');
+  const line = html.split('\n').find(l => l.includes('navigator.vibrate('));
+  assert.match(line, /this\.coarse/);
+  assert.match(line, /!this\.still/);
+  assert.match(line, /r\.kick/);
+  assert.match(html, /pickElement\(id\) \{[\s\S]{0,240}this\.buzzMs = 12/);
+  assert.match(html, /this\.fanfare\(\);\s*this\.buzzMs = 18/);
 });
