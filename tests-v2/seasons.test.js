@@ -144,7 +144,8 @@ test('the almanac reads the season and counts down to a coming spell at the curr
 
 test('the page shows the almanac, whispers seasons and omens, and frosts or warms the glass', () => {
   assert.match(html, /<span class="almanac" ref="\{\{ almanacRef \}\}"/);
-  assert.match(html, /phoneHud\.textContent = `\$\{this\.almanac \? almanacText\(this\.almanac, this\.state\.speed\)/);
+  assert.match(html, /const line = this\.almanac \? `\$\{almanacDial\(this\.almanac\)\} \$\{almanacText\(this\.almanac, this\.state\.speed\)\}`/);
+  assert.match(html, /if \(phoneAlm\) phoneAlm\.innerHTML = line/);
   assert.match(html, /case 'season': this\.setState\(\{ whisper: SEASON_WHISPER\[e\.v\]/);
   assert.match(html, /case 'omen': this\.setState\(\{ whisper: OMEN_WHISPER\[e\.v\]/);
   assert.match(html, /<div ref="\{\{ frostRef \}\}" class="omen-frost"/);
@@ -154,7 +155,7 @@ test('the page shows the almanac, whispers seasons and omens, and frosts or warm
 });
 
 test('the status lines name the weather once: the almanac replaces the old weather label', () => {
-  assert.equal((html.match(/\$\{this\.almanac \? '' : climateLabel\(this\.climate\)\}/g) || []).length, 2);
+  assert.equal((html.match(/\$\{this\.almanac \? '' : climateLabel\(this\.climate\)\}/g) || []).length, 1);
 });
 
 test('the frost holds through the moment a cold snap arrives instead of blinking out', () => {

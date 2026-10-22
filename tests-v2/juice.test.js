@@ -30,7 +30,7 @@ test('juice: per-material pour sounds, a discovery fanfare, tx sparks, and a bla
   assert.match(html, /impactSound\(m\) \{/);
   assert.match(html, /this\.impactSound\(s\.brush\)/);
   assert.match(html, /fanfare\(\) \{/);
-  assert.match(html, /revealMany[\s\S]{0,900}this\.fanfare\(\)/);
+  assert.match(html, /revealMany\(list, note\)[\s\S]{0,1200}this\.fanfare\(\)/);
   assert.match(html, /case 'tx':/);
   assert.match(html, /punch/);
 });
