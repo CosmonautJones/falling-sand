@@ -290,6 +290,8 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
   let wipe = -1, wipeC = null, wipeS = null;
   // ---------- grid ----------
   const cells = new Uint8Array(N), shades = new Int8Array(N), heat = new Uint8Array(N).fill(18), trails = new Uint8Array(N);
+  // Touch dabs set this. swap carries it with the grain. Checkpoints do not.
+  const pourMark = new Uint8Array(N);
   const VX = new Float32Array(N), VY = new Float32Array(N);
   const born = new Uint8Array(N), heatOut = new Uint8Array(N), trailOut = new Uint8Array(N);
   const meltList = new Int32Array(N);
@@ -309,7 +311,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
   function grain(m) { return m === PLASMA ? 3 + ri(3) : rshade(SHADE[m]); }
   function inb(x, y) { return x >= 0 && y >= 0 && x < W && y < H; }
   function get(x, y) { return (x >= 0 && y >= 0 && x < W && y < H) ? cells[y * W + x] : STONE; }
-  function setc(x, y, m, s) { if (!inb(x, y)) return; const i = y * W + x; cells[i] = m; shades[i] = s; heat[i] = SEEDHEAT[m]; VX[i] = 0; VY[i] = 0; markDirty(x, y); }
+  function setc(x, y, m, s) { if (!inb(x, y)) return; const i = y * W + x; cells[i] = m; shades[i] = s; heat[i] = SEEDHEAT[m]; VX[i] = 0; VY[i] = 0; pourMark[i] = 0; markDirty(x, y); }
   function swap(ax, ay, bx, by) {
     if (!inb(ax, ay) || !inb(bx, by)) return;
     markDirty(ax, ay); markDirty(bx, by);
@@ -319,6 +321,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     t = heat[a]; heat[a] = heat[b]; heat[b] = t;
     t = VX[a]; VX[a] = VX[b]; VX[b] = t;
     t = VY[a]; VY[a] = VY[b]; VY[b] = t;
+    t = pourMark[a]; pourMark[a] = pourMark[b]; pourMark[b] = t;
   }
   function paint(cx, cy, r, m) {
     const r2 = r * r;
@@ -339,9 +342,21 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     }
   }
   // Optional pointer-fling: write op.vx/op.vy (clamped) into grains newly painted by the op; pre-existing same-material cells are untouched.
-  const PRE = new Uint8Array(W * H);
+  // pourMark follows a touch dab through every swap. It is not checkpointed: a pinch
+  // deletes exactly those grains, and lifting the finger clears the tags.
+  const PRE = new Uint8Array(W * H), PREMARK = new Uint8Array(N);
   function flingPre(x0, y0, x1, y1, m) {
-    for (let y = Math.max(0, y0); y <= Math.min(H - 1, y1); y++) for (let x = Math.max(0, x0); x <= Math.min(W - 1, x1); x++) { const i = y * W + x; PRE[i] = cells[i] === m ? 1 : 0; }
+    for (let y = Math.max(0, y0); y <= Math.min(H - 1, y1); y++) for (let x = Math.max(0, x0); x <= Math.min(W - 1, x1); x++) {
+      const i = y * W + x; PRE[i] = cells[i] === m ? 1 : 0; PREMARK[i] = pourMark[i];
+    }
+  }
+  function stampPour(x0, y0, x1, y1, m) {
+    if (!m) return;
+    for (let y = Math.max(0, y0); y <= Math.min(H - 1, y1); y++) for (let x = Math.max(0, x0); x <= Math.min(W - 1, x1); x++) {
+      const i = y * W + x;
+      if (cells[i] !== m) continue;
+      if (!PRE[i] || PREMARK[i]) pourMark[i] = 1;
+    }
   }
   function flingCells(x0, y0, x1, y1, m, vx, vy) {
     const hasX = typeof vx === 'number' && isFinite(vx), hasY = typeof vy === 'number' && isFinite(vy);
@@ -353,7 +368,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     }
   }
   function fill(x0, y0, x1, y1, m) { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) setc(x, y, m, grain(m)); }
-  function clearGrid() { dirty.fill(1); tQuiet.fill(0); cells.fill(AIR); shades.fill(0); heat.fill(AMBIENT[AIR]); trails.fill(0); VX.fill(0); VY.fill(0); trailsLive = false; }
+  function clearGrid() { dirty.fill(1); tQuiet.fill(0); cells.fill(AIR); shades.fill(0); heat.fill(AMBIENT[AIR]); trails.fill(0); VX.fill(0); VY.fill(0); pourMark.fill(0); trailsLive = false; }
 
   // ---------- convection field (coarse stable-fluids lite) ----------
   const WU = new Float32Array(CNN), WV = new Float32Array(CNN), WU0 = new Float32Array(CNN), WV0 = new Float32Array(CNN);
@@ -1348,7 +1363,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       x = Math.max(1, Math.min(W - 2, x));
       y++;
     }
-    for (const j of path) { cells[j] = PLASMA; shades[j] = 3 + random.weather.int(3); heat[j] = 255; VX[j] = 0; VY[j] = 0; born[j] = 1; markDirty(j % W, (j / W) | 0); }
+    for (const j of path) { cells[j] = PLASMA; shades[j] = 3 + random.weather.int(3); heat[j] = 255; VX[j] = 0; VY[j] = 0; pourMark[j] = 0; born[j] = 1; markDirty(j % W, (j / W) | 0); }
     let hx = x, hy = y;
     if (hit >= 0) { hx = hit % W; hy = (hit / W) | 0; strikeAt(hx, hy); }
     flash = 1;
@@ -1645,9 +1660,9 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
         if (y < H - 1 && cells[j + W] === m && seenAt[j + W] !== levelPass) { seenAt[j + W] = levelPass; bq[tail++] = j + W; }
       }
       if (topI < 0 || lowI < 0 || lowY - topY < 1 || cells[lowI] !== AIR) continue;
-      const s = shades[topI], h = heat[topI];
+      const s = shades[topI], h = heat[topI], tagged = pourMark[topI];
       setc(topI % W, topY, AIR, 0);
-      setc(lowI % W, lowY, m, s); heat[lowI] = h;
+      setc(lowI % W, lowY, m, s); heat[lowI] = h; pourMark[lowI] = tagged;
     }
   }
   function simulate() {
@@ -1904,11 +1919,28 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
   }
 
 
+  function applyBrush(op) {
+    const r = op.r, m = op.m;
+    let x0, y0, x1, y1;
+    if (op.t === 'l') {
+      x0 = Math.min(op.x0, op.x1) - r; y0 = Math.min(op.y0, op.y1) - r;
+      x1 = Math.max(op.x0, op.x1) + r; y1 = Math.max(op.y0, op.y1) + r;
+      flingPre(x0, y0, x1, y1, m); paintLine(op.x0, op.y0, op.x1, op.y1, r, m);
+    } else if (op.t === 'spray') {
+      x0 = op.x - r; y0 = op.y - r; x1 = op.x + r; y1 = op.y + r;
+      flingPre(x0, y0, x1, y1, m); spray(op.x, op.y, r, m, op.n);
+    } else {
+      x0 = op.x - r; y0 = op.y - r; x1 = op.x + r; y1 = op.y + r;
+      flingPre(x0, y0, x1, y1, m); paint(op.x, op.y, r, m);
+    }
+    if (op.mark) stampPour(x0, y0, x1, y1, m);
+    flingCells(x0, y0, x1, y1, m, op.vx, op.vy);
+  }
   function applyOperation(op) {
     switch (op.t) {
-      case 'l': flingPre(Math.min(op.x0, op.x1) - op.r, Math.min(op.y0, op.y1) - op.r, Math.max(op.x0, op.x1) + op.r, Math.max(op.y0, op.y1) + op.r, op.m); paintLine(op.x0, op.y0, op.x1, op.y1, op.r, op.m); flingCells(Math.min(op.x0, op.x1) - op.r, Math.min(op.y0, op.y1) - op.r, Math.max(op.x0, op.x1) + op.r, Math.max(op.y0, op.y1) + op.r, op.m, op.vx, op.vy); break;
-      case 'p': flingPre(op.x - op.r, op.y - op.r, op.x + op.r, op.y + op.r, op.m); paint(op.x, op.y, op.r, op.m); flingCells(op.x - op.r, op.y - op.r, op.x + op.r, op.y + op.r, op.m, op.vx, op.vy); break;
-      case 'spray': flingPre(op.x - op.r, op.y - op.r, op.x + op.r, op.y + op.r, op.m); spray(op.x, op.y, op.r, op.m, op.n); flingCells(op.x - op.r, op.y - op.r, op.x + op.r, op.y + op.r, op.m, op.vx, op.vy); break;
+      case 'l':
+      case 'p':
+      case 'spray': applyBrush(op); break;
       case 'box': fill(Math.max(0, Math.min(op.x0, op.x1)), Math.max(0, Math.min(op.y0, op.y1)), Math.min(W - 1, Math.max(op.x0, op.x1)), Math.min(H - 1, Math.max(op.y0, op.y1)), op.m); break;
       case 'heat': heatWand(op.x, op.y, op.r, true); break;
       case 'cool': heatWand(op.x, op.y, op.r, false); break;
@@ -1927,25 +1959,30 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
         break;
       }
       case 'load': { dropSparks(); clearGrid(); cells.set(op.cells); for (let i = 0; i < N; i++) { shades[i] = grain(cells[i]); heat[i] = SEEDHEAT[cells[i]]; } break; }
-      // Put back the stroke's footprint. A cell still holding the dab returns to its
-      // prior material, including dab that fell down a touched column. A brush cell
-      // the dab left empty is filled again. Anything else — a brick placed during
-      // the stroke, a cell outside the columns — keeps its shade, heat, and velocity.
+      // Put the footprint back, then delete every grain this stroke tagged, wherever
+      // it has since moved. A brick painted over a tagged cell cleared that tag in
+      // setc, so it stays. Marks are not part of the saved world.
       case 'revert': {
         const idx = op.idx, prior = op.prior, span = op.span, m = op.m | 0;
-        if (!idx || !prior || !span) break;
-        const n = Math.min(idx.length, prior.length, span.length);
-        for (let k = 0; k < n; k++) {
-          const i = idx[k];
-          if (i < 0 || i >= N) continue;
-          const cur = cells[i], was = prior[k];
-          const dabHere = cur === m && was !== m;
-          const hole = span[k] === 1 && m !== AIR && cur === AIR && was !== AIR;
-          if (!dabHere && !hole) continue;
-          setc(i % W, (i / W) | 0, was, grain(was));
+        if (idx && prior && span) {
+          const n = Math.min(idx.length, prior.length, span.length);
+          for (let k = 0; k < n; k++) {
+            const i = idx[k];
+            if (i < 0 || i >= N) continue;
+            const cur = cells[i], was = prior[k];
+            const dabHere = cur === m && was !== m;
+            const hole = span[k] === 1 && m !== AIR && cur === AIR && was !== AIR;
+            if (!dabHere && !hole) continue;
+            setc(i % W, (i / W) | 0, was, grain(was));
+          }
         }
+        if (m !== AIR) {
+          for (let i = 0; i < N; i++) if (pourMark[i] && cells[i] === m) setc(i % W, (i / W) | 0, AIR, 0);
+        }
+        pourMark.fill(0);
         break;
       }
+      case 'untag': pourMark.fill(0); break;
       case 'snap': return { cells: cells.slice() };
       case 'poke': {
         const m = get(op.x, op.y);
@@ -1966,7 +2003,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       dirty.fill(1);
       const end = Math.min(W, wipe + 14);
       for (let y = 0; y < H; y++) for (let x = wipe; x < end; x++) {
-        const i = y * W + x; cells[i] = wipeC[i]; shades[i] = wipeS[i]; heat[i] = SEEDHEAT[cells[i]]; VX[i] = 0; VY[i] = 0; trails[i] = 0;
+        const i = y * W + x; cells[i] = wipeC[i]; shades[i] = wipeS[i]; heat[i] = SEEDHEAT[cells[i]]; VX[i] = 0; VY[i] = 0; trails[i] = 0; pourMark[i] = 0;
       }
       wipe = end >= W ? -1 : end;
     }
@@ -2070,7 +2107,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     initialSeed = nextSeed >>> 0; initialScene = nextScene;
     random.reset(initialSeed);
     clearGrid();
-    for (const a of [born, heatOut, trailOut, meltList, PRE, WU, WV, WU0, WV0, WP, WP2, WD, HS, SOL, WS, AX, AY, BX, BY, SX, SY, SS, COUNTS]) a.fill(0);
+    for (const a of [born, heatOut, trailOut, meltList, PRE, PREMARK, pourMark, WU, WV, WU0, WV0, WP, WP2, WD, HS, SOL, WS, AX, AY, BX, BY, SX, SY, SS, COUNTS]) a.fill(0);
     dirty.fill(1); awake.fill(1); live.fill(0); tQuiet.fill(0);
     scanDir = 1; blastKick = 0; windEnergy = 0; tickIndex = 0; EV.length = 0;
     commands = []; opTick = 0;
@@ -2113,18 +2150,18 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     wipe = next.wipe; wipeC = next.wipeC; wipeS = next.wipeS; commands = next.commands;
     // Checkpoints from before sleeping chunks wake the whole vessel for one tick.
     if (next.dirty) dirty.set(next.dirty); else dirty.fill(1);
-    tQuiet.fill(0);
+    tQuiet.fill(0); pourMark.fill(0);
     EV.length = 0; for (const event of next.events) EV.push(event);
     random.physical.reset(next.random.physical); random.ecology.reset(next.random.ecology);
     random.weather.reset(next.random.weather); random.cosmetic.reset(next.random.cosmetic);
   }
   function inspect() {
     return {
-      cells, shades, heat, trails, VX, VY, born, WU, WV, awake, dirty, W, H, step, setc, get, paint, paintLine, detonate,
+      cells, shades, heat, trails, VX, VY, born, pourMark, WU, WV, awake, dirty, W, H, step, setc, get, paint, paintLine, detonate,
       clear: clearGrid, seed: n => random.reset(n), DENS, KIND, DISP, G, MAXV,
       // Scratch is rebuilt before being read on the next tick/operation: born, heatOut,
       // trailOut, meltList, PRE, WU0/WV0, WP/WP2/WD, HS/SOL/WS, neighbor/sense scratch.
-      scratch: { heatOut, trailOut, meltList, PRE, WU0, WV0, WP, WP2, WD, HS, SOL, WS, AX, AY, BX, BY, SX, SY, SS, COUNTS },
+      scratch: { heatOut, trailOut, meltList, PRE, PREMARK, WU0, WV0, WP, WP2, WD, HS, SOL, WS, AX, AY, BX, BY, SX, SY, SS, COUNTS },
     };
   }
   reset({ seed, scene });

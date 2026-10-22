@@ -1625,8 +1625,8 @@ class Component extends DCLogic {
       const r2 = r * r;
       const x0 = Math.max(0, cx - r), x1 = Math.min(W - 1, cx + r);
       const y0 = Math.max(0, cy - r), y1 = Math.min(H - 1, cy + r);
-      // A falling grain can step sideways off the disc. A couple of columns covers
-      // that slide; anything further is no longer this stroke.
+      // The band is only the fall path, so the cell under the brush can be restored.
+      // Grains that slide farther stay tagged in the worker and are removed by that.
       columns(x0 - 2, x1 + 2);
       for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
         const dx = x - cx, dy = y - cy;
@@ -1646,11 +1646,60 @@ class Component extends DCLogic {
       if (e2 < dx) { err += dx; y += sy; }
     }
   }
+  // The first dab waits this long before it reaches the worker. A pinch inside
+  // the window drops the buffer and commits nothing. 120 ms keeps a 100 ms pinch out.
+  beginTouchStroke() {
+    clearTimeout(this.touchHoldT);
+    this.touchHoldT = 0;
+    this.touchHold = null;
+    this.touchStroke = [];
+    this.strokeFoot = null;
+    this.touchLive = false;
+    this.touchMarked = false;
+  }
+  queueTouchPour(op) {
+    if (!op) return;
+    if (!this.touchStroke || this.touchLive) { this.commitTouchOp(op); return; }
+    if (!this.touchHold) {
+      this.touchHold = [];
+      this.touchHoldT = setTimeout(() => this.flushTouchHold(), 120);
+    }
+    this.touchHold.push(op);
+  }
+  commitTouchOp(op) {
+    if (!this.touchStroke) { this.ops.push(op); return; }
+    if (op.t === 'p' || op.t === 'l' || op.t === 'spray') op.mark = 1;
+    this.ops.push(op);
+    this.touchStroke.push(op);
+    this.noteStroke(op);
+    this.touchMarked = true;
+  }
+  flushTouchHold() {
+    clearTimeout(this.touchHoldT);
+    this.touchHoldT = 0;
+    const held = this.touchHold;
+    this.touchHold = null;
+    if (!this.touchStroke || !held) return;
+    this.touchLive = true;
+    for (const op of held) this.commitTouchOp(op);
+  }
+  endTouchStroke() {
+    this.flushTouchHold();
+    if (this.touchMarked) this.ops.push({ t: 'untag' });
+    this.touchStroke = null;
+    this.strokeFoot = null;
+    this.touchLive = false;
+    this.touchMarked = false;
+  }
   // A second finger lands after the dab is queued. Drop it if the worker has not taken it.
-  // If it has, put the footprint back: a cell still holding the dab returns to what was
-  // there, a dab that fell down the column goes with it, and anything else placed since
-  // (a brick box, a cell the dab has left that something else now fills) stays.
+  // If it has, put the footprint back and delete every tagged grain of the dab, wherever
+  // it slid. A brick placed during the stroke, and any edit outside the dab, stays.
   undoTouchPour() {
+    clearTimeout(this.touchHoldT);
+    this.touchHoldT = 0;
+    this.touchHold = null;
+    this.touchLive = false;
+    this.touchMarked = false;
     const stroke = this.touchStroke || [];
     const foot = this.strokeFoot;
     this.touchStroke = null; this.strokeFoot = null;
@@ -1663,12 +1712,13 @@ class Component extends DCLogic {
     });
     this.ops = keep(this.ops);
     this.pending = keep(this.pending);
-    if (foot && foot.idx.length && stroke.some(op => !stillQueued.has(op))) {
+    if (stroke.some(op => !stillQueued.has(op))) {
+      const sent = stroke.find(op => !stillQueued.has(op));
       this.ops.push({
-        t: 'revert', m: foot.m,
-        idx: Uint32Array.from(foot.idx),
-        prior: Uint8Array.from(foot.prior),
-        span: Uint8Array.from(foot.span),
+        t: 'revert', m: foot?.m ?? sent?.m ?? 0,
+        idx: Uint32Array.from(foot?.idx || []),
+        prior: Uint8Array.from(foot?.prior || []),
+        span: Uint8Array.from(foot?.span || []),
       });
     }
     this.painting = false; this.lastCell = null; this.dragStart = null;
@@ -1730,39 +1780,38 @@ class Component extends DCLogic {
       const now = performance.now();
       if (lc) { const scale = this.grainPx(); this.trackFling((px - lc.px) / scale, (py - lc.py) / scale, now - lc.time); }
       else this.flingV = { x: 0, y: 0 };
-      if (lc) this.ops.push({ t: 'l', x0: lc.x, y0: lc.y, x1: x, y1: y, r: s.radius, m: s.brush, ...this.flingFields() });
-      else this.ops.push({ t: 'p', x, y, r: s.radius, m: s.brush, ...this.flingFields() });
+      const op = lc
+        ? { t: 'l', x0: lc.x, y0: lc.y, x1: x, y1: y, r: s.radius, m: s.brush, ...this.flingFields() }
+        : { t: 'p', x, y, r: s.radius, m: s.brush, ...this.flingFields() };
       this.lastCell = { x, y, px, py, time: now };
+      return op;
     };
     on(vp, 'contextmenu', e => e.preventDefault());
     let lpTimer = 0;
     const cancelLongPress = () => { if (lpTimer) { clearTimeout(lpTimer); lpTimer = 0; } };
-    // Touch: the finger pours on contact. A still 450 ms hold names the grain. A second finger undoes that stroke.
+    // Touch: the finger aims on contact. The first dab waits 120 ms, so a pinch that
+    // lands first never commits. A still 450 ms hold names the grain. A second finger undoes the stroke.
     const glide = this.touchMod.createGlide;
     this.glide = glide ? glide({ pan: (dx, dy) => this.glidePan(dx, dy) }) : { kick() {}, stop() {} };
     const touch = this.touchMod.createTouchPour({
       setTimer: fn => (lpTimer = setTimeout(fn, 450)), clearTimer: cancelLongPress,
       moved: (dx, dy) => Math.hypot(dx, dy) > 8,
-      begin: () => { this.touchStroke = []; this.strokeFoot = null; },
+      begin: () => this.beginTouchStroke(),
       undo: () => this.undoTouchPour(),
       pour: (px, py) => {
         const c = this.cellAt(px, py), tool = this.state.tool;
         this.curCell = c;
         if (tool === 'line' || tool === 'box') { if (!this.dragStart) this.dragStart = c; this.drawPreview(); return; }
-        const before = this.ops.length;
         const starting = !this.painting;
         this.painting = true;
-        if (tool === 'pour') pour(c.x, c.y, px, py);
-        else if (tool === 'tap') { const op = starting && this.tapOp(c); if (op) this.ops.push(op); }
-        else if (starting || this.state.paused) { const op = this.toolTick(); if (op) this.ops.push(op); }
-        if (this.touchStroke && this.ops.length > before) {
-          const op = this.ops[this.ops.length - 1];
-          this.touchStroke.push(op);
-          this.noteStroke(op);
-        }
+        let op = null;
+        if (tool === 'pour') op = pour(c.x, c.y, px, py);
+        else if (tool === 'tap') { if (starting) op = this.tapOp(c); }
+        else if (starting || this.state.paused) op = this.toolTick();
+        if (op) this.queueTouchPour(op);
       },
       probe: (px, py) => { const c = this.cellAt(px, py); this.showProbe(c.x, c.y, px, py); },
-      end: () => { this.touchStroke = null; this.strokeFoot = null; },
+      end: () => this.endTouchStroke(),
     });
     const ptrs = this.ptrs = new Map();
     const isUi = e => e.target && e.target.closest && e.target.closest('[data-ui]');
@@ -1810,7 +1859,7 @@ class Component extends DCLogic {
       const tool = this.state.tool;
       if (tool === 'line' || tool === 'box') { this.gesture = 'drag'; this.dragStart = { x, y }; this.drawPreview(); return; }
       this.gesture = 'paint'; this.painting = true; this.lastCell = null;
-      if (tool === 'pour') pour(x, y, e.clientX, e.clientY);
+      if (tool === 'pour') this.ops.push(pour(x, y, e.clientX, e.clientY));
       else if (tool === 'tap') { const op = this.tapOp({ x, y }); if (op) this.ops.push(op); }
       else { const op = this.toolTick(); if (op) this.ops.push(op); }
     });
@@ -1844,7 +1893,7 @@ class Component extends DCLogic {
       if (this.gesture === 'drag') { this.curCell = c; this.drawPreview(); return; }
       if (this.painting) {
         this.curCell = c;
-        if (this.state.tool === 'pour') pour(c.x, c.y, e.clientX, e.clientY);
+        if (this.state.tool === 'pour') this.ops.push(pour(c.x, c.y, e.clientX, e.clientY));
         else if (this.state.paused) { const op = this.toolTick(); if (op) this.ops.push(op); }
       }
     });

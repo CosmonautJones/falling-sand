@@ -164,7 +164,7 @@ const OPS = {
   spray: ['x', 'y', 'r', 'm', 'n'], box: ['x0', 'y0', 'x1', 'y1', 'm'],
   heat: ['x', 'y', 'r'], cool: ['x', 'y', 'r'], rain: ['m', 'n'],
   tempest: [], clear: [], reset: [], snap: [], wipe: ['mode'], load: ['cells'],
-  revert: ['m', 'idx', 'prior', 'span'],
+  revert: ['m', 'idx', 'prior', 'span'], untag: [],
   spark: ['x', 'y'], poke: ['x', 'y', 'dx', 'dy'], font: ['x', 'y', 'm'],
 };
 function operation(op, mode) {
@@ -172,7 +172,7 @@ function operation(op, mode) {
   const descriptor = op && Object.getOwnPropertyDescriptor(op, 't');
   if (!descriptor || !('value' in descriptor) || typeof descriptor.value !== 'string' || !Object.hasOwn(OPS, descriptor.value)) fail('unknown operation');
   const t = descriptor.value;
-  const optional = ['l', 'p', 'spray'].includes(t) ? ['vx', 'vy'] : t === 'wipe' ? ['cells', 'day'] : [];
+  const optional = ['l', 'p', 'spray'].includes(t) ? ['vx', 'vy', 'mark'] : t === 'wipe' ? ['cells', 'day'] : [];
   record(op, ['t', ...OPS[t]], optional);
   const out = { t };
   for (const key of OPS[t]) {
@@ -196,6 +196,7 @@ function operation(op, mode) {
     for (const i of idx) if (i >= SIZE) fail('revert index out of range');
     for (const s of span) if (s > 1) fail('revert span');
   }
+  if (optional.includes('mark') && Object.hasOwn(op, 'mark')) out.mark = integer(op.mark, 0, 1);
   for (const key of ['vx', 'vy']) if (optional.includes(key) && Object.hasOwn(op, key)) {
     const value = op[key];
     // Only legacy host input normalizes nonfinite numeric fling hints; stored commands stay strict.

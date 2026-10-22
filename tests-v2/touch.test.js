@@ -138,7 +138,7 @@ test('a pinch puts the stroke footprint back and leaves the rest of the world', 
   const shade = w.shades[stone];
   w.VX[stone] = 2.5;
   const prior = w.cells.slice();
-  engine.tick({ paused: true, ops: [{ t: 'p', x: 12, y: 26, r: 1, m: E.GOLD }] }, ...buffers());
+  engine.tick({ paused: true, ops: [{ t: 'p', x: 12, y: 26, r: 1, m: E.GOLD, mark: 1 }] }, ...buffers());
   assert.equal(w.cells[water], E.GOLD);
   engine.tick({ dt: 250, speed: 1 }, ...buffers());
   let gold = 0;
@@ -204,4 +204,158 @@ test('undo drops a queued pour and restores the grid once the worker has taken i
   assert.equal(ui.ops[0].span[0], 1);
   assert.ok(ui.ops[0].idx.length < E.N, 'the revert is the footprint, not the grid');
   assert.equal(JSON.stringify(ui.ops).includes('"m":0'), false, 'the stroke is not painted back as air');
+});
+
+function page() {
+  const html = readFileSync(new URL('../public/v2/index.html', import.meta.url), 'utf8');
+  const script = html.match(/<script type="text\/x-dc" data-dc-script[^>]*>([\s\S]*?)<\/script>/)[1];
+  const timers = [];
+  const context = {
+    DCLogic: class { constructor() { this.props = {}; } },
+    React: { createRef: () => ({ current: null }) },
+    performance: { now: () => 0 },
+    localStorage: { getItem: () => null },
+    requestAnimationFrame: () => 1,
+    Float32Array, Uint32Array, Uint8Array,
+    window: {},
+    setTimeout(fn, ms) { return timers.push({ fn, ms }); },
+    clearTimeout(id) { if (timers[id - 1]) timers[id - 1].fn = null; },
+  };
+  vm.createContext(context);
+  vm.runInContext(script + '\nthis.Component = Component;', context);
+  const ui = new context.Component();
+  ui.M = E; ui.ops = []; ui.pending = [];
+  return { ui, timers };
+}
+
+test('the first dab waits 120 ms, and lifting the finger still pours', () => {
+  const dab = () => ({ t: 'p', x: 12, y: 20, r: 1, m: E.GOLD });
+  const early = page();
+  early.ui.beginTouchStroke();
+  early.ui.queueTouchPour(dab());
+  assert.equal(early.ui.ops.length, 0, 'nothing is committed while the hold is open');
+  assert.equal(early.timers[0].ms, 120);
+  early.ui.undoTouchPour();
+  assert.deepEqual(early.ui.ops, [], 'a pinch inside the hold commits nothing');
+  early.timers[0].fn?.();
+  assert.deepEqual(early.ui.ops, [], 'a timer that fires after the pinch does not pour');
+
+  const held = page();
+  held.ui.beginTouchStroke();
+  held.ui.queueTouchPour(dab());
+  held.timers[0].fn();
+  assert.equal(held.ui.ops.length, 1);
+  assert.equal(held.ui.ops[0].mark, 1, 'a committed touch dab is tagged');
+  held.ui.queueTouchPour({ t: 'l', x0: 12, y0: 20, x1: 16, y1: 20, r: 1, m: E.GOLD });
+  assert.equal(held.ui.ops.length, 2, 'later dabs in the same stroke are not held again');
+  assert.equal(held.ui.ops[1].mark, 1);
+  held.ui.ops = []; held.ui.pending = [];
+  held.ui.undoTouchPour();
+  assert.equal(held.ui.ops[0].t, 'revert');
+  assert.equal(held.ui.ops[0].m, E.GOLD);
+
+  const tap = page();
+  tap.ui.beginTouchStroke();
+  tap.ui.queueTouchPour(dab());
+  tap.ui.endTouchStroke();
+  assert.equal(tap.ui.ops[0].mark, 1, 'a tap shorter than the hold still pours on lift');
+  assert.equal(tap.ui.ops[1].t, 'untag', 'lifting the finger drops the tags so the grains stay');
+});
+
+const countMat = (cells, m) => {
+  let n = 0;
+  for (const c of cells) if (c === m) n++;
+  return n;
+};
+
+function strokeFootprint(prior, cx, cy, r) {
+  const idx = [], was = [], span = [], brush = new Set();
+  for (let y = cy - r; y <= cy + r; y++) for (let x = cx - r; x <= cx + r; x++) {
+    if ((x - cx) * (x - cx) + (y - cy) * (y - cy) <= r * r) brush.add(y * E.W + x);
+  }
+  for (let x = cx - r - 2; x <= cx + r + 2; x++) for (let y = 0; y < E.H; y++) {
+    const i = y * E.W + x;
+    idx.push(i); was.push(prior[i]); span.push(brush.has(i) ? 1 : 0);
+  }
+  return { idx: Uint32Array.from(idx), prior: Uint8Array.from(was), span: Uint8Array.from(span) };
+}
+
+function simulateMs(engine, ms, buf) {
+  const step = 1000 / 60;
+  let left = ms;
+  while (left > 1e-6) {
+    const dt = Math.min(left, step * 8);
+    engine.tick({ dt, speed: 1 }, ...buf);
+    left -= dt;
+  }
+}
+
+// The dab is committed immediately here. That is the harder case: a pinch before
+// 120 ms never commits, and these counts are what remains after a dab that did.
+test('a pinch removes a tagged dab wherever it slid, and leaves other edits', () => {
+  const holds = [100, 300, 600, 1000];
+  const materials = [['gold', E.GOLD], ['sand', E.SAND], ['water', E.WATER], ['salt', E.SALT]];
+  const buf = () => [new Uint8Array(E.N * 4), new Uint8Array(E.N * 4), new Uint8Array(E.N * 4)];
+  for (const [name, mat] of materials) {
+    for (const paused of [false, true]) {
+      for (const ms of holds) {
+        const color = buf();
+        const engine = E.createEngine({ seed: 3, scene: 'empty', weather: false, ambientEmbers: false });
+        const setup = [
+          { t: 'box', x0: 0, y0: 55, x1: 479, y1: 59, m: E.STONE },
+          { t: 'box', x0: 10, y0: 10, x1: 30, y1: 30, m: E.STONE },
+          { t: 'p', x: 20, y: 20, r: 0, m: mat },
+        ];
+        if (mat !== E.WATER) setup.push({ t: 'p', x: 240, y: 30, r: 0, m: E.WATER });
+        engine.tick({ paused: true, ops: setup }, ...color);
+        const w = engine.inspect();
+        const prior = w.cells.slice();
+        const keeper = 20 * E.W + 20;
+        engine.tick({ paused: true, ops: [{ t: 'p', x: 240, y: 30, r: 1, m: mat, mark: 1 }] }, ...color);
+        w.setc(241, 30, E.BRICK, 4);
+        engine.tick({ paused: true, ops: [{ t: 'box', x0: 400, y0: 10, x1: 430, y1: 30, m: E.BRICK }] }, ...color);
+        const bricks = countMat(w.cells, E.BRICK);
+        if (!paused) simulateMs(engine, ms, color);
+        const foot = strokeFootprint(prior, 240, 30, 1);
+        engine.tick({ paused: true, ops: [{ t: 'revert', m: mat, ...foot }] }, ...color);
+        const leftover = countMat(w.cells, mat) - 1;
+        assert.equal(w.cells[keeper], mat, `${name} ${paused ? 'paused' : 'running'} ${ms}ms keeps the sealed grain`);
+        assert.equal(leftover, 0, `${name} ${paused ? 'paused' : 'running'} ${ms}ms leaves no dab`);
+        assert.equal(countMat(w.cells, E.BRICK), bricks, `${name} keeps the brick box and the brick on the stroke`);
+        if (mat !== E.WATER) assert.equal(w.cells[30 * E.W + 240], E.WATER, 'the cell under the dab is restored');
+      }
+    }
+  }
+  // No other edits, so the slide is the one a flat floor produces. The column band
+  // cannot see these grains; the mark has to.
+  for (const [name, mat] of materials) {
+    for (const ms of [600, 1000]) {
+      const color = buf();
+      const engine = E.createEngine({ seed: 3, scene: 'empty', weather: false, ambientEmbers: false });
+      engine.tick({ paused: true, ops: [{ t: 'box', x0: 0, y0: 55, x1: 479, y1: 59, m: E.STONE }] }, ...color);
+      const w = engine.inspect();
+      const prior = w.cells.slice();
+      engine.tick({ paused: true, ops: [{ t: 'p', x: 240, y: 30, r: 1, m: mat, mark: 1 }] }, ...color);
+      simulateMs(engine, ms, color);
+      let far = 0;
+      for (let i = 0; i < E.N; i++) {
+        if (!w.pourMark[i] || w.cells[i] !== mat) continue;
+        const x = i % E.W;
+        if (x < 237 || x > 243) far++;
+      }
+      assert.ok(far > 0, `${name} at ${ms}ms leaves the column band`);
+      const foot = strokeFootprint(prior, 240, 30, 1);
+      engine.tick({ paused: true, ops: [{ t: 'revert', m: mat, ...foot }] }, ...color);
+      assert.equal(countMat(w.cells, mat), 0, `${name} at ${ms}ms is removed past the band`);
+    }
+  }
+  const state = E.createEngine({ seed: 1, scene: 'empty', weather: false, ambientEmbers: false });
+  const color = buf();
+  state.tick({ paused: true, ops: [{ t: 'p', x: 5, y: 5, r: 0, m: E.GOLD, mark: 1 }] }, ...color);
+  assert.equal(state.inspect().pourMark[5 * E.W + 5], 1);
+  assert.equal(state.captureState().pourMark, undefined, 'pour marks are not part of a checkpoint');
+  const saved = state.checkpoint();
+  simulateMs(state, 100, color);
+  state.restore(saved);
+  assert.ok([...state.inspect().pourMark].every(v => v === 0), 'restoring a world clears ephemeral marks');
 });
