@@ -20,75 +20,110 @@
 .more-controls{position:relative}.more-controls summary{cursor:pointer;list-style:none;padding:9px 14px;border:1px solid #3a3128;background:#1c1612;min-height:44px}.more-controls summary::-webkit-details-marker{display:none}.more-panel{position:absolute;right:0;bottom:calc(100% + 8px);z-index:15;width:min(420px,calc(100vw - 32px));max-height:65dvh;overflow:auto;display:flex;flex-wrap:wrap;gap:12px;padding:16px;background:#14100c;border:1px solid #c49a4a;box-shadow:0 12px 40px #000}.more-panel > div{flex-wrap:wrap}.current-tool{font-size:12px;color:#cbb89a}.exit-screen{display:none}.root[data-immersive] .enter-screen{display:none}.root[data-immersive] .exit-screen{display:inline}
 .root[data-immersive]{position:relative;padding: max(4px,env(safe-area-inset-top)) max(4px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left))!important;gap:4px!important}.root[data-immersive] .hd{display:none!important}.root[data-immersive] .fig{flex:1 1 0!important;height:auto!important;padding:0!important}.root[data-immersive] .zoom-controls{top:10px;bottom:auto!important}.root[data-immersive] [data-mobile-hud]{display:none}.root[data-immersive] .ctl{position:absolute;bottom:max(4px,env(safe-area-inset-bottom));left:max(4px,env(safe-area-inset-left));right:max(4px,env(safe-area-inset-right));width:auto!important;padding:6px;background:rgba(20,16,12,.92);z-index:10;overflow:visible!important}
 button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8c97a;outline-offset:2px}
-.phone-bar,.sheet{display:none}.zoom-mini{width:128px}
+.touch-chrome,.sheet{display:none}.zoom-mini{width:128px}
 .root{touch-action:none}[data-scroll]{touch-action:pan-y;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}.chips{touch-action:pan-x}
 .root[data-immersive] .rotate-hint,.root[data-immersive] .flask-status{display:none}
 @media(max-width:520px){.ftab{letter-spacing:.06em!important;padding:6px 5px 8px!important;font-size:12px!important}}
-.phone-bar{flex:0 0 auto;flex-direction:column;gap:6px;width:100%;padding:0 10px}.phone-row{display:flex;gap:8px;align-items:stretch}.phone-hud{font-size:11px;letter-spacing:.06em;color:rgba(203,184,154,.7);font-variant-numeric:tabular-nums;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:1.3em}
-.pb{display:flex;align-items:center;justify-content:center;gap:8px;min-width:52px;height:52px;padding:0 12px;background:#1c1612;color:#f0e2c4;border:1px solid #3a3128;border-radius:14px;font-size:18px;cursor:pointer}.pb:active{background:#2a2119}.pb[aria-expanded="true"]{border-color:#c49a4a}
-.pb-el{flex:1;justify-content:flex-start;min-width:0;text-align:left}.pb-el .sw{width:26px;height:26px;border-radius:8px}.pb-txt{display:flex;flex-direction:column;min-width:0;line-height:1.15}.pb-name{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pb-sub{font-size:11px;color:#a8977c;letter-spacing:.04em}.pb-zoom-lab{font-size:15px;font-variant-numeric:tabular-nums}.caret{margin-left:auto;color:#c49a4a;font-size:14px}
+.pb-zoom-lab{font-size:15px;font-variant-numeric:tabular-nums}
 .sw{display:inline-block;flex:0 0 auto;border:1px solid #5a4630;box-shadow:inset 0 -5px 6px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.28)}.dot{display:block;border-radius:50%;background:#e8c97a}
 .sheet-backdrop{position:fixed;inset:0;z-index:24;background:rgba(6,4,3,.55)}
-.sheet{position:fixed;z-index:25;left:0;right:0;bottom:0;max-height:72dvh;flex-direction:column;background:#16110d;border-top:1px solid rgba(196,154,74,.55);border-radius:18px 18px 0 0;box-shadow:0 -18px 40px rgba(0,0,0,.6);padding-bottom:env(safe-area-inset-bottom);animation:sheet-up .22s ease-out}
-@keyframes sheet-up{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+.sheet{position:fixed;z-index:25;left:0;right:0;bottom:0;height:min(62dvh,560px);max-height:92dvh;flex-direction:column;background:rgba(22,17,13,.96);border-top:1px solid rgba(196,154,74,.55);border-radius:22px 22px 0 0;box-shadow:0 -18px 40px rgba(0,0,0,.6);padding-bottom:env(safe-area-inset-bottom);transform:translateY(110%);pointer-events:none;transition:transform .22s ease,height .22s ease}
+.sheet[data-open="true"]{transform:none;pointer-events:auto}.sheet[data-snap="full"]{height:min(92dvh,100%)}.sheet[data-snap="half"]{height:min(62dvh,560px)}
 .experiment-card{flex:0 0 auto;width:min(96vw,1440px);display:flex;align-items:center;gap:12px;padding:8px 12px;background:#19130e;border:1px solid #5a4630;border-radius:4px}.experiment-copy{flex:1;min-width:0}.experiment-title{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#c49a4a}.experiment-status{font-size:12px;color:#b8a483}.experiment-text{font-size:16px;line-height:1.3;color:#f0e2c4}.experiment-help{font-size:12px;color:#a8977c}.experiment-actions{display:flex;flex:0 0 auto;gap:8px;flex-wrap:wrap}.experiment-action{min-width:44px;min-height:44px;padding:8px 12px;background:#241b12;border:1px solid #5a4630;border-radius:8px;color:#f0e2c4;font-size:14px;cursor:pointer}.experiment-action:hover{border-color:#c49a4a}
 @media(max-width:700px){.experiment-card{width:calc(100% - 20px);flex-wrap:wrap;gap:6px;padding:8px 10px}.experiment-copy{flex-basis:100%}.experiment-text{font-size:15px}}
 @media(orientation:landscape) and (max-height:520px){.experiment-card{width:190px;flex:0 0 190px;flex-direction:column;align-items:stretch;justify-content:center;gap:8px;padding:8px}.experiment-copy{flex:0 0 auto}.experiment-actions{flex-direction:column}.fig{min-width:0}}
 .pour-hint{position:absolute;left:50%;top:56%;transform:translate(-50%,-50%);z-index:3;padding:8px 16px;border-radius:999px;background:rgba(20,16,12,.78);border:1px solid rgba(232,201,122,.45);color:#f0e2c4;font-size:14px;font-style:italic;letter-spacing:.03em;white-space:nowrap;pointer-events:none;animation:hint-breathe 2.4s ease-in-out infinite}
 @keyframes hint-breathe{50%{opacity:.55}}[data-suggest="true"]{animation:suggest 1.6s ease-in-out infinite}@keyframes suggest{50%{border-color:#e8c97a;box-shadow:0 0 0 2px rgba(232,201,122,.35),0 0 18px rgba(232,201,122,.35)}}
-@media(prefers-reduced-motion:reduce){[data-suggest="true"]{animation:none;border-color:#e8c97a}.sheet,.pour-hint{animation:none}}
+@media(prefers-reduced-motion:reduce){[data-suggest="true"]{animation:none;border-color:#e8c97a}.sheet,.pour-hint,.top-pills,.zoom-mini{animation:none;transition:none}}
 .sheet-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 6px;font-size:13px;letter-spacing:.24em;color:#c49a4a;text-transform:uppercase}.sheet-x{width:44px;height:44px;background:transparent;border:none;color:#cbb89a;font-size:18px;cursor:pointer}
-.sheet-body{overflow:auto;padding:0 16px 16px;display:flex;flex-direction:column;gap:8px}.sheet-label{margin-top:8px;font-size:12px;letter-spacing:.14em;color:#8f7d62;text-transform:uppercase}
-.tile-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}.tile{display:flex;align-items:center;gap:9px;height:48px;padding:0 10px;background:#1c1612;color:#f0e2c4;border:1px solid #3a3128;border-radius:12px;font-size:15px;cursor:pointer;text-align:left}.tile .sw{width:20px;height:20px;border-radius:6px}
+.sheet-body{overflow:auto;padding:0 16px 16px;display:flex;flex-direction:column;gap:8px;flex:1;min-height:0}.sheet-label{margin-top:8px;font-size:12px;letter-spacing:.14em;color:#8f7d62;text-transform:uppercase}
+.tile-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}.tile{display:flex;align-items:center;gap:9px;height:48px;padding:0 10px;background:#1c1612;color:#f0e2c4;border:1px solid #3a3128;border-radius:12px;font-size:15px;cursor:pointer;text-align:left;position:relative}.tile .sw{width:20px;height:20px;border-radius:6px}.tile .new{display:none;position:absolute;top:6px;right:8px;width:7px;height:7px;border-radius:50%;background:#9fd0ff}.tile[data-new="true"] .new{display:block}
+.orb-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.orb-grid .tile{flex-direction:column;justify-content:center;height:auto;min-height:72px;padding:8px 2px;gap:4px;font-size:11px;text-align:center}.orb-grid .sw{width:30px;height:30px;border-radius:50%}
+.sheet-tabs{display:flex;gap:8px;padding:0 16px 8px;overflow:auto}.sheet-tabs button{flex:0 0 auto;padding:6px 12px;border-radius:999px;border:1px solid #3a3128;background:transparent;color:#cbb89a;font-size:12px;cursor:pointer}.sheet-tabs button[aria-selected="true"]{border-color:#c49a4a;color:#e8c97a;background:#2a2119}
+.sheet-search{width:100%;margin:0 0 8px;border:1px solid #3a3128;border-radius:12px;padding:9px 12px;background:#1c1612;color:#f0e2c4;font:italic 13px/1.3 inherit;user-select:text;-webkit-user-select:text}.sheet-search::placeholder{color:#7d6c55}
+.sheet-foot{flex:0 0 auto;display:flex;flex-direction:column;gap:8px;padding:8px 16px 12px;border-top:1px solid #2a2218}
+.sheet-brush-land{display:none}
+.grab{display:flex;align-items:center;justify-content:center;width:100%;height:28px;margin:0;padding:0;border:none;background:transparent;cursor:grab;touch-action:none}.grab i{width:44px;height:5px;border-radius:3px;background:#5a4a38;display:block}
 .seg{display:flex;flex-wrap:wrap;gap:8px}.seg > button,.seg-b{flex:1 1 0;min-width:72px;height:46px;display:flex;align-items:center;justify-content:center;background:#1c1612;color:#f0e2c4;border:1px solid #3a3128;border-radius:12px;font-size:15px;cursor:pointer}.seg-3 > button{flex:1 1 calc(33% - 8px)}
 .seg > a,.seg > span{flex:1 1 0;min-width:72px;height:46px;display:flex;align-items:center;justify-content:center;background:#1c1612;color:#f0e2c4;border:1px solid #3a3128;border-radius:12px;font-size:15px;text-decoration:none}.seg > span[aria-current]{border-color:#c49a4a;color:#e8c97a;background:#2a2119}
 .seg > button.danger{color:#e8a090;border-color:#5a3128}.seg-5 > button{min-width:0}.rotate-hint{display:none}
 @media(orientation:portrait) and (max-width:700px){.toast-text{display:none}}
 @media(orientation:portrait) and (max-width:700px){.rotate-hint{display:block;position:absolute;left:0;right:0;bottom:8px;text-align:center;font-size:12px;font-style:italic;color:#6f6150;pointer-events:none}}
 .blank-note{margin-top:6px;padding:12px;background:transparent;border:1px dashed #4a3e30;border-radius:12px;color:#a8977c;font-style:italic;font-size:14px;cursor:pointer;text-align:left}.touch-help{margin:4px 0 0;color:#8f7d62;font-size:13px}
-@media(max-width:700px),(pointer:coarse){.zoom-buttons{display:none!important}.zoom-mini{width:84px!important}[data-mobile-hud]{display:none!important}.ctl,.hd-tally,.hd-btns{display:none!important}.phone-bar{display:flex}.sheet{display:flex}
+@media(max-width:700px),(pointer:coarse){.zoom-buttons{display:none!important}.zoom-mini{width:84px!important}[data-mobile-hud]{display:none!important}.ctl,.hd-tally,.hd-btns{display:none!important}.touch-chrome{display:block}.sheet{display:flex}
 .root{gap:6px!important;padding:max(8px,env(safe-area-inset-top)) env(safe-area-inset-right) max(8px,env(safe-area-inset-bottom)) env(safe-area-inset-left)!important}
 .hd{width:100%!important;display:flex!important;flex-direction:column;align-items:center;gap:0!important;padding:0 14px}.hd-title{font-size:17px!important;letter-spacing:.32em!important}.hd-line{font-size:13px!important;min-height:2.7em!important}
 .fig{width:100%!important;flex:1 1 0!important;padding:0!important;background:none!important;box-shadow:none!important;border-radius:0!important}.rivet{display:none}
 .flask-status{position:absolute;top:max(6px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:6;pointer-events:none;text-align:center}.toast{top:6px!important;padding:4px 12px 4px 6px!important;gap:8px!important;max-width:92%!important;border-radius:999px!important;background:rgba(20,16,12,.72)!important;box-shadow:none!important}
 .toast > div:first-child{width:14px!important;height:14px!important}.toast > div:last-child{flex-direction:row!important;align-items:baseline;gap:8px;min-width:0}.toast-label{font-size:10px!important;letter-spacing:.14em!important;white-space:nowrap}
 .toast-text{font-size:12px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:62vw}}
-@media(orientation:landscape) and (max-height:520px){.root{flex-direction:row!important;align-items:stretch!important;padding:max(4px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))!important}.hd,.ctl,.zoom-buttons,[data-mobile-hud]{display:none!important}.sheet{display:flex}.fig{flex:1 1 0!important;padding:0!important;background:none!important;box-shadow:none!important}.rivet{display:none}
-.phone-bar{display:flex;flex-direction:column-reverse;justify-content:flex-end;width:76px;padding:0}.phone-row{flex-direction:column}.pb-el{flex:0 0 auto;flex-direction:column;justify-content:center;gap:2px;height:76px;padding:4px}.pb-el .pb-txt{align-items:center}.pb-el .caret,.pb-sub{display:none}.pb-name{font-size:12px;max-width:68px}.phone-hud{white-space:normal;font-size:10px;margin-top:auto}
-.sheet{left:auto;top:0;width:min(380px,58vw);max-height:none;border-radius:18px 0 0 18px;border-top:none;border-left:1px solid rgba(196,154,74,.55);padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) 0}}
-.pb-txt{flex:1;overflow:hidden}.pb-el .sw{flex-shrink:0}.pb-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pb-brush{flex-direction:column;gap:3px}.pb-brush .dot{max-width:12px;max-height:12px}
+@media(orientation:landscape) and (max-height:520px){.root{flex-direction:row!important;align-items:stretch!important;padding:max(4px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))!important}.hd,.ctl,.zoom-buttons,[data-mobile-hud]{display:none!important}.touch-chrome{display:block}.sheet{display:flex}.fig{flex:1 1 0!important;padding:0!important;background:none!important;box-shadow:none!important}.rivet{display:none}}
 .vp{position:relative;overflow:hidden;width:min(100cqw, calc(100cqh * 480 / 270));aspect-ratio:480 / 270;max-height:100%;background:#0b090e}
-@media(max-width:700px){.vp{position:absolute;inset:0;width:auto;height:auto;max-height:none;aspect-ratio:auto}}.pb-size{font-size:12px;line-height:1;font-variant-numeric:tabular-nums}
-@media(max-width:380px) and (orientation:portrait){.phone-row{gap:5px}.pb{min-width:44px;padding:0 8px}.pb-el{padding:0 7px;gap:6px}.pb-el .caret{display:none}.pb-el .sw{width:20px;height:20px}.pb-sub{letter-spacing:0}}
+@media(max-width:700px){.vp{position:absolute;inset:0;width:auto;height:auto;max-height:none;aspect-ratio:auto}}
+.glass{background:rgba(20,16,12,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(232,201,122,.28)}
+.touch-chrome{position:fixed;inset:0;z-index:16;pointer-events:none}
+.top-pills{position:absolute;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:8px;pointer-events:none;transition:opacity .35s ease}
+.pill{max-width:68vw;padding:6px 12px;border-radius:999px;font-size:12px;letter-spacing:.04em;color:#e8d7b4;display:flex;gap:7px;align-items:center;overflow:hidden;white-space:nowrap;pointer-events:auto}
+.pill-count{flex:0 0 auto;max-width:none}
+.orb-wrap{position:absolute;width:220px;height:230px;pointer-events:none}
+.orb-wrap[data-radial="true"] .rec{opacity:0;pointer-events:none}
+.orb{position:absolute;left:0;bottom:18px;width:66px;height:66px;border-radius:50%;border:2px solid transparent;padding:0;background:radial-gradient(circle at 35% 30%,#ffe9a8,#c9a14e 45%,#6d5222);box-shadow:0 0 0 3px rgba(20,16,12,.7),0 0 0 4px #e8c97a,0 0 22px rgba(232,201,122,.55);color:#f0e2c4;pointer-events:auto;touch-action:none}
+.orb b{position:absolute;left:-12px;right:-12px;bottom:-20px;text-align:center;font-size:12px;font-weight:400;text-shadow:0 1px 3px #000;pointer-events:none}
+.rec{position:absolute;width:38px;height:38px;border:none;border-radius:50%;padding:0;box-shadow:0 0 0 2px rgba(20,16,12,.75),0 0 0 3px rgba(240,226,196,.35);pointer-events:auto;touch-action:manipulation}
+.radial-item{position:absolute;width:44px;height:44px;border:none;border-radius:50%;padding:0;box-shadow:0 0 0 2px rgba(20,16,12,.75),0 0 0 3px rgba(240,226,196,.45);pointer-events:none}
+.radial-item[data-hot="true"]{box-shadow:0 0 0 2px #1c1612,0 0 0 4px #e8c97a,0 0 16px rgba(232,201,122,.75)}
+.size-orb{position:absolute;left:96px;bottom:22px;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;pointer-events:auto;touch-action:manipulation}
+.size-orb span{width:12px;height:12px;border-radius:50%;background:#e8c97a}
+.rbtns{position:absolute;display:flex;flex-direction:column;gap:12px;z-index:2}
+.rb{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;color:#f0e2c4;pointer-events:auto;touch-action:manipulation}
+.sheet-handle{position:absolute;left:50%;width:120px;height:28px;transform:translateX(-50%);border:none;background:transparent;pointer-events:auto;touch-action:none}
+.sheet-handle i{display:block;width:120px;height:5px;margin:16px auto 0;border-radius:3px;background:rgba(240,226,196,.55)}
+.root[data-idle] .top-pills,.root[data-idle] .top-pills .pill{opacity:0;pointer-events:none}
 /* touch-fill: the vessel is the screen; chrome sits in the safe area */
 @media(max-width:700px),(pointer:coarse){
 .root{padding:0!important;gap:0!important}
-.hd{position:fixed!important;z-index:13;top:max(8px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));right:110px;width:auto!important;display:flex!important;pointer-events:none;padding:0!important}
+.hd{position:fixed!important;z-index:13;top:calc(max(8px,env(safe-area-inset-top)) + 42px);left:max(10px,env(safe-area-inset-left));right:120px;width:auto!important;display:flex!important;pointer-events:none;padding:0!important}
 .hd-title{display:none!important}
 .hd-line{min-height:0!important;max-height:2.6em;overflow:hidden;text-shadow:0 1px 2px #000}
-.toast{top:calc(max(8px, env(safe-area-inset-top)) + 44px)!important}
+.toast{top:calc(max(8px, env(safe-area-inset-top)) + 86px)!important}
 .fig{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;max-width:none!important;margin:0!important;padding:0!important;border-radius:0!important;background:#0b090e!important;box-shadow:none!important}
 .vp{position:absolute!important;inset:0!important;width:auto!important;height:auto!important;max-height:none!important;aspect-ratio:auto!important;border-radius:0!important}
-.phone-bar{position:fixed;z-index:12;left:0;right:0;bottom:0;width:auto;padding:8px max(10px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));background:linear-gradient(to top,rgba(16,12,9,.88),rgba(16,12,9,0));pointer-events:none}
-.phone-bar .pb{pointer-events:auto}
-.zoom-controls{top:max(12px,env(safe-area-inset-top))!important;right:max(12px,env(safe-area-inset-right))!important;bottom:auto!important}
+.top-pills{top:max(10px,calc(env(safe-area-inset-top) + 6px));left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right))}
+.orb-wrap{left:max(14px,env(safe-area-inset-left));bottom:max(16px,calc(env(safe-area-inset-bottom) + 8px))}
+.rbtns{right:max(14px,env(safe-area-inset-right));bottom:max(28px,calc(env(safe-area-inset-bottom) + 18px))}
+.sheet-handle{bottom:max(6px,env(safe-area-inset-bottom))}
+.zoom-controls{top:calc(max(12px,env(safe-area-inset-top)) + 46px)!important;right:max(12px,env(safe-area-inset-right))!important;bottom:auto!important}
 .zoom-mini{opacity:1!important;pointer-events:auto!important}
+.root[data-idle] .zoom-mini{opacity:0!important;pointer-events:none!important}
 .rotate-hint{display:none!important}
 .flask-status{position:fixed;top:max(8px,env(safe-area-inset-top));z-index:13}
-.experiment-card{position:fixed;z-index:14;top:max(8px,env(safe-area-inset-top));left:max(8px,env(safe-area-inset-left));width:auto;max-width:calc(100vw - 110px)}
+.experiment-card{position:fixed;z-index:14;top:calc(max(8px,env(safe-area-inset-top)) + 92px);left:max(8px,env(safe-area-inset-left));width:auto;max-width:calc(100vw - 120px)}
 }
 @media(orientation:landscape) and (max-height:520px){
-.phone-bar{top:0;bottom:0;left:0;right:auto;width:calc(76px + env(safe-area-inset-left));padding:max(4px,env(safe-area-inset-top)) 0 max(4px,env(safe-area-inset-bottom)) env(safe-area-inset-left);background:linear-gradient(to right,rgba(16,12,9,.88),rgba(16,12,9,0))}
-.hd{left:calc(84px + env(safe-area-inset-left));top:max(4px,env(safe-area-inset-top));right:calc(100px + env(safe-area-inset-right))}
-.zoom-controls{top:max(8px,env(safe-area-inset-top))!important;right:max(8px,env(safe-area-inset-right))!important}
-.experiment-card{left:calc(84px + env(safe-area-inset-left))!important;max-width:min(260px,calc(100vw - 120px - env(safe-area-inset-left) - env(safe-area-inset-right)))}
-.phone-bar{overflow:hidden}
-.phone-bar .pb{width:64px;min-width:0;max-width:calc(100% - 12px);padding:0 4px}
+.orb-wrap{left:env(safe-area-inset-left);bottom:max(8px,env(safe-area-inset-bottom))}
+.top-pills{left:calc(172px + env(safe-area-inset-left));top:max(6px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right))}
+.hd{left:calc(172px + env(safe-area-inset-left));top:calc(max(4px,env(safe-area-inset-top)) + 36px);right:calc(100px + env(safe-area-inset-right))}
+.sheet{left:calc(172px + env(safe-area-inset-left));overflow:hidden}
+.sheet-foot{display:none}
+.sheet-body{min-height:120px}
+.sheet-brush-land{display:block}
+.zoom-controls{top:calc(max(8px,env(safe-area-inset-top)) + 40px)!important;right:max(8px,env(safe-area-inset-right))!important}
+.experiment-card{left:calc(172px + env(safe-area-inset-left))!important;max-width:min(260px,calc(100vw - 200px - env(safe-area-inset-left) - env(safe-area-inset-right)))}
+.pour-hint{left:auto;right:max(84px,calc(env(safe-area-inset-right) + 72px));top:42%;transform:translateY(-50%)}
+.rbtns{right:max(10px,env(safe-area-inset-right));bottom:max(10px,env(safe-area-inset-bottom))}
+}
+@media (pointer:coarse) and (min-width:701px) and (min-height:521px){
+.sheet{left:50%;right:auto;width:min(560px,calc(100% - 32px));transform:translate(-50%,110%)}
+.sheet[data-open="true"]{transform:translate(-50%,0)}
+.orb-grid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}
 }
 </style>
 </helmet>
 <div ref="{{ rootRef }}" class="root" style="height:100dvh; display:flex; flex-direction:column; align-items:center; gap:8px; padding:max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); overflow:hidden; color:#f0e2c4; font:15px/1.5 Palatino,'Palatino Linotype','Book Antiqua','EB Garamond',Georgia,serif; -webkit-font-smoothing:antialiased; background:radial-gradient(70% 45% at 50% -8%, rgba(176,137,72,.16), transparent 55%), #100c09;">
+  <div data-safe-top aria-hidden="true" style="position:fixed;top:0;left:0;width:0;height:env(safe-area-inset-top);pointer-events:none"></div>
   <div data-safe-right aria-hidden="true" style="position:fixed;top:0;right:0;width:env(safe-area-inset-right);height:0;pointer-events:none"></div>
+  <div data-safe-bottom aria-hidden="true" style="position:fixed;bottom:0;left:0;width:0;height:env(safe-area-inset-bottom);pointer-events:none"></div>
+  <div data-safe-left aria-hidden="true" style="position:fixed;top:0;left:0;width:env(safe-area-inset-left);height:0;pointer-events:none"></div>
 
   <header class="col hd" style="width:min(96vw,1440px); display:grid; grid-template-columns:minmax(150px,1fr) minmax(0,2.4fr) minmax(max-content,1fr); align-items:center; gap:16px; flex:0 0 auto;">
     <div class="hd-tally" style="display:flex; flex-direction:column; gap:1px; font-size:13px; font-style:italic; color:#8f7d62; letter-spacing:.02em; white-space:nowrap;">
@@ -268,105 +303,152 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
     </div>
   </div>
 
-  <nav class="phone-bar" aria-label="Vessel controls">
-    <div class="phone-hud" data-phone-hud ref="{{ phoneHudRef }}"></div>
-    <div class="phone-row">
-      <button data-phone="element" class="pb pb-el" data-suggest="{{ suggesting }}" aria-haspopup="dialog" aria-expanded="{{ elementsOpen }}" aria-label="{{ elementAria }}" onClick="{{ openElements }}">
-        <span class="sw" style="background:{{ brushSwatch }};"></span>
-        <span class="pb-txt"><span class="pb-name">{{ brushName }}</span><span class="pb-sub">{{ toolHint }}</span></span>
-        <span class="caret" aria-hidden="true">▾</span>
-      </button>
-      <button data-phone="brush" class="pb pb-brush" aria-label="{{ brushAria }}" onClick="{{ cycleBrush }}"><span class="dot" style="width:{{ brushDot }}px; height:{{ brushDot }}px;"></span><span class="pb-size" aria-hidden="true">{{ radius }}</span></button>
-      <button data-phone="zoom" class="pb pb-zoom" aria-label="Zoom: 1× fills the glass. Each press doubles it, then the whole vessel, then back to 1×" onClick="{{ cycleZoom }}"><span class="pb-zoom-lab" ref="{{ pbZoomRef }}">1×</span></button>
-      <button data-phone="pause" class="pb" aria-label="{{ pauseLabel }}" onClick="{{ togglePause }}">{{ pauseIcon }}</button>
-      <button data-phone="options" class="pb" aria-haspopup="dialog" aria-expanded="{{ optionsOpen }}" aria-label="Options" onClick="{{ openOptions }}">☰</button>
+  <div class="touch-chrome" data-ui="1">
+    <div class="top-pills">
+      <div class="pill glass" data-phone="almanac"><span class="almanac" ref="{{ phoneAlmanacRef }}"></span></div>
+      <button class="pill glass pill-count" data-phone="tally" aria-label="{{ foundAria }}" onClick="{{ openCodex }}">{{ foundCount }}</button>
     </div>
-  </nav>
+    <div class="orb-wrap" data-radial="{{ radialFlag }}">
+      <sc-for list="{{ recents }}" as="c" hint-placeholder-count="3">
+        <button class="rec" data-phone="recent" title="{{ c.name }}" aria-label="{{ c.name }}" onClick="{{ c.onClick }}" style="left:{{ c.left }};bottom:{{ c.bottom }};background:{{ c.swatch }};"></button>
+      </sc-for>
+      <sc-if value="{{ radialOpen }}" hint-placeholder-val="{{ false }}">
+        <div class="radial" role="menu" aria-label="Materials">
+          <sc-for list="{{ radialItems }}" as="c" hint-placeholder-count="8">
+            <span class="radial-item" data-hot="{{ c.hot }}" title="{{ c.name }}" style="left:{{ c.left }};bottom:{{ c.bottom }};background:{{ c.swatch }};"></span>
+          </sc-for>
+        </div>
+      </sc-if>
+      <button data-phone="element" class="orb" data-suggest="{{ suggesting }}" data-ui="1" aria-haspopup="dialog" aria-expanded="{{ orbExpanded }}" aria-label="{{ elementAria }}" onPointerDown="{{ orbDown }}" onPointerMove="{{ orbMove }}" onPointerUp="{{ orbUp }}" onPointerCancel="{{ orbCancel }}" onClick="{{ orbClick }}"><b>{{ orbName }}</b></button>
+      <button data-phone="brush" class="size-orb glass" data-ui="1" aria-label="{{ brushAria }}" onClick="{{ cycleBrush }}"><span></span></button>
+    </div>
+    <div class="rbtns">
+      <button data-phone="pause" class="rb glass" data-ui="1" aria-label="{{ pauseLabel }}" onClick="{{ togglePause }}">{{ pauseIcon }}</button>
+      <button data-phone="options" class="rb glass" data-ui="1" aria-haspopup="dialog" aria-expanded="{{ toolsOpen }}" aria-label="Options" onClick="{{ openOptions }}">☰</button>
+    </div>
+    <button class="sheet-handle" data-phone="handle" data-ui="1" aria-label="Palette and options" onPointerDown="{{ handleDown }}" onPointerUp="{{ handleUp }}" onPointerCancel="{{ handleUp }}" onClick="{{ handleClick }}"><i></i></button>
+  </div>
 
   <sc-if value="{{ sheetOpen }}" hint-placeholder-val="{{ false }}">
-    <div class="sheet-backdrop" onClick="{{ closeSheet }}"></div>
+    <div class="sheet-backdrop" data-ui="1" onClick="{{ closeSheet }}"></div>
   </sc-if>
-  <sc-if value="{{ elementsOpen }}" hint-placeholder-val="{{ false }}">
-    <section class="sheet" data-sheet="elements" role="dialog" aria-modal="true" aria-label="Choose an element">
-      <div class="sheet-head"><span>Elements</span><button class="sheet-x" onClick="{{ closeSheet }}" aria-label="Close">✕</button></div>
-      <div class="sheet-body" data-scroll>
-        <div class="sheet-label">Reagents</div>
-        <div class="tile-grid">
-          <sc-for list="{{ starterTiles }}" as="c" hint-placeholder-count="14">
-            <button class="tile" onClick="{{ c.onClick }}" aria-pressed="{{ c.on }}" style="border-color:{{ c.border }}; background:{{ c.bg }};"><span class="sw" style="background:{{ c.swatch }};"></span><span>{{ c.name }}</span></button>
+  <section class="sheet" data-sheet="studio" data-ui="1" data-open="{{ sheetOpenFlag }}" data-snap="{{ sheetSnap }}" role="dialog" aria-modal="{{ sheetOpenFlag }}" aria-hidden="{{ sheetHidden }}" aria-label="Palette and options">
+    <button class="grab" data-ui="1" aria-label="Drag the sheet" onPointerDown="{{ grabDown }}" onPointerUp="{{ grabUp }}" onPointerCancel="{{ grabUp }}"><i></i></button>
+    <div class="sheet-tabs" role="tablist">
+      <button role="tab" aria-selected="{{ tabElements }}" onClick="{{ showElements }}">Elements</button>
+      <button role="tab" aria-selected="{{ tabTools }}" onClick="{{ showTools }}">Tools</button>
+      <button role="tab" aria-selected="{{ tabVessel }}" onClick="{{ showVessel }}">Vessel</button>
+      <button role="tab" aria-selected="{{ tabCodexSheet }}" onClick="{{ showCodexTab }}">Codex</button>
+    </div>
+    <div class="sheet-body" data-scroll>
+      <sc-if value="{{ tabElements }}" hint-placeholder-val="{{ true }}">
+        <div data-sheet="elements">
+          <input class="sheet-search" type="search" enterkeyhint="search" aria-label="Search materials" placeholder="{{ searchPlaceholder }}" value="{{ matQuery }}" onInput="{{ onMatQuery }}">
+          <sc-if value="{{ recentOn }}" hint-placeholder-val="{{ false }}">
+            <div class="sheet-label">Recent</div>
+            <div class="tile-grid orb-grid">
+              <sc-for list="{{ recentTiles }}" as="c" hint-placeholder-count="4">
+                <button class="tile" data-new="{{ c.isNew }}" onClick="{{ c.onClick }}" aria-pressed="{{ c.on }}" style="border-color:{{ c.border }};background:{{ c.bg }};"><span class="sw" style="background:{{ c.swatch }};"></span><span>{{ c.name }}</span><i class="new"></i></button>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-for list="{{ families }}" as="fam" hint-placeholder-count="4">
+            <div class="sheet-label">{{ fam.label }}</div>
+            <div class="tile-grid orb-grid">
+              <sc-for list="{{ fam.tiles }}" as="c" hint-placeholder-count="4">
+                <button class="tile" data-new="{{ c.isNew }}" onClick="{{ c.onClick }}" aria-pressed="{{ c.on }}" style="border-color:{{ c.border }};background:{{ c.bg }};"><span class="sw" style="background:{{ c.swatch }};"></span><span>{{ c.name }}</span><i class="new"></i></button>
+              </sc-for>
+            </div>
           </sc-for>
+          <sc-if value="{{ noMatches }}" hint-placeholder-val="{{ false }}"><p class="touch-help">Nothing matches.</p></sc-if>
+          <button class="blank-note" onClick="{{ openCodex }}">{{ blankNote }}</button>
         </div>
-        <div class="sheet-label">{{ foundLabel }}</div>
-        <div class="tile-grid">
-          <sc-for list="{{ foundTiles }}" as="c" hint-placeholder-count="4">
-            <button class="tile" onClick="{{ c.onClick }}" aria-pressed="{{ c.on }}" style="border-color:{{ c.border }}; background:{{ c.bg }};"><span class="sw" style="background:{{ c.swatch }};"></span><span>{{ c.name }}</span></button>
-          </sc-for>
+      </sc-if>
+      <sc-if value="{{ tabTools }}" hint-placeholder-val="{{ false }}">
+        <div data-sheet="tools">
+          <div class="sheet-brush-land">
+            <div class="sheet-label">Brush</div>
+            <div class="seg seg-5">
+              <sc-for list="{{ sizes }}" as="s" hint-placeholder-count="5">
+                <button onClick="{{ s.onClick }}" aria-label="{{ s.title }}" style="border-color:{{ s.border }};"><span class="dot" style="width:{{ s.dot }}px; height:{{ s.dot }}px; background:{{ s.color }};"></span></button>
+              </sc-for>
+              <button data-phone="zoom" aria-label="Zoom: 1× fills the glass. Each press doubles it, then the whole vessel, then back to 1×" onClick="{{ cycleZoom }}"><span class="pb-zoom-lab">1×</span></button>
+            </div>
+            <div class="sheet-label">Speed</div>
+            <div class="seg">
+              <sc-for list="{{ clocks }}" as="k" hint-placeholder-count="4">
+                <button onClick="{{ k.onClick }}" style="background:{{ k.bg }}; color:{{ k.color }};">{{ k.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+          <div class="sheet-label">Tool</div>
+          <div class="seg seg-3">
+            <sc-for list="{{ tools }}" as="t" hint-placeholder-count="7">
+              <button onClick="{{ t.onClick }}" title="{{ t.title }}" style="background:{{ t.bg }}; color:{{ t.color }}; border-color:{{ t.border }};">{{ t.label }}</button>
+            </sc-for>
+          </div>
+          <div class="sheet-label">Step</div>
+          <div class="seg"><button onClick="{{ onStep }}" aria-label="Step one tick">step</button></div>
         </div>
-        <button class="blank-note" onClick="{{ openCodex }}">{{ blankNote }}</button>
+      </sc-if>
+      <sc-if value="{{ tabVessel }}" hint-placeholder-val="{{ false }}">
+        <div data-sheet="vessel">
+          <a href="./catch/" target="_blank" rel="noopener" style="display:flex; align-items:center; min-height:44px; color:#dbc18b;">Catch the Pour · finite-resource puzzle</a>
+          <div class="sheet-label">Vessel</div>
+          <div class="seg">
+            <button onClick="{{ onClear }}">clear</button>
+            <button onClick="{{ onReset }}">reset</button>
+            <button onClick="{{ onDaily }}">today's vessel</button>
+            <sc-if value="{{ tempestOn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ onTempest }}">tempest</button></sc-if>
+            <button onClick="{{ zoomFit }}">fit view</button>
+          </div>
+          <div class="sheet-label">Capture &amp; sound</div>
+          <div class="seg">
+            <button onClick="{{ onShot }}">shot</button>
+            <button onClick="{{ onClip }}">clip</button>
+            <button onClick="{{ toggleSound }}" style="color:{{ soundColor }};">{{ soundLabel }}</button>
+            <button onClick="{{ toggleScreen }}"><span class="enter-screen">fullscreen</span><span class="exit-screen">exit screen</span></button>
+          </div>
+          <div class="sheet-label">Version</div>
+          <div class="seg">
+            <a href="../">v1</a>
+            <span aria-current="page">v2</span>
+            <a href="../v3/index.html">Living Valley</a>
+            <a href="https://github.com/CosmonautJones/falling-sand/releases" target="_blank" rel="noopener noreferrer">what's new</a>
+          </div>
+          <div class="sheet-label">Progress</div>
+          <div class="seg"><button class="danger" onClick="{{ onStartOver }}">{{ startOverLabel }}</button></div>
+          <p class="touch-help">Touch to pour. Hold the orb for the radial picker, or tap it for this sheet. Pinch to zoom and pan. Two-finger tap to zoom in or out.</p>
+        </div>
+      </sc-if>
+      <sc-if value="{{ tabCodexSheet }}" hint-placeholder-val="{{ false }}">
+        <div data-sheet="codex">
+          <div class="sheet-label">Library</div>
+          <div class="seg">
+            <button onClick="{{ openCodex }}">codex</button>
+            <button onClick="{{ openRites }}">rites</button>
+            <button onClick="{{ openAmbitions }}">ambitions</button>
+            <button onClick="{{ openFlasks }}">flasks</button>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+    <div class="sheet-foot">
+      <div class="sheet-label">Brush</div>
+      <div class="seg seg-5">
+        <sc-for list="{{ sizes }}" as="s" hint-placeholder-count="5">
+          <button onClick="{{ s.onClick }}" aria-label="{{ s.title }}" style="border-color:{{ s.border }};"><span class="dot" style="width:{{ s.dot }}px; height:{{ s.dot }}px; background:{{ s.color }};"></span></button>
+        </sc-for>
+        <button data-phone="zoom" aria-label="Zoom: 1× fills the glass. Each press doubles it, then the whole vessel, then back to 1×" onClick="{{ cycleZoom }}"><span class="pb-zoom-lab" ref="{{ pbZoomRef }}">1×</span></button>
       </div>
-    </section>
-  </sc-if>
-  <sc-if value="{{ optionsOpen }}" hint-placeholder-val="{{ false }}">
-    <section class="sheet" data-sheet="options" role="dialog" aria-modal="true" aria-label="Options">
-      <div class="sheet-head"><span>Options</span><button class="sheet-x" onClick="{{ closeSheet }}" aria-label="Close">✕</button></div>
-      <div class="sheet-body" data-scroll>
-        <a href="./catch/" target="_blank" rel="noopener" style="display:flex; align-items:center; min-height:44px; color:#dbc18b;">Catch the Pour · finite-resource puzzle</a>
-        <div class="sheet-label">Tool</div>
-        <div class="seg seg-3">
-          <sc-for list="{{ tools }}" as="t" hint-placeholder-count="7">
-            <button onClick="{{ t.onClick }}" title="{{ t.title }}" style="background:{{ t.bg }}; color:{{ t.color }}; border-color:{{ t.border }};">{{ t.label }}</button>
-          </sc-for>
-        </div>
-        <div class="sheet-label">Brush</div>
-        <div class="seg seg-5">
-          <sc-for list="{{ sizes }}" as="s" hint-placeholder-count="5">
-            <button onClick="{{ s.onClick }}" aria-label="{{ s.title }}" style="border-color:{{ s.border }};"><span class="dot" style="width:{{ s.dot }}px; height:{{ s.dot }}px; background:{{ s.color }};"></span></button>
-          </sc-for>
-        </div>
-        <div class="sheet-label">Speed</div>
-        <div class="seg">
-          <sc-for list="{{ clocks }}" as="k" hint-placeholder-count="4">
-            <button onClick="{{ k.onClick }}" style="background:{{ k.bg }}; color:{{ k.color }};">{{ k.label }}</button>
-          </sc-for>
-          <button onClick="{{ onStep }}" aria-label="Step one tick">step</button>
-        </div>
-        <div class="sheet-label">Vessel</div>
-        <div class="seg">
-          <button onClick="{{ onClear }}">clear</button>
-          <button onClick="{{ onReset }}">reset</button>
-          <button onClick="{{ onDaily }}">today's vessel</button>
-          <sc-if value="{{ tempestOn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ onTempest }}">tempest</button></sc-if>
-          <button onClick="{{ zoomFit }}">fit view</button>
-        </div>
-        <div class="sheet-label">Capture &amp; sound</div>
-        <div class="seg">
-          <button onClick="{{ onShot }}">shot</button>
-          <button onClick="{{ onClip }}">clip</button>
-          <button onClick="{{ toggleSound }}" style="color:{{ soundColor }};">{{ soundLabel }}</button>
-          <button onClick="{{ toggleScreen }}"><span class="enter-screen">fullscreen</span><span class="exit-screen">exit screen</span></button>
-        </div>
-        <div class="sheet-label">Library</div>
-        <div class="seg">
-          <button onClick="{{ openCodex }}">codex</button>
-          <button onClick="{{ openRites }}">rites</button>
-          <button onClick="{{ openAmbitions }}">ambitions</button>
-          <button onClick="{{ openFlasks }}">flasks</button>
-        </div>
-        <div class="sheet-label">Version</div>
-        <div class="seg">
-          <a href="../">v1</a>
-          <span aria-current="page">v2</span>
-          <a href="../v3/index.html">Living Valley</a>
-          <a href="https://github.com/CosmonautJones/falling-sand/releases" target="_blank" rel="noopener noreferrer">what's new</a>
-        </div>
-        <div class="sheet-label">Progress</div>
-        <div class="seg">
-          <button class="danger" onClick="{{ onStartOver }}">{{ startOverLabel }}</button>
-        </div>
-        <p class="touch-help">Touch to pour · Hold still to name a grain · Pinch to zoom and pan · Two-finger tap to zoom in or out</p>
+      <div class="sheet-label">Speed</div>
+      <div class="seg">
+        <sc-for list="{{ clocks }}" as="k" hint-placeholder-count="4">
+          <button onClick="{{ k.onClick }}" style="background:{{ k.bg }}; color:{{ k.color }};">{{ k.label }}</button>
+        </sc-for>
       </div>
-    </section>
-  </sc-if>
+    </div>
+  </section>
 
   <sc-if value="{{ folio }}" hint-placeholder-val="{{ false }}">
     <aside style="position:fixed; z-index:20; top:max(10px, env(safe-area-inset-top)); right:max(10px, env(safe-area-inset-right)); bottom:max(10px, env(safe-area-inset-bottom)); width:min(27rem,94vw); display:flex; flex-direction:column; background:#14100c; border:1px solid #c49a4a; box-shadow:inset 0 1px 0 rgba(232,201,122,.35), 0 24px 48px rgba(0,0,0,.6);">
@@ -752,7 +834,7 @@ const TOOLS = [['pour', 'Hold to pour'], ['spray', 'Scatter single grains'], ['l
 class Component extends DCLogic {
   constructor(props) {
     super(props);
-    ['rootRef', 'cvRef', 'vpRef', 'retRef', 'hudRef', 'phoneHudRef', 'boxRef', 'lineRef', 'almanacRef', 'frostRef', 'warmRef', 'experimentRef', 'experimentPourRef', 'experimentCodexRef'].forEach(k => this[k] = React.createRef());
+    ['rootRef', 'cvRef', 'vpRef', 'retRef', 'hudRef', 'phoneAlmanacRef', 'boxRef', 'lineRef', 'almanacRef', 'frostRef', 'warmRef', 'experimentRef', 'experimentPourRef', 'experimentCodexRef'].forEach(k => this[k] = React.createRef());
     this.view = { zoom: 1, panX: 0, panY: 0 };
     this.ops = []; this.h = {}; this.shake = 0; this.wonder = 0; this.flash = 0; this.wipe = -1; this.ship = null; this.walker = null; this.walkerKeys = {}; this.walkerCmd = null; this.walkerJump = false; this.pendingDt = 0; this.simMs = 0; this.stepQ = 0;
     this.last = performance.now(); this.frames = 0; this.lastSample = performance.now(); this.fps = 0;
@@ -760,6 +842,7 @@ class Component extends DCLogic {
     this.still = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.rite = { title: 0, konami: 0, typed: '' };
     this.known = new Set(); this.lastFind = ''; this.counts = null; this.windE = 0; this.storming = false;
+    this.recents = []; this.sessionFinds = new Set();
     this.kills = 0; this.toastQ = []; this.pending = [];
     this.checkpointJobs = new Map(); this.checkpointRequests = []; this.checkpointId = 0;
     let rites = [], flasks = [null, null, null], sound = true, tempest = false, poured = false, ambitions = [], gallery = [], speed = 1;
@@ -771,7 +854,7 @@ class Component extends DCLogic {
     this.armOpening();
     this.unlocked = new Set(rites);
     this.P = new Float32Array(PMAX * 10); this.PD = new Float32Array(PMAX * 7); this.pn = 0;
-    this.state = { ready: false, discovered: [], brush: 1, radius: 6, tool: 'pour', paused: false, speed, folio: false, tab: 'codex', sheet: '', suggest: -1, experiment: null, pourHint: !poured, ambitions: [...this.ambDone], gallery: Array.isArray(gallery) ? gallery : [],
+    this.state = { ready: false, discovered: [], brush: 1, radius: 6, tool: 'pour', paused: false, speed, folio: false, tab: 'codex', sheet: '', sheetTab: 'elements', sheetSnap: 'half', matQuery: '', radial: false, radialHot: -1, suggest: -1, experiment: null, pourHint: !poured, ambitions: [...this.ambDone], gallery: Array.isArray(gallery) ? gallery : [],
       curtainMounted: !this.still, curtainOpacity: 1, whisper: '', toast: null, toastOn: false, probe: { on: false }, opus: false,
       rites: [...this.unlocked], flasks, sound, tempest, recording: false, shareLabel: 'copy scene stamp link', flaskBusy: false, flaskStatus: '', checkpointDownload: '',
       engineError: '', walkerIn: false, walkerHand: 'spade', walkerWeapon: false };
@@ -799,6 +882,7 @@ class Component extends DCLogic {
     this.initEngine();
     this.screen = await import(new URL('./mobile-screen.js', document.baseURI).href);
     this.touchMod = await import(new URL('./touch-gesture.js', document.baseURI).href);
+    this.touchUi = await import(new URL('./touch-ui.js', document.baseURI).href);
     this.opening = await import(new URL('./opening.js', document.baseURI).href);
     this.toastsMod = await import(new URL('./toasts.js', document.baseURI).href);
     this.goals = await import(new URL('./ambitions.js', document.baseURI).href);
@@ -813,6 +897,27 @@ class Component extends DCLogic {
     const gestures = await import(new URL('./gesture-lock.js', document.baseURI).href);
     if (!this.alive) return;
     this.unbind.push(gestures.lockPageGestures(document));
+    if (this.phone && this.touchUi) {
+      this.idle = this.touchUi.createIdleChrome({
+        start: !this.state.curtainMounted,
+        onChange: idle => { this.rootRef.current?.toggleAttribute('data-idle', idle); if (!idle) this.almanacKey = ''; },
+      });
+      const down = () => this.idle && this.idle.down();
+      const up = () => this.idle && this.idle.up();
+      const key = () => this.idle && this.idle.nudge();
+      // Capture: orb and sheet handlers stop the bubble, and the pills must still wake.
+      document.addEventListener('pointerdown', down, { passive: true, capture: true });
+      document.addEventListener('pointerup', up, { passive: true, capture: true });
+      document.addEventListener('pointercancel', up, { passive: true, capture: true });
+      document.addEventListener('keydown', key);
+      this.unbind.push(() => {
+        document.removeEventListener('pointerdown', down, true);
+        document.removeEventListener('pointerup', up, true);
+        document.removeEventListener('pointercancel', up, true);
+        document.removeEventListener('keydown', key);
+        this.idle.stop();
+      });
+    }
     this.setState({ ready: true, discovered: [...this.known] });
     this.raf = requestAnimationFrame(this.frame);
     this.curtainT = setTimeout(() => this.liftCurtain(), 2200);
@@ -826,11 +931,24 @@ class Component extends DCLogic {
     (this.unbind || []).forEach(f => f());
     for (const job of this.checkpointJobs.values()) clearTimeout(job.timer);
     this.checkpointJobs.clear();
-    clearTimeout(this.curtainT); clearTimeout(this.toastT); clearTimeout(this.watch); clearTimeout(this.miniHideT); clearTimeout(this.nudgeT); clearTimeout(this.wipeArmT);
+    clearTimeout(this.curtainT); clearTimeout(this.toastT); clearTimeout(this.watch); clearTimeout(this.miniHideT); clearTimeout(this.nudgeT); clearTimeout(this.wipeArmT); clearTimeout(this.orbT);
     if (this.ac) try { this.ac.close(); } catch (e) {}
   }
   componentDidUpdate(prev) {
     if ((prev.quality ?? 'full') !== (this.props.quality ?? 'full')) this.resize();
+    const sheet = this.rootRef.current?.querySelector('.sheet');
+    if (sheet) sheet.inert = this.state.sheet !== 'studio';
+    // Recents paint after the first fit. Lift the floor once they do.
+    this.fitCover();
+  }
+  fitCover() {
+    if (!this.view || !this.cam || !(this.vw > 0)) return;
+    const cover = this.chromeCover();
+    if (this.coverShift(cover, this.lastCover || 0) <= 0.5) return;
+    if (!this.viewUser) { this.view = this.cam.defaultView(this.vw, this.vh); this.viewT = this.view; }
+    else { this.view = this.clampPan(this.view); this.viewT = this.clampPan(this.viewT || this.view); }
+    this.lastCover = cover;
+    this.syncViewUI();
   }
 
   // ---------- engine ----------
@@ -938,7 +1056,7 @@ class Component extends DCLogic {
   revealMany(list, note) {
     const M = this.M; let lastId = -1;
     const action = this.experimentPourRef.current, focus = action && action.ownerDocument.activeElement === action && list.includes(this.state.experiment?.goal);
-    for (const id of list) if (!this.known.has(id)) { this.known.add(id); lastId = id; }
+    for (const id of list) if (!this.known.has(id)) { this.sessionFinds.add(id); this.known.add(id); lastId = id; }
     if (lastId < 0) return;
     try { localStorage.setItem(DKEY, JSON.stringify([...this.known])); } catch (e) {}
     this.lastFind = M.NAMES[lastId];
@@ -1302,15 +1420,15 @@ class Component extends DCLogic {
     if (now - this.lastSample >= 500) {
       this.fps = this.frames * 1000 / (now - this.lastSample); this.frames = 0; this.lastSample = now;
       const hud = this.hudRef.current;
-      const phoneHud = this.phoneHudRef.current;
-      if (phoneHud) {
-        const z = this.view.zoom;
-        phoneHud.textContent = `${this.almanac ? almanacText(this.almanac, this.state.speed) + ' · ' : ''}${this.fps.toFixed(0)} fps · sim ${this.simMs.toFixed(1)} ms${this.zoomSuffix(z)}${this.storming ? ' · storm' : ''}${this.almanac ? '' : climateLabel(this.climate)}${this.ship ? ' · visitation' : ''}`;
-      }
-      const alm = this.almanacRef.current;
-      if (alm) {
+      const alm = this.almanacRef.current, phoneAlm = this.phoneAlmanacRef.current;
+      if ((alm || phoneAlm) && !this.rootRef.current?.hasAttribute('data-idle')) {
         const key = this.almanac ? `${almanacText(this.almanac, this.state.speed)}|${Math.round(this.almanac.yearPhase * 96)}` : '';
-        if (key !== this.almanacKey) { this.almanacKey = key; alm.innerHTML = this.almanac ? `${almanacDial(this.almanac)} ${almanacText(this.almanac, this.state.speed)}` : ''; }
+        if (key !== this.almanacKey) {
+          this.almanacKey = key;
+          const line = this.almanac ? `${almanacDial(this.almanac)} ${almanacText(this.almanac, this.state.speed)}` : '';
+          if (alm) alm.innerHTML = line;
+          if (phoneAlm) phoneAlm.innerHTML = line;
+        }
       }
       if (hud) {
         const s = this.state, v = this.view;
@@ -1417,31 +1535,51 @@ class Component extends DCLogic {
   // ---------- view / input ----------
   screenCamera(view) { return this.cam.cameraFromView(this.vw || 0, this.vh || 0, view || this.view); }
   grainPx() { return this.cam && this.vw > 0 ? this.screenCamera().scale : (this.vw / this.M.W) * (this.view?.zoom || 1); }
-  // Chrome overlapping the glass. A wide bottom bar covers the floor; a tall
-  // left rail covers the wall. The right safe area covers the other wall the
-  // same way. Desktop (the bar is hidden, no notch) covers nothing.
+  // Chrome overlapping the glass. Portrait bottom chrome (the orb, recents,
+  // pause, and menu) sets the floor. Side safe areas cover the walls. Desktop,
+  // where the touch chrome is hidden and there is no notch, covers nothing.
+  safeInset(side) {
+    const probe = this.rootRef?.current?.querySelector('[data-safe-' + side + ']');
+    if (!probe) return 0;
+    return side === 'top' || side === 'bottom' ? probe.offsetHeight : probe.offsetWidth;
+  }
+  // Orb-wrap local box the fan must stay inside: the safe viewport, measured
+  // from the wrap's bottom-left. Null until the wrap has a box.
+  fanBounds() {
+    const wrap = this.rootRef?.current?.querySelector('.orb-wrap');
+    if (!wrap || !(this.vw > 0) || !(this.vh > 0)) return null;
+    const wr = wrap.getBoundingClientRect();
+    if (wr.width < 1 || wr.height < 1) return null;
+    return {
+      minLeft: this.safeInset('left') - wr.left,
+      maxRight: this.vw - this.safeInset('right') - wr.left,
+      minBottom: 0,
+      maxTop: wr.bottom - this.safeInset('top'),
+    };
+  }
   chromeCover() {
     const none = { left: 0, right: 0, bottom: 0 };
     const vp = this.vpRef?.current, root = this.rootRef?.current;
     if (!vp || !root) return none;
-    const probe = root.querySelector('[data-safe-right]');
-    const safeRight = probe ? probe.offsetWidth : 0;
-    const withRight = cover => ({ ...cover, right: Math.max(cover.right || 0, safeRight) });
-    const bar = root.querySelector('.phone-bar');
-    if (!bar) return withRight(none);
-    const cs = getComputedStyle(bar);
-    if (cs.display === 'none' || cs.visibility === 'hidden') return withRight(none);
-    const vr = vp.getBoundingClientRect(), br = bar.getBoundingClientRect();
-    if (br.width < 1 || br.height < 1) return withRight(none);
-    if (br.width >= vr.width * 0.6 && br.top >= vr.top + vr.height * 0.4) {
-      const cover = vr.bottom - br.top;
-      if (cover > 0) return withRight({ left: 0, right: 0, bottom: Math.min(vr.height * 0.45, cover) });
+    const left = this.safeInset('left');
+    const right = this.safeInset('right');
+    const vr = vp.getBoundingClientRect();
+    let bottom = this.safeInset('bottom');
+    // Portrait: the orb, its recents, and the pause/menu sit on the floor.
+    // The floor is their top edge, the same idea as the old bottom bar. A
+    // landscape corner does not crop the short world down to the orb.
+    if (vr.height >= vr.width && vr.height > 0) {
+      const nodes = root.querySelectorAll('.orb, .size-orb, .rb, .rec, .sheet-handle');
+      for (const el of nodes) {
+        const br = el.getBoundingClientRect();
+        if (br.width < 1 || br.height < 1) continue;
+        if (br.top < vr.top + vr.height * 0.45) continue;
+        bottom = Math.max(bottom, vr.bottom - br.top);
+      }
+      bottom = Math.min(vr.height * 0.45, bottom);
     }
-    if (br.height >= vr.height * 0.6 && br.left <= vr.left + 4 && br.right < vr.left + vr.width * 0.45) {
-      const cover = br.right - vr.left;
-      if (cover > 0) return withRight({ left: Math.min(vr.width * 0.45, cover), right: 0, bottom: 0 });
-    }
-    return withRight(none);
+    if (!(left > 0) && !(right > 0) && !(bottom > 0)) return none;
+    return { left, right, bottom };
   }
   coverShift(a, b) {
     const box = (e) => typeof e === 'number' ? { left: 0, right: 0, bottom: e } : { left: e?.left || 0, right: e?.right || 0, bottom: e?.bottom || 0 };
@@ -1750,10 +1888,13 @@ class Component extends DCLogic {
   syncViewUI() {
     const v = this.view; if (!v) return;
     const lab = this.zoomLabRef?.current; if (lab) lab.textContent = Math.round(v.zoom * 100) + '%';
+    const zoomText = this.zoomLabel(v.zoom);
     const pz = this.pbZoomRef?.current;
-    if (pz) pz.textContent = this.zoomLabel(v.zoom);
+    if (pz) pz.textContent = zoomText;
+    const zoomRoot = this.rootRef?.current;
+    if (zoomRoot) zoomRoot.querySelectorAll('.pb-zoom-lab').forEach(el => { if (el !== pz) el.textContent = zoomText; });
     const mini = this.miniRef?.current, rect = this.miniRectRef?.current;
-    if (mini) {
+    if (mini && !this.phone) {
       const on = v.zoom > 1.02, show = o => { mini.style.opacity = o ? '1' : '0'; mini.style.pointerEvents = o ? 'auto' : 'none'; };
       show(on);
       // Only while the view moves: a resting mini-map would hide the corner of the vessel.
@@ -1777,7 +1918,121 @@ class Component extends DCLogic {
     this.revealMany([id]); this.setState({ brush: id });
   }
   selectBrush(id) { if (this.known.has(id)) this.setState({ brush: id }); }
-  pickElement(id) { this.setState({ brush: id, sheet: '' }); }
+  noteBrush(id) {
+    if (id !== this.state.brush && this.touchUi) this.recents = this.touchUi.rememberRecent(this.recents || [], this.state.brush, 8);
+    this.sessionFinds?.delete(id);
+  }
+  pickElement(id) { this.noteBrush(id); this.setState({ brush: id, sheet: '', radial: false, radialHot: -1 }); }
+  armSheetTap(tab) {
+    this.sheetTap = tab;
+    clearTimeout(this.sheetTapT);
+    // preventDefault on pointerdown can swallow the click. Open from the
+    // click when it arrives; if it never does, open shortly after.
+    this.sheetTapT = setTimeout(() => {
+      if (this.sheetTap !== tab) return;
+      this.sheetTap = '';
+      this.openSheet(tab);
+    }, 400);
+  }
+  openSheet(tab) {
+    const s = this.state, next = tab || 'elements';
+    this.sheetTap = '';
+    clearTimeout(this.sheetTapT);
+    if (s.sheet === 'studio' && s.sheetTab === next) { this.sheetGuardUntil = 0; this.setState({ sheet: '' }); return; }
+    this.setState({ sheet: 'studio', sheetTab: next, radial: false, radialHot: -1 });
+    // The synthetic click is hit-tested after the backdrop exists and can
+    // land a few hundred milliseconds later. Start the quiet period now.
+    this.sheetGuardUntil = performance.now() + 500;
+  }
+  closeSheet() {
+    if (performance.now() < (this.sheetGuardUntil || 0)) return;
+    this.setState({ sheet: '', matQuery: '' });
+  }
+  radialNow() {
+    const M = this.M, ui = this.touchUi;
+    if (!M || !ui) return { ids: [], slots: [] };
+    const ids = ui.pickerIds(this.known, this.state.brush, this.recents || [], M.STARTER, ui.PICKER_SLOTS);
+    const origin = { x: 33, y: 51 }, size = 44;
+    const radius = ui.clampFanRadius(ui.fanRadius(ids.length, 46), origin, size, this.fanBounds());
+    return { ids, slots: ui.arcSlots(ids.length, radius) };
+  }
+  onOrbDown(e) {
+    if (e.button != null && e.button !== 0) return;
+    e.preventDefault(); e.stopPropagation();
+    const r = e.currentTarget.getBoundingClientRect();
+    this.sheetTap = '';
+    clearTimeout(this.sheetTapT);
+    this.orbHold = { x: e.clientX, y: e.clientY, cx: r.left + r.width / 2, cy: r.top + r.height / 2, held: false, moved: false };
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+    clearTimeout(this.orbT);
+    const wait = this.touchUi ? this.touchUi.HOLD_MS : 380;
+    this.orbT = setTimeout(() => {
+      if (!this.orbHold || this.orbHold.moved) return;
+      this.orbHold.held = true;
+      this.setState({ radial: true, radialHot: -1 });
+    }, wait);
+  }
+  onOrbMove(e) {
+    const hold = this.orbHold;
+    if (!hold || !this.touchUi) return;
+    if (!hold.held && Math.hypot(e.clientX - hold.x, e.clientY - hold.y) > this.touchUi.HOLD_MOVE) { hold.moved = true; clearTimeout(this.orbT); }
+    if (!hold.held) return;
+    const hot = this.touchUi.nearestSlot(e.clientX - hold.cx, e.clientY - hold.cy, this.radialNow().slots, 46);
+    if (hot !== this.state.radialHot) this.setState({ radialHot: hot });
+  }
+  onOrbUp(e) {
+    clearTimeout(this.orbT);
+    const hold = this.orbHold;
+    this.orbHold = null;
+    if (!hold) return;
+    if (hold.held && this.touchUi) {
+      const geom = this.radialNow();
+      const hot = this.touchUi.nearestSlot(e.clientX - hold.cx, e.clientY - hold.cy, geom.slots, 50);
+      this.setState({ radial: false, radialHot: -1 });
+      if (hot >= 0) this.pickElement(geom.ids[hot]);
+      return;
+    }
+    if (!hold.moved) { if (e && e.preventDefault) e.preventDefault(); this.armSheetTap('elements'); }
+  }
+  onOrbClick() {
+    if (this.sheetTap) this.openSheet(this.sheetTap);
+  }
+  onOrbCancel() {
+    clearTimeout(this.orbT); this.orbHold = null;
+    if (this.state.radial) this.setState({ radial: false, radialHot: -1 });
+  }
+  onHandleDown(e) {
+    e.preventDefault(); e.stopPropagation();
+    this.sheetTap = '';
+    clearTimeout(this.sheetTapT);
+    this.handleDrag = e.clientY;
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+  }
+  onHandleUp(e) {
+    if (this.handleDrag == null) return;
+    const dy = e.clientY - this.handleDrag;
+    this.handleDrag = null;
+    if (e && e.preventDefault) e.preventDefault();
+    // A flick often produces no click, so open now. A tap opens on the click,
+    // before the backdrop exists to catch it.
+    if (dy < -24) this.openSheet('elements');
+    else if (Math.abs(dy) < 12) this.armSheetTap('elements');
+  }
+  onHandleClick() {
+    if (this.sheetTap) this.openSheet(this.sheetTap);
+  }
+  onGrabDown(e) {
+    e.preventDefault(); e.stopPropagation();
+    this.grabDrag = { y: e.clientY, snap: this.state.sheetSnap || 'half' };
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+  }
+  onGrabUp(e) {
+    const drag = this.grabDrag; this.grabDrag = null;
+    if (!drag || !this.touchUi) return;
+    const snap = this.touchUi.nextSnap(drag.snap, e.clientY - drag.y);
+    if (snap === 'closed') this.setState({ sheet: '', sheetSnap: 'half' });
+    else this.setState({ sheetSnap: snap });
+  }
   selectRadius(r) { this.setState({ radius: r }, () => this.updateReticleSize()); }
   selectTool(t) { this.setState({ tool: t }, () => this.updateReticleSize()); }
   bindInput() {
@@ -2196,6 +2451,7 @@ class Component extends DCLogic {
   liftCurtain() {
     if (!this.state.curtainMounted) return;
     this.setState({ curtainOpacity: 0 });
+    if (this.idle) this.idle.nudge();
     setTimeout(() => this.alive && this.setState({ curtainMounted: false }), 850);
   }
   hnd(key, fn) { return this.h[key] || (this.h[key] = fn); }
@@ -2207,15 +2463,24 @@ class Component extends DCLogic {
       toolLabel: s.tool, radius: s.radius, cycleBrush: () => { const sizes = this.M.BRUSH_SIZES; this.selectRadius(sizes[(sizes.indexOf(s.radius) + 1) % sizes.length]); }, rootRef: this.rootRef, toggleScreen: () => this.goFullscreen(), vpRef: this.vpRef, cvRef: this.cvRef, retRef: this.retRef, hudRef: this.hudRef, boxRef: this.boxRef, lineRef: this.lineRef,
       miniRef: this.miniRef || (this.miniRef = React.createRef()), miniRectRef: this.miniRectRef || (this.miniRectRef = React.createRef()), zoomLabRef: this.zoomLabRef || (this.zoomLabRef = React.createRef()), pbZoomRef: this.pbZoomRef || (this.pbZoomRef = React.createRef()), cycleZoom: this.hnd('cycleZoom', () => this.cycleZoom()),
       miniPoint: this.miniPoint, zoomIn: () => this.zoomBy(1.5), zoomOut: () => this.zoomBy(1 / 1.5), zoomFit: () => { this.setState({ sheet: '' }); this.setView({ zoom: 1, panX: 0, panY: 0 }, true); },
-      phoneHudRef: this.phoneHudRef, almanacRef: this.almanacRef, frostRef: this.frostRef, warmRef: this.warmRef, experimentRef: this.experimentRef, experimentPourRef: this.experimentPourRef, experimentCodexRef: this.experimentCodexRef,
-      sheetOpen: !!s.sheet, elementsOpen: s.sheet === 'elements', optionsOpen: s.sheet === 'options',
-      openElements: () => this.setState({ sheet: s.sheet === 'elements' ? '' : 'elements' }),
-      openOptions: () => this.setState({ sheet: s.sheet === 'options' ? '' : 'options' }),
-      closeSheet: () => this.setState({ sheet: '' }),
+      phoneAlmanacRef: this.phoneAlmanacRef, almanacRef: this.almanacRef, frostRef: this.frostRef, warmRef: this.warmRef, experimentRef: this.experimentRef, experimentPourRef: this.experimentPourRef, experimentCodexRef: this.experimentCodexRef,
+      sheetOpen: s.sheet === 'studio', sheetOpenFlag: s.sheet === 'studio' ? 'true' : 'false', sheetHidden: s.sheet === 'studio' ? 'false' : 'true', sheetSnap: s.sheetSnap || 'half',
+      tabElements: (s.sheetTab || 'elements') === 'elements', tabTools: s.sheetTab === 'tools', tabVessel: s.sheetTab === 'vessel', tabCodexSheet: s.sheetTab === 'codex',
+      toolsOpen: s.sheet === 'studio' && s.sheetTab === 'tools' ? 'true' : 'false',
+      orbExpanded: (s.sheet === 'studio' && s.sheetTab === 'elements') || s.radial ? 'true' : 'false',
+      radialOpen: !!s.radial, radialFlag: s.radial ? 'true' : 'false', radialItems: [], recents: [], recentTiles: [], recentOn: false, families: [], noMatches: false,
+      showElements: this.hnd('tabEl', () => this.setState({ sheetTab: 'elements' })), showTools: this.hnd('tabTl', () => this.setState({ sheetTab: 'tools' })),
+      showVessel: this.hnd('tabVs', () => this.setState({ sheetTab: 'vessel' })), showCodexTab: this.hnd('tabCx', () => this.setState({ sheetTab: 'codex' })),
+      openOptions: () => this.openSheet('tools'), closeSheet: () => this.closeSheet(),
+      orbDown: this.hnd('orbDown', e => this.onOrbDown(e)), orbMove: this.hnd('orbMove', e => this.onOrbMove(e)), orbUp: this.hnd('orbUp', e => this.onOrbUp(e)), orbCancel: this.hnd('orbCancel', () => this.onOrbCancel()), orbClick: this.hnd('orbClick', () => this.onOrbClick()),
+      handleDown: this.hnd('handleDown', e => this.onHandleDown(e)), handleUp: this.hnd('handleUp', e => this.onHandleUp(e)), handleClick: this.hnd('handleClick', () => this.onHandleClick()),
+      grabDown: this.hnd('grabDown', e => this.onGrabDown(e)), grabUp: this.hnd('grabUp', e => this.onGrabUp(e)),
+      onMatQuery: this.hnd('matQ', e => this.setState({ matQuery: e.target.value })), matQuery: s.matQuery || '', searchPlaceholder: 'Search materials…',
+      foundCount: '', foundAria: 'Discoveries', orbName: '',
       pauseIcon: s.paused ? '▶' : '❚❚', brushAria: `Brush size ${s.radius}, tap to change`,
       brushDot: [6, 9, 13, 18, 24][Math.max(0, [1, 3, 6, 12, 22].indexOf(s.radius))],
       toolHint: `${s.tool} · size ${s.radius}`, brushName: '', brushSwatch: 'transparent', elementAria: 'Choose an element',
-      starterTiles: [], foundTiles: [], foundLabel: '', blankNote: '',
+      blankNote: '',
       experimentVisible: false, experimentPending: false, experimentComplete: false, experimentStatus: '', experimentText: '', experimentBrushLabel: '',
       onExperimentBrush: () => this.resumeExperiment(), onDismissExperiment: () => this.dismissExperiment(),
       pourHint: s.pourHint && !s.curtainMounted, pourHintText: '',
@@ -2288,16 +2553,48 @@ class Component extends DCLogic {
     });
     const tile = id => {
       const on = s.brush === id, tip = id === suggest && !on;
-      return { name: tip ? M.NAMES[id] + ' ✦' : M.NAMES[id], swatch: rgb(M.COLORS[id]), on: on ? 'true' : 'false', bg: on ? '#2a2119' : '#1c1612', border: on ? '#c49a4a' : tip ? '#e8c97a' : '#3a3128', onClick: this.hnd('pk' + id, () => this.pickElement(id)) };
+      return { name: tip ? M.NAMES[id] + ' ✦' : M.NAMES[id], swatch: rgb(M.COLORS[id]), on: on ? 'true' : 'false', isNew: this.sessionFinds && this.sessionFinds.has(id) ? 'true' : 'false', bg: on ? '#2a2119' : '#1c1612', border: on ? '#c49a4a' : tip ? '#e8c97a' : '#3a3128', onClick: this.hnd('pk' + id, () => this.pickElement(id)) };
     };
     base.pourHintText = `${this.coarse ? 'Touch' : 'Click and drag'} to pour ${M.NAMES[s.brush]}`;
     const found = M.TRANSMUTED.filter(id => this.known.has(id)), blank = M.TRANSMUTED.length - found.length;
-    base.starterTiles = M.STARTER.map(tile);
-    base.foundTiles = found.map(tile);
-    base.foundLabel = `Transmuted · ${found.length} of ${M.TRANSMUTED.length}`;
+    const knownIds = [...M.STARTER, ...M.TRANSMUTED].filter(id => this.known.has(id));
+    const place = (ids, radius, size) => {
+      if (!this.touchUi) return [];
+      const origin = { x: 33, y: 51 };
+      const bounds = this.fanBounds();
+      const fit = this.touchUi.clampFanRadius(radius, origin, size, bounds);
+      return this.touchUi.arcSlots(ids.length, fit).map((slot, i) => {
+        const at = this.touchUi.placeSlot(slot, origin, size, bounds);
+        return { id: ids[i], left: at.left + 'px', bottom: at.bottom + 'px' };
+      });
+    };
+    base.recents = place(this.touchUi ? this.touchUi.recentAround(this.recents, s.brush, M.STARTER, 3) : [], 78, 38).map(slot => ({
+      ...slot, name: M.NAMES[slot.id], swatch: rgb(M.COLORS[slot.id]), onClick: this.hnd('rc' + slot.id, () => this.pickElement(slot.id)),
+    }));
+    if (s.radial && this.touchUi) {
+      const geom = this.radialNow();
+      base.radialItems = geom.ids.map((id, i) => {
+        const at = this.touchUi.placeSlot(geom.slots[i], { x: 33, y: 51 }, 44, this.fanBounds());
+        return { name: M.NAMES[id], swatch: rgb(M.COLORS[id]), hot: i === s.radialHot ? 'true' : 'false', left: at.left + 'px', bottom: at.bottom + 'px' };
+      });
+    }
+    const query = s.matQuery || '';
+    const recentIds = (this.recents || []).filter(id => this.known.has(id) && (!query || M.NAMES[id].toLowerCase().includes(query.trim().toLowerCase())));
+    base.recentTiles = recentIds.map(tile);
+    base.recentOn = base.recentTiles.length > 0;
+    base.families = (this.touchUi ? this.touchUi.groupKnown(knownIds, M.NAMES, query) : []).map(group => ({ label: group.label, tiles: group.ids.map(tile) }));
+    base.noMatches = !!query.trim() && !base.recentOn && !base.families.length;
+    base.searchPlaceholder = `Search ${knownIds.length} materials…`;
     base.blankNote = blank ? `${blank} still unmade. The codex keeps a hint for each →` : 'Every reagent is yours. The codex is complete.';
     base.brushName = M.NAMES[s.brush]; base.brushSwatch = rgb(M.COLORS[s.brush]);
-    base.elementAria = `Element: ${M.NAMES[s.brush]}. Choose another`;
+    base.orbName = M.NAMES[s.brush];
+    if (s.radial && s.radialHot >= 0 && this.touchUi) {
+      const hot = this.radialNow().ids[s.radialHot];
+      if (hot != null) base.orbName = M.NAMES[hot];
+    }
+    base.elementAria = `Element: ${M.NAMES[s.brush]}. Tap for the sheet, hold for the radial picker`;
+    base.foundCount = `${this.known.size} / ${M.COUNT}`;
+    base.foundAria = `${this.known.size} of ${M.COUNT} discovered`;
     base.sizes = M.BRUSH_SIZES.map((r, i) => ({
       title: 'size ' + r, dot: [3, 5, 8, 12, 17][i], color: s.radius === r ? '#e8c97a' : '#8f7d62',
       border: s.radius === r ? '#cbb89a' : '#3a3128', shadow: s.radius === r ? 'inset 0 0 0 1px #cbb89a' : 'none',

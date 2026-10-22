@@ -5,7 +5,7 @@ import * as E from '../public/v2/alembic-engine-v2.js';
 
 const html = readFileSync(new URL('../public/v2/index.html', import.meta.url), 'utf8');
 const markup = html.slice(0, html.indexOf('<script type="text/x-dc"'));
-const options = markup.slice(markup.indexOf('data-sheet="options"'));
+const options = markup.slice(markup.indexOf('data-sheet="studio"'));
 
 test('version switch: v1 is one tap away on phones and desktop, v2 is marked current', () => {
   assert.match(options, /<a [^>]*href="\.\.\/"[^>]*>v1<\/a>/);

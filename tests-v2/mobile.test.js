@@ -31,19 +31,25 @@ test('a touch screen fills the dynamic viewport and parks the minimap in the saf
   assert.match(block, /\.fig\{[^}]*height:100dvh/);
   assert.match(block, /\.zoom-controls\{[^}]*env\(safe-area-inset-top\)/);
   assert.match(block, /\.zoom-controls\{[^}]*env\(safe-area-inset-right\)/);
-  assert.match(block, /\.phone-bar\{[^}]*env\(safe-area-inset-bottom\)/);
-  assert.match(block, /\.phone-bar\{[^}]*env\(safe-area-inset-left\)/);
+  assert.match(block, /\.orb-wrap\{[^}]*env\(safe-area-inset-bottom\)/);
+  assert.match(block, /\.orb-wrap\{[^}]*env\(safe-area-inset-left\)/);
   assert.match(block, /\.zoom-mini\{[^}]*opacity:1/);
   assert.match(html, /viewport-fit=cover/);
 });
 
 test('a landscape rail grows by the left inset and the toast clears the whisper', () => {
-  assert.match(html, /\.phone-bar\{[^}]*width:calc\(76px \+ env\(safe-area-inset-left\)\)/);
-  assert.match(html, /\.hd\{[^}]*left:calc\(84px \+ env\(safe-area-inset-left\)\)/);
-  assert.match(html, /\.experiment-card\{[^}]*left:calc\(84px \+ env\(safe-area-inset-left\)\)/);
-  assert.match(html, /\.phone-bar \.pb\{[^}]*max-width:calc\(100% - 12px\)/);
+  assert.match(html, /\.top-pills\{[^}]*left:calc\(172px \+ env\(safe-area-inset-left\)\)/);
+  assert.match(html, /\.hd\{[^}]*left:calc\(172px \+ env\(safe-area-inset-left\)\)/);
+  assert.match(html, /\.sheet\{[^}]*left:calc\(172px \+ env\(safe-area-inset-left\)\)/);
+  assert.match(html, /\.experiment-card\{[^}]*left:calc\(172px \+ env\(safe-area-inset-left\)\)/);
+  assert.match(html, /\.sheet-foot\{display:none\}/);
+  assert.match(html, /\.sheet-body\{min-height:120px\}/);
+  assert.match(html, /\.sheet-brush-land\{display:block\}/);
+  const tools = html.slice(html.indexOf('data-sheet="tools"'), html.indexOf('data-sheet="vessel"'));
+  assert.ok(tools.indexOf('sheet-brush-land') < tools.indexOf('>Tool<'), 'landscape Brush and Speed lead the Tools tab');
+  assert.match(html, /\.experiment-card\{position:fixed;[^}]*top:calc\(max\(8px,env\(safe-area-inset-top\)\) \+ 92px\)/);
   assert.match(html, /data-safe-right/);
-  assert.match(html, /\.toast\{top:calc\(max\(8px, env\(safe-area-inset-top\)\) \+ 44px\)!important\}/);
+  assert.match(html, /\.toast\{top:calc\(max\(8px, env\(safe-area-inset-top\)\) \+ 86px\)!important\}/);
 });
 
 test('layout respects safe-area insets and dynamic viewport height', () => {
@@ -73,6 +79,20 @@ test('long-press probes the grain: timer plus movement threshold in bindInput', 
 test('two-finger pinch also pans (midpoint tracked)', () => {
   assert.match(bindInput, /pc\.mx = mx; pc\.my = my;/);
   assert.match(bindInput, /viewFromAnchor\(this\.vw, this\.vh, zoom, mx, my, pc\.gx, pc\.gy\)/);
+});
+
+test('a wide coarse screen caps the sheet and fills tile columns', () => {
+  assert.match(html, /@media \(pointer:coarse\) and \(min-width:701px\) and \(min-height:521px\)/);
+  assert.match(html, /width:min\(560px,calc\(100% - 32px\)\)/);
+  assert.match(html, /repeat\(auto-fill,minmax\(104px,1fr\)\)/);
+  assert.match(html, /sheetGuardUntil = performance\.now\(\) \+ 500/);
+  assert.match(html, /onClick="\{\{ orbClick \}\}"/);
+  assert.match(html, /onClick="\{\{ handleClick \}\}"/);
+  assert.match(html, /armSheetTap\(tab\)/);
+  assert.match(html, /componentDidUpdate\(prev\) \{[\s\S]{0,400}?this\.fitCover\(\)/);
+  assert.match(html, /fitCover\(\) \{[\s\S]{0,500}?this\.coverShift\(cover, this\.lastCover/);
+  assert.match(html, /chromeCover\(\) \{[\s\S]*?\.orb, \.size-orb, \.rb, \.rec, \.sheet-handle/);
+  assert.match(html, /\.pour-hint\{left:auto;right:max\(84px,calc\(env\(safe-area-inset-right\) \+ 72px\)\)/);
 });
 
 test('touch backing-store DPR is capped at 1 and a fine pointer stays at 2', () => {
