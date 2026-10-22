@@ -32,7 +32,7 @@ test('the opening is a bigger moment: a cask cluster goes off in a chain', () =>
 });
 
 test('phones get touch instructions under the title, not mouse ones', () => {
-  assert.match(html, /this\.coarse \? 'Drag to pour\. Hold still to name a grain\. Pinch, or tap with two fingers, to zoom\.' : 'Hold to pour\. Right-click/);
+  assert.match(html, /this\.coarse \? 'Touch to pour\. Hold still to name a grain\. Pinch, or tap with two fingers, to zoom\.' : 'Hold to pour\. Right-click/);
 });
 
 test('the camera leans toward a blast rather than the centre (and not in reduced motion)', () => {

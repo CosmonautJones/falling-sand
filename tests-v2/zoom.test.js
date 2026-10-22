@@ -29,7 +29,8 @@ test('the phone bar doubles the fill, skips a step past the cap, then returns to
 test('a quick two-finger tap toggles fit and a close-up; a slow or moving pinch does not', () => {
   const m = method('pinchEnd');
   assert.match(m, /if \(!pc\.moved && performance\.now\(\) - pc\.at < 320\)/);
-  assert.match(m, /this\.zoomBy\(TAP_ZOOM \/ v\.zoom, pc\.mx, pc\.my\)/, 'close-up lands where the fingers tapped');
+  assert.match(m, /fillZ \* TAP_ZOOM/, 'close-up is a multiple of the fill, not an absolute zoom');
+  assert.match(m, /this\.zoomBy\(close \/ v\.zoom, pc\.mx, pc\.my\)/, 'close-up lands where the fingers tapped');
   assert.match(html, /if \(Math\.abs\(ratio - 1\) > 0\.08 \|\| Math\.hypot\(mx - pc\.mx0, my - pc\.my0\) > 12\) pc\.moved = true;/);
   assert.match(html, /if \(this\.gesture === 'pinch' && this\.pinch\) this\.pinchEnd\(this\.pinch\);/, 'only the first lifted finger ends the pinch');
 });
@@ -38,6 +39,9 @@ test('a pinch released near a whole zoom snaps to it', () => {
   const m = method('pinchEnd');
   assert.match(html, /SNAP_ZOOM = 0\.12/);
   assert.match(m, /Math\.abs\(v\.zoom - whole\) < SNAP_ZOOM\) this\.zoomBy\(whole \/ v\.zoom, pc\.mx, pc\.my\)/);
+  assert.match(m, /pc\.moved && pc\.vel && this\.glide\) this\.glide\.kick\(pc\.vel\.x, pc\.vel\.y\)/, 'a moving pinch glides after release');
+  assert.match(html, /sampleVelocity\(pc\.vel, mx, my, performance\.now\(\)\)/);
+  assert.match(html, /touch\.cancel\(\)/, 'the second finger cancels the pour before the pinch');
 });
 
 test('the vessel itself stays free of zoom buttons on phones', () => {

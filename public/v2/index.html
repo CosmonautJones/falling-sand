@@ -363,7 +363,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
         <div class="seg">
           <button class="danger" onClick="{{ onStartOver }}">{{ startOverLabel }}</button>
         </div>
-        <p class="touch-help">Drag to pour · Hold still to name a grain · Pinch to zoom and pan · Two-finger tap to zoom in or out</p>
+        <p class="touch-help">Touch to pour · Hold still to name a grain · Pinch to zoom and pan · Two-finger tap to zoom in or out</p>
       </div>
     </section>
   </sc-if>
@@ -883,7 +883,7 @@ class Component extends DCLogic {
   onFrame(r) {
     if (this.flingV && r.steps) { const decay = 0.85 ** r.steps; this.flingV.x *= decay; this.flingV.y *= decay; }
     const c = new Uint8Array(this.bufs[0]), e = new Uint8Array(this.bufs[1]), fx = new Uint8Array(this.bufs[2]);
-    this.lastColor.set(c);
+    this.lastColor.set(c); this.sawFrame = true;
     this.upload(c, e, fx);
     if (r.kick > 0) { if (typeof navigator !== 'undefined' && navigator.vibrate && !this.still && performance.now() - (this.lastBuzz || 0) > 250) { this.lastBuzz = performance.now(); navigator.vibrate(Math.round(10 + 30 * Math.min(1, r.kick / 6))); } }
     if (r.kick > 0) { if (!this.still) this.shake = Math.min(1, this.shake + Math.min(1, r.kick / 6)); this.boom(r.kick); }
@@ -1390,15 +1390,28 @@ class Component extends DCLogic {
   // A font set by the tap tool is already taught the brush element (air leaves it to learn).
   // The tap is only offered once the font has been transmuted: new things are made, not handed out.
   tapOp(c) { return this.known.has(this.M.FONT) ? { t: 'font', x: c.x, y: c.y, m: this.state.brush } : null; }
-  toolTick() {
-    if (this.state.walkerIn && this.painting) { this.useWalkerTool(); return null; }
-    if (!this.painting || !this.curCell) return null;
+  toolOp() {
     const s = this.state, c = this.curCell;
+    if (!c) return null;
     if (s.tool === 'pour') return { t: 'p', x: c.x, y: c.y, r: s.radius, m: s.brush, ...this.flingFields() };
     if (s.tool === 'spray') return { t: 'spray', x: c.x, y: c.y, r: Math.max(2, s.radius * 1.6), m: s.brush, n: 3 + s.radius * 2 };
     if (s.tool === 'heat') return { t: 'heat', x: c.x, y: c.y, r: s.radius };
     if (s.tool === 'cool') return { t: 'cool', x: c.x, y: c.y, r: s.radius };
     return null;
+  }
+  toolTick() {
+    if (this.state.walkerIn && this.painting) { this.useWalkerTool(); return null; }
+    if (!this.painting || !this.curCell) return null;
+    // The first dab is still buffered. Held ticks must not pour ahead of that
+    // 120 ms hold. Once it flushes, every held pour carries the stroke tag.
+    if (this.touchStroke && !this.touchLive) return null;
+    const op = this.toolOp();
+    if (op && this.touchStroke && (op.t === 'p' || op.t === 'spray')) {
+      op.mark = 1;
+      this.noteStroke(op);
+      this.touchMarked = true;
+    }
+    return op;
   }
 
   // ---------- view / input ----------
@@ -1573,11 +1586,157 @@ class Component extends DCLogic {
   pinchEnd(pc) {
     const v = this.view;
     if (!pc.moved && performance.now() - pc.at < 320) {
-      if (v.zoom < 1.5) this.zoomBy(TAP_ZOOM / v.zoom, pc.mx, pc.my); else this.setView({ zoom: 1, panX: 0, panY: 0 }, true);
+      // Close-up is TAP_ZOOM times the fill. On a tall phone the fill is already ~3.8, so an absolute 3 would be a wider view.
+      const fill = this.cam.defaultView(this.vw, this.vh), fillZ = fill.zoom || 1;
+      const close = Math.min(this.cam.MAX_ZOOM, fillZ * TAP_ZOOM);
+      if (v.zoom < fillZ * 1.5) this.zoomBy(close / v.zoom, pc.mx, pc.my); else this.setView({ zoom: 1, panX: 0, panY: 0 }, true);
       return;
     }
     const whole = Math.round(v.zoom);
     if (whole >= 1 && Math.abs(v.zoom - whole) > 0.001 && Math.abs(v.zoom - whole) < SNAP_ZOOM) this.zoomBy(whole / v.zoom, pc.mx, pc.my);
+    if (pc.moved && pc.vel && this.glide) this.glide.kick(pc.vel.x, pc.vel.y);
+  }
+  glidePan(dx, dy) {
+    if (!this.cam || !this.view) return false;
+    const prevX = this.view.panX, prevY = this.view.panY;
+    const shift = v => this.cam.panView(this.vw, this.vh, v, dx, dy);
+    this.view = shift(this.view);
+    if (this.viewT) this.viewT = shift(this.viewT);
+    this.viewUser = true;
+    this.updateReticleSize();
+    this.syncViewUI();
+    return Math.hypot(this.view.panX - prevX, this.view.panY - prevY) > 0.05;
+  }
+  // Priors for this finger's dab, from the last frame, the first time a cell is covered.
+  // The brush disc is the footprint. The rest of each touched column is the fall path,
+  // so a grain that drops out of the disc can be put back without copying the grid.
+  noteStroke(op) {
+    if (!op || (op.t !== 'p' && op.t !== 'l' && op.t !== 'spray')) return;
+    const M = this.M, src = this.lastColor;
+    if (!this.sawFrame || !M || !src || src.length < M.N * 4) return;
+    const W = M.W, H = M.H, N = M.N;
+    const foot = this.strokeFoot || (this.strokeFoot = { m: op.m, idx: [], prior: [], span: [], at: new Map(), cols: new Set() });
+    if (foot.m !== op.m) return;
+    const add = (i, brush) => {
+      if (i < 0 || i >= N) return;
+      const at = foot.at.get(i);
+      if (at !== undefined) { if (brush) foot.span[at] = 1; return; }
+      foot.at.set(i, foot.idx.length);
+      foot.idx.push(i);
+      foot.prior.push(src[i * 4 + 3] | 0);
+      foot.span.push(brush ? 1 : 0);
+    };
+    const columns = (x0, x1) => {
+      const a = Math.max(0, Math.min(x0, x1)), b = Math.min(W - 1, Math.max(x0, x1));
+      for (let x = a; x <= b; x++) {
+        if (foot.cols.has(x)) continue;
+        foot.cols.add(x);
+        for (let y = 0; y < H; y++) add(y * W + x, false);
+      }
+    };
+    const disc = (cx, cy, r) => {
+      const r2 = r * r;
+      const x0 = Math.max(0, cx - r), x1 = Math.min(W - 1, cx + r);
+      const y0 = Math.max(0, cy - r), y1 = Math.min(H - 1, cy + r);
+      // The band is only the fall path, so the cell under the brush can be restored.
+      // Grains that slide farther stay tagged in the worker and are removed by that.
+      columns(x0 - 2, x1 + 2);
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+        const dx = x - cx, dy = y - cy;
+        if (dx * dx + dy * dy <= r2) add(y * W + x, true);
+      }
+    };
+    const rad = Math.max(0, Math.ceil(op.r || 0));
+    if (op.t !== 'l') { disc(op.x | 0, op.y | 0, rad); return; }
+    let x = op.x0 | 0, y = op.y0 | 0, x1 = op.x1 | 0, y1 = op.y1 | 0;
+    const dx = Math.abs(x1 - x), dy = Math.abs(y1 - y), sx = x < x1 ? 1 : -1, sy = y < y1 ? 1 : -1;
+    let err = dx - dy, guard = 0;
+    for (;;) {
+      disc(x, y, rad);
+      if ((x === x1 && y === y1) || ++guard > 2000) break;
+      const e2 = 2 * err;
+      if (e2 > -dy) { err -= dy; x += sx; }
+      if (e2 < dx) { err += dx; y += sy; }
+    }
+  }
+  // The first dab waits this long before it reaches the worker. A pinch inside
+  // the window drops the buffer and commits nothing. 120 ms keeps a 100 ms pinch out.
+  beginTouchStroke() {
+    clearTimeout(this.touchHoldT);
+    this.touchHoldT = 0;
+    this.touchHold = null;
+    this.touchStroke = [];
+    this.strokeFoot = null;
+    this.touchLive = false;
+    this.touchMarked = false;
+  }
+  queueTouchPour(op) {
+    if (!op) return;
+    if (!this.touchStroke || this.touchLive) { this.commitTouchOp(op); return; }
+    if (!this.touchHold) {
+      this.touchHold = [];
+      this.touchHoldT = setTimeout(() => this.flushTouchHold(), 120);
+    }
+    this.touchHold.push(op);
+  }
+  commitTouchOp(op) {
+    if (!this.touchStroke) { this.ops.push(op); return; }
+    if (op.t === 'p' || op.t === 'l' || op.t === 'spray') op.mark = 1;
+    this.ops.push(op);
+    this.touchStroke.push(op);
+    this.noteStroke(op);
+    this.touchMarked = true;
+  }
+  flushTouchHold() {
+    clearTimeout(this.touchHoldT);
+    this.touchHoldT = 0;
+    const held = this.touchHold;
+    this.touchHold = null;
+    if (!this.touchStroke || !held) return;
+    this.touchLive = true;
+    for (const op of held) this.commitTouchOp(op);
+  }
+  endTouchStroke() {
+    this.flushTouchHold();
+    if (this.touchMarked) this.ops.push({ t: 'untag' });
+    this.touchStroke = null;
+    this.strokeFoot = null;
+    this.touchLive = false;
+    this.touchMarked = false;
+  }
+  // A second finger lands after the dab is queued. Drop it if the worker has not taken it.
+  // If it has, put the footprint back and delete every tagged grain of the dab, wherever
+  // it slid. A brick placed during the stroke, and any edit outside the dab, stays.
+  undoTouchPour() {
+    clearTimeout(this.touchHoldT);
+    this.touchHoldT = 0;
+    this.touchHold = null;
+    this.touchLive = false;
+    this.touchMarked = false;
+    const stroke = this.touchStroke || [];
+    const foot = this.strokeFoot;
+    this.touchStroke = null; this.strokeFoot = null;
+    const queued = new Set(stroke);
+    const stillQueued = new Set();
+    const keep = list => (list || []).filter(op => {
+      if (!queued.has(op)) return true;
+      stillQueued.add(op);
+      return false;
+    });
+    this.ops = keep(this.ops);
+    this.pending = keep(this.pending);
+    if (stroke.some(op => !stillQueued.has(op))) {
+      const sent = stroke.find(op => !stillQueued.has(op));
+      this.ops.push({
+        t: 'revert', m: foot?.m ?? sent?.m ?? 0,
+        idx: Uint32Array.from(foot?.idx || []),
+        prior: Uint8Array.from(foot?.prior || []),
+        span: Uint8Array.from(foot?.span || []),
+      });
+    }
+    this.painting = false; this.lastCell = null; this.dragStart = null;
+    if (this.drawPreview) this.drawPreview();
+    if (this.state?.probe?.on) this.setState({ probe: { on: false } });
   }
   zoomBy(f, sx, sy) {
     const base = this.viewT || this.view;
@@ -1634,29 +1793,39 @@ class Component extends DCLogic {
       const now = performance.now();
       if (lc) { const scale = this.grainPx(); this.trackFling((px - lc.px) / scale, (py - lc.py) / scale, now - lc.time); }
       else this.flingV = { x: 0, y: 0 };
-      if (lc) this.ops.push({ t: 'l', x0: lc.x, y0: lc.y, x1: x, y1: y, r: s.radius, m: s.brush, ...this.flingFields() });
-      else this.ops.push({ t: 'p', x, y, r: s.radius, m: s.brush, ...this.flingFields() });
+      const op = lc
+        ? { t: 'l', x0: lc.x, y0: lc.y, x1: x, y1: y, r: s.radius, m: s.brush, ...this.flingFields() }
+        : { t: 'p', x, y, r: s.radius, m: s.brush, ...this.flingFields() };
       this.lastCell = { x, y, px, py, time: now };
+      return op;
     };
     on(vp, 'contextmenu', e => e.preventDefault());
     let lpTimer = 0;
     const cancelLongPress = () => { if (lpTimer) { clearTimeout(lpTimer); lpTimer = 0; } };
-    // Touch: a drag always pours from where the finger landed; a still 450 ms hold names the grain.
+    // Touch: the finger aims on contact. The first dab waits 120 ms, so a pinch that
+    // lands first never commits. A still 450 ms hold names the grain. A second finger undoes the stroke.
+    const glide = this.touchMod.createGlide;
+    this.glide = glide ? glide({ pan: (dx, dy) => this.glidePan(dx, dy) }) : { kick() {}, stop() {} };
     const touch = this.touchMod.createTouchPour({
       setTimer: fn => (lpTimer = setTimeout(fn, 450)), clearTimer: cancelLongPress,
       moved: (dx, dy) => Math.hypot(dx, dy) > 8,
+      begin: () => this.beginTouchStroke(),
+      undo: () => this.undoTouchPour(),
       pour: (px, py) => {
         const c = this.cellAt(px, py), tool = this.state.tool;
         this.curCell = c;
         if (tool === 'line' || tool === 'box') { if (!this.dragStart) this.dragStart = c; this.drawPreview(); return; }
         const starting = !this.painting;
         this.painting = true;
-        if (tool === 'pour') pour(c.x, c.y, px, py);
-        else if (tool === 'tap') { const op = starting && this.tapOp(c); if (op) this.ops.push(op); }
-        else if (starting || this.state.paused) { const op = this.toolTick(); if (op) this.ops.push(op); }
+        let op = null;
+        if (tool === 'pour') op = pour(c.x, c.y, px, py);
+        else if (tool === 'tap') { if (starting) op = this.tapOp(c); }
+        // toolTick stays silent until the hold flushes, so the first dab is built here and buffered.
+        else if (starting || this.state.paused) op = this.touchStroke && !this.touchLive ? this.toolOp() : this.toolTick();
+        if (op) this.queueTouchPour(op);
       },
       probe: (px, py) => { const c = this.cellAt(px, py); this.showProbe(c.x, c.y, px, py); },
-      end: () => {},
+      end: () => this.endTouchStroke(),
     });
     const ptrs = this.ptrs = new Map();
     const isUi = e => e.target && e.target.closest && e.target.closest('[data-ui]');
@@ -1671,6 +1840,7 @@ class Component extends DCLogic {
     on(vp, 'dblclick', e => { if (e.button === 0 && !isUi(e)) this.setView({ zoom: 1, panX: 0, panY: 0 }, true); });
     on(vp, 'pointerdown', e => {
       if (isUi(e)) return;
+      if (this.glide) this.glide.stop();
       this.ensureAudio();
       ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
       cancelLongPress();
@@ -1681,7 +1851,7 @@ class Component extends DCLogic {
         this.painting = false; this.lastCell = null; this.dragStart = null; this.drawPreview();
         this.gesture = 'pinch'; cap(e);
         const g = this.cam.screenToGrain(this.vw, this.vh, v, mx, my);
-        this.pinch = { d: Math.hypot(p.x - q.x, p.y - q.y) || 1, zoom: v.zoom, gx: g.x / M.W, gy: g.y / M.H, mx, my, mx0: mx, my0: my, at: performance.now(), moved: false };
+        this.pinch = { d: Math.hypot(p.x - q.x, p.y - q.y) || 1, zoom: v.zoom, gx: g.x / M.W, gy: g.y / M.H, mx, my, mx0: mx, my0: my, at: performance.now(), moved: false, vel: null };
         return;
       }
       if (ptrs.size > 2 || this.gesture === 'held') return;
@@ -1703,7 +1873,7 @@ class Component extends DCLogic {
       const tool = this.state.tool;
       if (tool === 'line' || tool === 'box') { this.gesture = 'drag'; this.dragStart = { x, y }; this.drawPreview(); return; }
       this.gesture = 'paint'; this.painting = true; this.lastCell = null;
-      if (tool === 'pour') pour(x, y, e.clientX, e.clientY);
+      if (tool === 'pour') this.ops.push(pour(x, y, e.clientX, e.clientY));
       else if (tool === 'tap') { const op = this.tapOp({ x, y }); if (op) this.ops.push(op); }
       else { const op = this.toolTick(); if (op) this.ops.push(op); }
     });
@@ -1718,6 +1888,7 @@ class Component extends DCLogic {
         const mx = (p.x + q.x) / 2 - r.left, my = (p.y + q.y) / 2 - r.top;
         const ratio = Math.hypot(p.x - q.x, p.y - q.y) / pc.d, zoom = Math.min(this.cam.MAX_ZOOM, Math.max(this.cam.MIN_ZOOM, pc.zoom * ratio));
         pc.mx = mx; pc.my = my;
+        pc.vel = this.touchMod.sampleVelocity(pc.vel, mx, my, performance.now());
         if (Math.abs(ratio - 1) > 0.08 || Math.hypot(mx - pc.mx0, my - pc.my0) > 12) pc.moved = true;
         this.setView(this.cam.viewFromAnchor(this.vw, this.vh, zoom, mx, my, pc.gx, pc.gy), false);
         return;
@@ -1736,7 +1907,7 @@ class Component extends DCLogic {
       if (this.gesture === 'drag') { this.curCell = c; this.drawPreview(); return; }
       if (this.painting) {
         this.curCell = c;
-        if (this.state.tool === 'pour') pour(c.x, c.y, e.clientX, e.clientY);
+        if (this.state.tool === 'pour') this.ops.push(pour(c.x, c.y, e.clientX, e.clientY));
         else if (this.state.paused) { const op = this.toolTick(); if (op) this.ops.push(op); }
       }
     });
@@ -2053,7 +2224,7 @@ class Component extends DCLogic {
       paused: s.paused && !s.engineError, engineError: s.engineError, vesselEvents: s.engineError ? 'none' : 'auto', folio: s.folio, probe: s.probe, recording: s.recording,
       curtainMounted: s.curtainMounted, curtainOpacity: s.curtainOpacity, liftCurtain: () => this.liftCurtain(),
       titleColor: s.opus ? '#e8b86a' : '#c49a4a', titleGlow: s.opus ? 22 : 0,
-      line: s.opus ? 'The Magnum Opus is in the glass. Lead kneels.' : (s.whisper || (this.coarse ? 'Drag to pour. Hold still to name a grain. Pinch, or tap with two fingers, to zoom.' : 'Hold to pour. Right-click names a grain; hold right-click to pan when zoomed. Scroll zooms. Casks remember fire. Space pauses; period steps a tick; comma cycles speed; [ ] the brush.')),
+      line: s.opus ? 'The Magnum Opus is in the glass. Lead kneels.' : (s.whisper || (this.coarse ? 'Touch to pour. Hold still to name a grain. Pinch, or tap with two fingers, to zoom.' : 'Hold to pour. Right-click names a grain; hold right-click to pan when zoomed. Scroll zooms. Casks remember fire. Space pauses; period steps a tick; comma cycles speed; [ ] the brush.')),
       lineColor: s.opus || s.whisper ? '#d4b56a' : '#cbb89a',
       onTitle: () => { this.rite.title++; if (this.rite.title >= 7) { this.rite.title = 0; this.enact('aether-rain'); } },
       openCodex: () => this.setState({ folio: true, tab: 'codex', sheet: '' }), openRites: () => this.setState({ folio: true, tab: 'rites', sheet: '' }), openFlasks: () => this.setState({ folio: true, tab: 'flasks', sheet: '' }),
@@ -2119,7 +2290,7 @@ class Component extends DCLogic {
       const on = s.brush === id, tip = id === suggest && !on;
       return { name: tip ? M.NAMES[id] + ' ✦' : M.NAMES[id], swatch: rgb(M.COLORS[id]), on: on ? 'true' : 'false', bg: on ? '#2a2119' : '#1c1612', border: on ? '#c49a4a' : tip ? '#e8c97a' : '#3a3128', onClick: this.hnd('pk' + id, () => this.pickElement(id)) };
     };
-    base.pourHintText = `${this.coarse ? 'Drag a finger' : 'Click and drag'} to pour ${M.NAMES[s.brush]}`;
+    base.pourHintText = `${this.coarse ? 'Touch' : 'Click and drag'} to pour ${M.NAMES[s.brush]}`;
     const found = M.TRANSMUTED.filter(id => this.known.has(id)), blank = M.TRANSMUTED.length - found.length;
     base.starterTiles = M.STARTER.map(tile);
     base.foundTiles = found.map(tile);

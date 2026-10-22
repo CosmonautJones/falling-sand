@@ -67,7 +67,7 @@ function checkSerializedSize(value, allowTyped = false) {
     if (typeof v === 'boolean') { add(v ? 4 : 5); return; }
     if (typeof v === 'number') { finite(v); add(JSON.stringify(v).length); return; }
     if (allowTyped && ArrayBuffer.isView(v)) {
-      const Type = [Uint8Array, Int8Array, Float32Array].find(Type => Object.getPrototypeOf(v) === Type.prototype);
+      const Type = [Uint8Array, Int8Array, Uint32Array, Float32Array].find(Type => Object.getPrototypeOf(v) === Type.prototype);
       if (!Type || ['length', 'buffer', 'byteOffset', 'byteLength'].some(key => Object.hasOwn(v, key))) fail('invalid typed array');
       add(4 * Math.ceil(v.byteLength / 3) + JSON.stringify({ type: Type.name, data: '' }).length);
       return;
@@ -96,9 +96,12 @@ function base64(bytes) {
   return btoa(binary);
 }
 function toBytes(array, Type) {
-  if (Type !== Float32Array) return new Uint8Array(array.buffer, array.byteOffset, array.byteLength);
+  if (Type !== Float32Array && Type !== Uint32Array) return new Uint8Array(array.buffer, array.byteOffset, array.byteLength);
   const bytes = new Uint8Array(array.length * 4), view = new DataView(bytes.buffer);
-  for (let i = 0; i < array.length; i++) view.setFloat32(i * 4, array[i], true);
+  for (let i = 0; i < array.length; i++) {
+    if (Type === Float32Array) view.setFloat32(i * 4, array[i], true);
+    else view.setUint32(i * 4, array[i], true);
+  }
   return bytes;
 }
 function typed(value, Type, length, mode, material = false, maxAbs = Infinity) {
@@ -114,9 +117,9 @@ function typed(value, Type, length, mode, material = false, maxAbs = Infinity) {
     const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
     if (base64(bytes) !== value.data) fail('noncanonical base64');
     array = new Type(length);
-    if (Type === Float32Array) {
+    if (Type === Float32Array || Type === Uint32Array) {
       const view = new DataView(bytes.buffer);
-      for (let i = 0; i < length; i++) array[i] = view.getFloat32(i * 4, true);
+      for (let i = 0; i < length; i++) array[i] = Type === Float32Array ? view.getFloat32(i * 4, true) : view.getUint32(i * 4, true);
     } else new Uint8Array(array.buffer).set(bytes);
   } else {
     if (!value || Object.getPrototypeOf(value) !== Type.prototype || Object.hasOwn(value, 'length') || Object.hasOwn(value, 'buffer') || Object.hasOwn(value, 'byteOffset') || Object.hasOwn(value, 'byteLength') || value.length !== length) fail('wrong typed-array type or length');
@@ -128,6 +131,23 @@ function typed(value, Type, length, mode, material = false, maxAbs = Infinity) {
     if (Math.abs(v) > maxAbs) fail('unsafe velocity');
   }
   return mode === 'encode' ? { type: Type.name, data: base64(toBytes(array, Type)) } : array;
+}
+// Same checks as `typed`, except the length is the array's own, capped at `max`.
+function typedFlex(value, Type, max, mode, material = false) {
+  let length;
+  if (mode === 'decode') {
+    record(value, ['type', 'data']);
+    if (value.type !== Type.name || typeof value.data !== 'string') fail('wrong typed-array tag');
+    if (!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value.data)) fail('bad base64');
+    const binary = atob(value.data);
+    if (binary.length % Type.BYTES_PER_ELEMENT) fail('wrong decoded byte length');
+    length = binary.length / Type.BYTES_PER_ELEMENT;
+    if (length > max) fail('wrong typed-array payload length');
+  } else {
+    if (!value || Object.getPrototypeOf(value) !== Type.prototype || Object.hasOwn(value, 'length') || Object.hasOwn(value, 'buffer') || Object.hasOwn(value, 'byteOffset') || Object.hasOwn(value, 'byteLength') || value.length > max) fail('wrong typed-array type or length');
+    length = value.length;
+  }
+  return typed(value, Type, length, mode, material);
 }
 const GRID_FIELDS = ['cells', 'shades', 'heat', 'VX', 'VY', 'trails', 'WU', 'WV'];
 const SCALAR_FIELDS = ['seed', 'scene', 'tickIndex', 'scanDir', 'trailsLive', 'blastKick', 'windEnergy', 'shipCd', 'storm', 'stormT', 'stormCd', 'boltCd', 'flash', 'goldCount', 'goldCX', 'goldCY', 'visitorCount', 'wipe'];
@@ -144,6 +164,7 @@ const OPS = {
   spray: ['x', 'y', 'r', 'm', 'n'], box: ['x0', 'y0', 'x1', 'y1', 'm'],
   heat: ['x', 'y', 'r'], cool: ['x', 'y', 'r'], rain: ['m', 'n'],
   tempest: [], clear: [], reset: [], snap: [], wipe: ['mode'], load: ['cells'],
+  revert: ['m', 'idx', 'prior', 'span'], untag: [],
   spark: ['x', 'y'], poke: ['x', 'y', 'dx', 'dy'], font: ['x', 'y', 'm'],
 };
 function operation(op, mode) {
@@ -151,11 +172,14 @@ function operation(op, mode) {
   const descriptor = op && Object.getOwnPropertyDescriptor(op, 't');
   if (!descriptor || !('value' in descriptor) || typeof descriptor.value !== 'string' || !Object.hasOwn(OPS, descriptor.value)) fail('unknown operation');
   const t = descriptor.value;
-  const optional = ['l', 'p', 'spray'].includes(t) ? ['vx', 'vy'] : t === 'wipe' ? ['cells', 'day'] : [];
+  const optional = ['l', 'p', 'spray'].includes(t) ? ['vx', 'vy', 'mark'] : t === 'wipe' ? ['cells', 'day'] : [];
   record(op, ['t', ...OPS[t]], optional);
   const out = { t };
   for (const key of OPS[t]) {
     if (key === 'cells') out.cells = typed(op.cells, Uint8Array, SIZE, mode, true);
+    else if (t === 'revert' && key === 'idx') out.idx = typedFlex(op.idx, Uint32Array, SIZE, mode);
+    else if (t === 'revert' && key === 'prior') out.prior = typedFlex(op.prior, Uint8Array, SIZE, mode, true);
+    else if (t === 'revert' && key === 'span') out.span = typedFlex(op.span, Uint8Array, SIZE, mode);
     else if (key === 'mode') out.mode = choice(op.mode, ['clear', 'reset', 'load', 'daily']);
     else if (key === 'm') out.m = integer(op.m, 0, MATERIALS - 1);
     else if (key === 'n') out.n = integer(op.n, 0, SIZE);
@@ -164,6 +188,15 @@ function operation(op, mode) {
     else out[key] = key.startsWith('x') ? integer(op[key], -WIDTH, WIDTH * 2) : integer(op[key], -HEIGHT, HEIGHT * 2);
   }
   if (t === 'poke' && Math.abs(out.dx) + Math.abs(out.dy) !== 1) fail('poke must move one cell on one axis');
+  if (t === 'revert') {
+    const idx = mode === 'decode' ? out.idx : op.idx;
+    const prior = mode === 'decode' ? out.prior : op.prior;
+    const span = mode === 'decode' ? out.span : op.span;
+    if (idx.length !== prior.length || idx.length !== span.length) fail('revert fields differ in length');
+    for (const i of idx) if (i >= SIZE) fail('revert index out of range');
+    for (const s of span) if (s > 1) fail('revert span');
+  }
+  if (optional.includes('mark') && Object.hasOwn(op, 'mark')) out.mark = integer(op.mark, 0, 1);
   for (const key of ['vx', 'vy']) if (optional.includes(key) && Object.hasOwn(op, key)) {
     const value = op[key];
     // Only legacy host input normalizes nonfinite numeric fling hints; stored commands stay strict.

@@ -25,7 +25,7 @@ test('stray touches outside the vessel and menus never scroll, bounce or zoom th
   assert.equal(doc.handlers.touchmove.opt.passive, false, 'must be able to cancel');
   const outside = event(false); doc.handlers.touchmove.fn(outside); assert.ok(outside.prevented);
   const inMenu = event(true); doc.handlers.touchmove.fn(inMenu); assert.ok(!inMenu.prevented, 'menus still scroll');
-  for (const t of ['gesturestart', 'gesturechange']) { const e = event(false); doc.handlers[t].fn(e); assert.ok(e.prevented, `${t} blocked`); }
+  for (const t of ['gesturestart', 'gesturechange', 'gestureend']) { const e = event(false); doc.handlers[t].fn(e); assert.ok(e.prevented, `${t} blocked`); }
   unlock();
   assert.deepEqual(Object.keys(doc.handlers), []);
 });
