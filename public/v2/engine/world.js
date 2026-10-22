@@ -1980,20 +1980,26 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
         break;
       }
       case 'load': { dropSparks(); clearGrid(); cells.set(op.cells); for (let i = 0; i < N; i++) { shades[i] = grain(cells[i]); heat[i] = SEEDHEAT[cells[i]]; } break; }
-      // Put the footprint back, then delete every grain this stroke tagged, wherever
-      // it has since moved. A brick painted over a tagged cell cleared that tag in
-      // setc, so it stays. Marks are not part of the saved world.
+      // Put overwritten brush cells back, then delete every grain this stroke
+      // tagged, wherever it has since moved. Fall-path cells (span 0) only changed
+      // because the grain swapped with what was there; restoring them would copy
+      // liquid that is still in the pool. The sweep removes the grain and the
+      // liquid settles into the hole. A brick painted over a tagged cell cleared
+      // that tag in setc, so it stays. Marks are not part of the saved world.
       case 'revert': {
         const idx = op.idx, prior = op.prior, span = op.span, m = op.m | 0;
         if (idx && prior && span) {
           const n = Math.min(idx.length, prior.length, span.length);
           for (let k = 0; k < n; k++) {
+            // span 1 is the brush, which really overwrote the cell. span 0 is the
+            // fall path under it.
+            if (span[k] !== 1) continue;
             const i = idx[k];
             if (i < 0 || i >= N) continue;
             const cur = cells[i], was = prior[k];
             const dabHere = cur === m && was !== m;
             const dissolved = m === SALT && cur === BRINE && was !== BRINE && was !== SALT;
-            const hole = span[k] === 1 && m !== AIR && cur === AIR && was !== AIR;
+            const hole = m !== AIR && cur === AIR && was !== AIR;
             if (!dabHere && !dissolved && !hole) continue;
             setc(i % W, (i / W) | 0, was, grain(was));
           }

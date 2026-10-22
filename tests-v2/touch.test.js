@@ -545,6 +545,37 @@ function seedHold(ui, mat, paused) {
   return engine;
 }
 
+// A trough under the pour. The brush at (240, 30) is in the air above it, so
+// grains reach the water by falling, which swaps, and not by painting over it.
+function seedPool(ui, mat) {
+  const bufs = [new ArrayBuffer(E.N * 4), new ArrayBuffer(E.N * 4), new ArrayBuffer(E.N * 4)];
+  const engine = E.createEngine({ seed: 3, scene: 'empty', weather: false, ambientEmbers: false });
+  // Surface sits well below the brush, as the opening trough does, so a splash
+  // cannot climb back into the pour and be painted away.
+  const setup = [
+    { t: 'box', x0: 80, y0: 200, x1: 400, y1: 230, m: E.STONE },
+    { t: 'box', x0: 80, y0: 170, x1: 80, y1: 200, m: E.STONE },
+    { t: 'box', x0: 400, y0: 170, x1: 400, y1: 200, m: E.STONE },
+    { t: 'box', x0: 81, y0: 180, x1: 399, y1: 199, m: E.WATER },
+  ];
+  const planes = bufs.map((b) => new Uint8Array(b));
+  engine.tick({ paused: true, ops: setup }, ...planes);
+  ui.eng = engine;
+  ui.bufs = bufs;
+  ui.lastColor = new Uint8Array(E.N * 4);
+  ui.lastColor.set(planes[0]);
+  ui.sawFrame = true;
+  ui.state.tool = 'pour';
+  ui.state.brush = mat;
+  ui.state.radius = 3;
+  ui.state.paused = false;
+  ui.state.pourHint = false;
+  ui.state.speed = 1;
+  ui.state.walkerIn = false;
+  ui.state.probe = { on: false };
+  return engine;
+}
+
 function taggedCount(w, mat) {
   let n = 0;
   for (let i = 0; i < E.N; i++) if (w.pourMark[i] && w.cells[i] === mat) n++;
@@ -812,4 +843,83 @@ test('a pinch removes salt that has already become brine, and leaves other brine
   assert.equal(countMat(w.cells, E.SALT), 0, 'no salt from the dab remains');
   assert.equal(countMat(w.cells, E.BRINE), 1, 'only the sealed brine remains');
   assert.equal(w.cells[keeper], E.BRINE);
+});
+
+test('a pinch over a pool deletes the dab and does not create liquid', () => {
+  const { ui, timers, fire, scr } = touchPage();
+  const frame = 1000 / 60;
+  const table = {};
+  for (const [name, mat] of [
+    ['gold', E.GOLD],
+    ['sand', E.SAND],
+    ['salt', E.SALT],
+  ]) {
+    resetStroke(ui, timers);
+    const engine = seedPool(ui, mat);
+    const beforeCells = engine.inspect().cells;
+    const before = {
+      water: countMat(beforeCells, E.WATER),
+      brine: countMat(beforeCells, E.BRINE),
+    };
+    fire('pointerdown', 1, scr.x, scr.y);
+    const n = Math.round(1000 / frame);
+    let flushed = false;
+    for (let i = 0; i < n; i++) {
+      const t = (i + 1) * frame;
+      if (!flushed && t >= 120) {
+        const timer = timers.find((tm) => tm.fn && tm.ms === 120);
+        assert.ok(timer, `${name} arms the hold`);
+        timer.fn();
+        flushed = true;
+      }
+      ui.pendingDt = frame;
+      ui.send();
+    }
+    const mid = engine.inspect();
+    const atPinch = {
+      water: countMat(mid.cells, E.WATER),
+      brine: countMat(mid.cells, E.BRINE),
+      dab: countMat(mid.cells, mat),
+    };
+    assert.ok(atPinch.dab > 0 || atPinch.brine > before.brine, `${name} pours into the pool`);
+    let inPool = 0;
+    for (let i = 0; i < E.N; i++) {
+      const c = mid.cells[i];
+      if (c !== mat && !(mat === E.SALT && c === E.BRINE)) continue;
+      if (((i / E.W) | 0) >= 180) inPool++;
+    }
+    assert.ok(inPool > 0, `${name} reaches the water`);
+    fire('pointerdown', 2, scr.x + 80, scr.y + 40);
+    ui.state.paused = true;
+    ui.pendingDt = 0;
+    ui.send();
+    const reverted = engine.inspect().cells;
+    const straight = {
+      water: countMat(reverted, E.WATER),
+      brine: countMat(reverted, E.BRINE),
+    };
+    ui.state.paused = false;
+    simulateMs(engine, 400, ui.bufs.map((b) => new Uint8Array(b)));
+    const settledCells = engine.inspect().cells;
+    const after = {
+      water: countMat(settledCells, E.WATER),
+      brine: countMat(settledCells, E.BRINE),
+    };
+    table[name] = { before, atPinch, straight, after };
+    const liquid = (c) => c.water + c.brine;
+    assert.equal(countMat(settledCells, mat), 0, `${name} dab is gone`);
+    assert.equal(after.brine, before.brine, `${name} leaves no brine from the dab`);
+    assert.equal(straight.water, before.water, `${name} water ${before.water} -> ${straight.water} at revert`);
+    assert.equal(after.water, before.water, `${name} water ${before.water} -> ${after.water} after settling`);
+    assert.equal(liquid(after), liquid(before), `${name} liquid ${liquid(before)} -> ${liquid(after)}`);
+    assert.equal(atPinch.water, before.water, `${name} pour leaves the water count alone`);
+  }
+  for (const name of ['gold', 'sand', 'salt']) {
+    assert.equal(table[name].before.water, 6380, name);
+    assert.equal(table[name].straight.water, 6380, name);
+    assert.equal(table[name].after.water, 6380, name);
+    assert.equal(table[name].before.brine, 0, name);
+    assert.equal(table[name].straight.brine, 0, name);
+    assert.equal(table[name].after.brine, 0, name);
+  }
 });
