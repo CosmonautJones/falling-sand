@@ -78,4 +78,5 @@ test('two-finger pinch also pans (midpoint tracked)', () => {
 test('touch backing-store DPR is capped at 1 and a fine pointer stays at 2', () => {
   assert.match(html, /const dpr = window\.devicePixelRatio \|\| 1;/);
   assert.match(html, /const s = Math\.min\(dpr, this\.coarse \? 1 : 2\);/);
+  assert.match(html, /480×1039/, 'the fit boost, not the CSS viewport, sizes the touch buffer');
 });

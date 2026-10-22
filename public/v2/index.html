@@ -1221,8 +1221,10 @@ class Component extends DCLogic {
     }
     let bw = this.M.W, bh = this.M.H;
     if ((this.props.quality ?? 'full') === 'full') {
-      // A coarse pointer caps the backing store at 1. Fill-height on a phone is already
-      // about 3 CSS px per grain, and 1.5–2 measured slower on the same view. A fine pointer stays at 2.
+      // A coarse pointer caps the backing store at 1. A fine pointer stays at 2.
+      // The fit boost below still applies, so a 390×844 touch view is not a 390×844 buffer:
+      // the narrow axis is shorter than the world, and both axes scale until that axis has
+      // one buffer pixel per grain. The result is 480×1039, about 3.85 buffer px per grain.
       const dpr = window.devicePixelRatio || 1;
       const s = Math.min(dpr, this.coarse ? 1 : 2);
       bw = Math.max(1, Math.round(r.width * s)); bh = Math.max(1, Math.round(r.height * s));
