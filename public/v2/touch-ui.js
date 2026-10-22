@@ -80,6 +80,26 @@ export function arcSlots(count, radius = 78, start = FAN_START, end = FAN_END) {
   return slots;
 }
 
+// Shrink a fan so its top and right edges stay inside `bounds` (orb-wrap local
+// CSS pixels: minLeft, maxRight, minBottom, maxTop). maxTop is the wrap's
+// bottom edge measured up to the safe top of the viewport.
+export function clampFanRadius(radius, origin, size, bounds) {
+  if (!bounds || !(size > 0)) return radius;
+  const half = size / 2;
+  const ox = origin?.x || 0, oy = origin?.y || 0;
+  let r = radius;
+  if (Number.isFinite(bounds.maxTop)) {
+    const room = bounds.maxTop - oy - half;
+    if (room > 0) r = Math.min(r, room);
+  }
+  const outward = Math.cos(FAN_END);
+  if (Number.isFinite(bounds.maxRight) && outward > 0.2) {
+    const room = bounds.maxRight - ox - half;
+    if (room > 0) r = Math.min(r, room / outward);
+  }
+  return Math.max(48, r);
+}
+
 // Radius that keeps `count` slots about `gap` px apart inside the fan.
 export function fanRadius(count, gap = 46) {
   const span = FAN_START - FAN_END;
@@ -87,9 +107,20 @@ export function fanRadius(count, gap = 46) {
   return Math.max(96, Math.ceil(((count - 1) * gap) / span));
 }
 
-export function placeSlot(slot, origin, size) {
+export function placeSlot(slot, origin, size, bounds) {
   const half = size / 2;
-  return { left: origin.x + slot.x - half, bottom: origin.y - slot.y - half };
+  let left = origin.x + slot.x - half;
+  let bottom = origin.y - slot.y - half;
+  if (!bounds) return { left, bottom };
+  const minLeft = Number.isFinite(bounds.minLeft) ? bounds.minLeft : -Infinity;
+  const maxRight = Number.isFinite(bounds.maxRight) ? bounds.maxRight : Infinity;
+  const minBottom = Number.isFinite(bounds.minBottom) ? bounds.minBottom : -Infinity;
+  const maxTop = Number.isFinite(bounds.maxTop) ? bounds.maxTop : Infinity;
+  if (left < minLeft) left = minLeft;
+  if (left + size > maxRight) left = Math.max(minLeft, maxRight - size);
+  if (bottom < minBottom) bottom = minBottom;
+  if (bottom + size > maxTop) bottom = Math.max(minBottom, maxTop - size);
+  return { left, bottom };
 }
 
 export function nearestSlot(dx, dy, slots, maxDist) {

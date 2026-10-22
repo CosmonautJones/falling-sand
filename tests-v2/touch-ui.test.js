@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as E from '../public/v2/alembic-engine-v2.js';
 import {
   IDLE_MS, HOLD_MS, arcSlots, createIdleChrome, familyOf, fanRadius, groupKnown, nearestSlot, nextSnap,
-  pickerIds, placeSlot, recentAround, rememberRecent,
+  clampFanRadius, pickerIds, placeSlot, recentAround, rememberRecent,
 } from '../public/v2/touch-ui.js';
 
 test('every material except nothing lands in exactly one family', () => {
@@ -60,6 +60,14 @@ test('radial slots arc above the orb and a finger lands on the nearest one', () 
   const picker = arcSlots(8, fanRadius(8, 46)).map(slot => placeSlot(slot, { x: 33, y: 51 }, 44));
   assert.ok(picker.every(slot => slot.left >= 0), 'the hold fan stays to the right of the left edge');
   assert.ok(picker[0].bottom > picker[7].bottom);
+  // 844×390 with the wrap sitting on a 21px home inset: an unclamped fan tops out at y=-6.
+  const origin = { x: 33, y: 51 }, size = 44;
+  const bounds = { minLeft: 0, maxRight: 780, minBottom: 0, maxTop: 390 - 21 };
+  const fit = clampFanRadius(fanRadius(8, 46), origin, size, bounds);
+  const fitted = arcSlots(8, fit).map(slot => placeSlot(slot, origin, size, bounds));
+  assert.ok(fit < fanRadius(8, 46), 'the fan shrinks to the safe viewport');
+  assert.ok(fitted.every(slot => slot.bottom + size <= bounds.maxTop + 0.01), 'no slot crosses the top edge');
+  assert.ok(fitted.every(slot => slot.left >= bounds.minLeft && slot.left + size <= bounds.maxRight));
 });
 
 test('the sheet snaps between half, full, and closed', () => {

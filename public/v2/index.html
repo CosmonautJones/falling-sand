@@ -105,12 +105,21 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
 .sheet{left:calc(172px + env(safe-area-inset-left))}
 .zoom-controls{top:calc(max(8px,env(safe-area-inset-top)) + 40px)!important;right:max(8px,env(safe-area-inset-right))!important}
 .experiment-card{left:calc(172px + env(safe-area-inset-left))!important;max-width:min(260px,calc(100vw - 200px - env(safe-area-inset-left) - env(safe-area-inset-right)))}
+.pour-hint{left:auto;right:max(84px,calc(env(safe-area-inset-right) + 72px));top:42%;transform:translateY(-50%)}
 .rbtns{right:max(10px,env(safe-area-inset-right));bottom:max(10px,env(safe-area-inset-bottom))}
+}
+@media (pointer:coarse) and (min-width:701px) and (min-height:521px){
+.sheet{left:50%;right:auto;width:min(560px,calc(100% - 32px));transform:translate(-50%,110%)}
+.sheet[data-open="true"]{transform:translate(-50%,0)}
+.orb-grid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}
 }
 </style>
 </helmet>
 <div ref="{{ rootRef }}" class="root" style="height:100dvh; display:flex; flex-direction:column; align-items:center; gap:8px; padding:max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); overflow:hidden; color:#f0e2c4; font:15px/1.5 Palatino,'Palatino Linotype','Book Antiqua','EB Garamond',Georgia,serif; -webkit-font-smoothing:antialiased; background:radial-gradient(70% 45% at 50% -8%, rgba(176,137,72,.16), transparent 55%), #100c09;">
+  <div data-safe-top aria-hidden="true" style="position:fixed;top:0;left:0;width:0;height:env(safe-area-inset-top);pointer-events:none"></div>
   <div data-safe-right aria-hidden="true" style="position:fixed;top:0;right:0;width:env(safe-area-inset-right);height:0;pointer-events:none"></div>
+  <div data-safe-bottom aria-hidden="true" style="position:fixed;bottom:0;left:0;width:0;height:env(safe-area-inset-bottom);pointer-events:none"></div>
+  <div data-safe-left aria-hidden="true" style="position:fixed;top:0;left:0;width:env(safe-area-inset-left);height:0;pointer-events:none"></div>
 
   <header class="col hd" style="width:min(96vw,1440px); display:grid; grid-template-columns:minmax(150px,1fr) minmax(0,2.4fr) minmax(max-content,1fr); align-items:center; gap:16px; flex:0 0 auto;">
     <div class="hd-tally" style="display:flex; flex-direction:column; gap:1px; font-size:13px; font-style:italic; color:#8f7d62; letter-spacing:.02em; white-space:nowrap;">
@@ -1496,31 +1505,51 @@ class Component extends DCLogic {
   // ---------- view / input ----------
   screenCamera(view) { return this.cam.cameraFromView(this.vw || 0, this.vh || 0, view || this.view); }
   grainPx() { return this.cam && this.vw > 0 ? this.screenCamera().scale : (this.vw / this.M.W) * (this.view?.zoom || 1); }
-  // Chrome overlapping the glass. A wide bottom bar covers the floor; a tall
-  // left rail covers the wall. The right safe area covers the other wall the
-  // same way. Desktop (the bar is hidden, no notch) covers nothing.
+  // Chrome overlapping the glass. Portrait bottom chrome (the orb, recents,
+  // pause, and menu) sets the floor. Side safe areas cover the walls. Desktop,
+  // where the touch chrome is hidden and there is no notch, covers nothing.
+  safeInset(side) {
+    const probe = this.rootRef?.current?.querySelector('[data-safe-' + side + ']');
+    if (!probe) return 0;
+    return side === 'top' || side === 'bottom' ? probe.offsetHeight : probe.offsetWidth;
+  }
+  // Orb-wrap local box the fan must stay inside: the safe viewport, measured
+  // from the wrap's bottom-left. Null until the wrap has a box.
+  fanBounds() {
+    const wrap = this.rootRef?.current?.querySelector('.orb-wrap');
+    if (!wrap || !(this.vw > 0) || !(this.vh > 0)) return null;
+    const wr = wrap.getBoundingClientRect();
+    if (wr.width < 1 || wr.height < 1) return null;
+    return {
+      minLeft: this.safeInset('left') - wr.left,
+      maxRight: this.vw - this.safeInset('right') - wr.left,
+      minBottom: 0,
+      maxTop: wr.bottom - this.safeInset('top'),
+    };
+  }
   chromeCover() {
     const none = { left: 0, right: 0, bottom: 0 };
     const vp = this.vpRef?.current, root = this.rootRef?.current;
     if (!vp || !root) return none;
-    const probe = root.querySelector('[data-safe-right]');
-    const safeRight = probe ? probe.offsetWidth : 0;
-    const withRight = cover => ({ ...cover, right: Math.max(cover.right || 0, safeRight) });
-    const bar = root.querySelector('.phone-bar');
-    if (!bar) return withRight(none);
-    const cs = getComputedStyle(bar);
-    if (cs.display === 'none' || cs.visibility === 'hidden') return withRight(none);
-    const vr = vp.getBoundingClientRect(), br = bar.getBoundingClientRect();
-    if (br.width < 1 || br.height < 1) return withRight(none);
-    if (br.width >= vr.width * 0.6 && br.top >= vr.top + vr.height * 0.4) {
-      const cover = vr.bottom - br.top;
-      if (cover > 0) return withRight({ left: 0, right: 0, bottom: Math.min(vr.height * 0.45, cover) });
+    const left = this.safeInset('left');
+    const right = this.safeInset('right');
+    const vr = vp.getBoundingClientRect();
+    let bottom = this.safeInset('bottom');
+    // Portrait: the orb, its recents, and the pause/menu sit on the floor.
+    // The floor is their top edge, the same idea as the old bottom bar. A
+    // landscape corner does not crop the short world down to the orb.
+    if (vr.height >= vr.width && vr.height > 0) {
+      const nodes = root.querySelectorAll('.orb, .size-orb, .rb, .rec, .sheet-handle');
+      for (const el of nodes) {
+        const br = el.getBoundingClientRect();
+        if (br.width < 1 || br.height < 1) continue;
+        if (br.top < vr.top + vr.height * 0.45) continue;
+        bottom = Math.max(bottom, vr.bottom - br.top);
+      }
+      bottom = Math.min(vr.height * 0.45, bottom);
     }
-    if (br.height >= vr.height * 0.6 && br.left <= vr.left + 4 && br.right < vr.left + vr.width * 0.45) {
-      const cover = br.right - vr.left;
-      if (cover > 0) return withRight({ left: Math.min(vr.width * 0.45, cover), right: 0, bottom: 0 });
-    }
-    return withRight(none);
+    if (!(left > 0) && !(right > 0) && !(bottom > 0)) return none;
+    return { left, right, bottom };
   }
   coverShift(a, b) {
     const box = (e) => typeof e === 'number' ? { left: 0, right: 0, bottom: e } : { left: e?.left || 0, right: e?.right || 0, bottom: e?.bottom || 0 };
@@ -1863,14 +1892,23 @@ class Component extends DCLogic {
   pickElement(id) { this.noteBrush(id); this.setState({ brush: id, sheet: '', radial: false, radialHot: -1 }); }
   openSheet(tab) {
     const s = this.state, next = tab || 'elements';
-    if (s.sheet === 'studio' && s.sheetTab === next) { this.setState({ sheet: '' }); return; }
+    if (s.sheet === 'studio' && s.sheetTab === next) { this.sheetGuardUntil = 0; this.setState({ sheet: '' }); return; }
+    // The tap that opens the sheet is followed by a click. The new backdrop
+    // would catch that click and close the sheet again. Ignore it briefly.
+    this.sheetGuardUntil = performance.now() + 350;
     this.setState({ sheet: 'studio', sheetTab: next, radial: false, radialHot: -1 });
+  }
+  closeSheet() {
+    if (performance.now() < (this.sheetGuardUntil || 0)) return;
+    this.setState({ sheet: '', matQuery: '' });
   }
   radialNow() {
     const M = this.M, ui = this.touchUi;
     if (!M || !ui) return { ids: [], slots: [] };
     const ids = ui.pickerIds(this.known, this.state.brush, this.recents || [], M.STARTER, ui.PICKER_SLOTS);
-    return { ids, slots: ui.arcSlots(ids.length, ui.fanRadius(ids.length, 46)) };
+    const origin = { x: 33, y: 51 }, size = 44;
+    const radius = ui.clampFanRadius(ui.fanRadius(ids.length, 46), origin, size, this.fanBounds());
+    return { ids, slots: ui.arcSlots(ids.length, radius) };
   }
   onOrbDown(e) {
     if (e.button != null && e.button !== 0) return;
@@ -1906,7 +1944,7 @@ class Component extends DCLogic {
       if (hot >= 0) this.pickElement(geom.ids[hot]);
       return;
     }
-    if (!hold.moved) this.openSheet('elements');
+    if (!hold.moved) { if (e && e.preventDefault) e.preventDefault(); this.openSheet('elements'); }
   }
   onOrbCancel() {
     clearTimeout(this.orbT); this.orbHold = null;
@@ -1921,7 +1959,7 @@ class Component extends DCLogic {
     if (this.handleDrag == null) return;
     const dy = e.clientY - this.handleDrag;
     this.handleDrag = null;
-    if (dy < -24 || Math.abs(dy) < 12) this.openSheet('elements');
+    if (dy < -24 || Math.abs(dy) < 12) { if (e && e.preventDefault) e.preventDefault(); this.openSheet('elements'); }
   }
   onGrabDown(e) {
     e.preventDefault(); e.stopPropagation();
@@ -2373,7 +2411,7 @@ class Component extends DCLogic {
       radialOpen: !!s.radial, radialFlag: s.radial ? 'true' : 'false', radialItems: [], recents: [], recentTiles: [], recentOn: false, families: [], noMatches: false,
       showElements: this.hnd('tabEl', () => this.setState({ sheetTab: 'elements' })), showTools: this.hnd('tabTl', () => this.setState({ sheetTab: 'tools' })),
       showVessel: this.hnd('tabVs', () => this.setState({ sheetTab: 'vessel' })), showCodexTab: this.hnd('tabCx', () => this.setState({ sheetTab: 'codex' })),
-      openOptions: () => this.openSheet('tools'), closeSheet: () => this.setState({ sheet: '', matQuery: '' }),
+      openOptions: () => this.openSheet('tools'), closeSheet: () => this.closeSheet(),
       orbDown: this.hnd('orbDown', e => this.onOrbDown(e)), orbMove: this.hnd('orbMove', e => this.onOrbMove(e)), orbUp: this.hnd('orbUp', e => this.onOrbUp(e)), orbCancel: this.hnd('orbCancel', () => this.onOrbCancel()),
       handleDown: this.hnd('handleDown', e => this.onHandleDown(e)), handleUp: this.hnd('handleUp', e => this.onHandleUp(e)),
       grabDown: this.hnd('grabDown', e => this.onGrabDown(e)), grabUp: this.hnd('grabUp', e => this.onGrabUp(e)),
@@ -2463,8 +2501,10 @@ class Component extends DCLogic {
     const place = (ids, radius, size) => {
       if (!this.touchUi) return [];
       const origin = { x: 33, y: 51 };
-      return this.touchUi.arcSlots(ids.length, radius).map((slot, i) => {
-        const at = this.touchUi.placeSlot(slot, origin, size);
+      const bounds = this.fanBounds();
+      const fit = this.touchUi.clampFanRadius(radius, origin, size, bounds);
+      return this.touchUi.arcSlots(ids.length, fit).map((slot, i) => {
+        const at = this.touchUi.placeSlot(slot, origin, size, bounds);
         return { id: ids[i], left: at.left + 'px', bottom: at.bottom + 'px' };
       });
     };
@@ -2474,7 +2514,7 @@ class Component extends DCLogic {
     if (s.radial && this.touchUi) {
       const geom = this.radialNow();
       base.radialItems = geom.ids.map((id, i) => {
-        const at = this.touchUi.placeSlot(geom.slots[i], { x: 33, y: 51 }, 44);
+        const at = this.touchUi.placeSlot(geom.slots[i], { x: 33, y: 51 }, 44, this.fanBounds());
         return { name: M.NAMES[id], swatch: rgb(M.COLORS[id]), hot: i === s.radialHot ? 'true' : 'false', left: at.left + 'px', bottom: at.bottom + 'px' };
       });
     }

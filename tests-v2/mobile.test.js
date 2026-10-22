@@ -75,6 +75,15 @@ test('two-finger pinch also pans (midpoint tracked)', () => {
   assert.match(bindInput, /viewFromAnchor\(this\.vw, this\.vh, zoom, mx, my, pc\.gx, pc\.gy\)/);
 });
 
+test('a wide coarse screen caps the sheet and fills tile columns', () => {
+  assert.match(html, /@media \(pointer:coarse\) and \(min-width:701px\) and \(min-height:521px\)/);
+  assert.match(html, /width:min\(560px,calc\(100% - 32px\)\)/);
+  assert.match(html, /repeat\(auto-fill,minmax\(104px,1fr\)\)/);
+  assert.match(html, /sheetGuardUntil = performance\.now\(\) \+ 350/);
+  assert.match(html, /chromeCover\(\) \{[\s\S]*?\.orb, \.size-orb, \.rb, \.rec, \.sheet-handle/);
+  assert.match(html, /\.pour-hint\{left:auto;right:max\(84px,calc\(env\(safe-area-inset-right\) \+ 72px\)\)/);
+});
+
 test('touch backing-store DPR is capped at 1 and a fine pointer stays at 2', () => {
   assert.match(html, /const dpr = window\.devicePixelRatio \|\| 1;/);
   assert.match(html, /const s = Math\.min\(dpr, this\.coarse \? 1 : 2\);/);
