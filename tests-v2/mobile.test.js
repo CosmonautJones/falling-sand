@@ -75,6 +75,7 @@ test('two-finger pinch also pans (midpoint tracked)', () => {
   assert.match(bindInput, /viewFromAnchor\(this\.vw, this\.vh, zoom, mx, my, pc\.gx, pc\.gy\)/);
 });
 
-test('render DPR is capped at 2', () => {
-  assert.match(html, /Math\.min\(window\.devicePixelRatio \|\| 1, 2\)/);
+test('touch backing-store DPR is capped at 1 and a fine pointer stays at 2', () => {
+  assert.match(html, /const dpr = window\.devicePixelRatio \|\| 1;/);
+  assert.match(html, /const s = Math\.min\(dpr, this\.coarse \? 1 : 2\);/);
 });
