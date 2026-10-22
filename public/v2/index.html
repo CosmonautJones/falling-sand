@@ -315,14 +315,14 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
           </sc-for>
         </div>
       </sc-if>
-      <button data-phone="element" class="orb" data-suggest="{{ suggesting }}" data-ui="1" aria-haspopup="dialog" aria-expanded="{{ orbExpanded }}" aria-label="{{ elementAria }}" onPointerDown="{{ orbDown }}" onPointerMove="{{ orbMove }}" onPointerUp="{{ orbUp }}" onPointerCancel="{{ orbCancel }}"><b>{{ orbName }}</b></button>
+      <button data-phone="element" class="orb" data-suggest="{{ suggesting }}" data-ui="1" aria-haspopup="dialog" aria-expanded="{{ orbExpanded }}" aria-label="{{ elementAria }}" onPointerDown="{{ orbDown }}" onPointerMove="{{ orbMove }}" onPointerUp="{{ orbUp }}" onPointerCancel="{{ orbCancel }}" onClick="{{ orbClick }}"><b>{{ orbName }}</b></button>
       <button data-phone="brush" class="size-orb glass" data-ui="1" aria-label="{{ brushAria }}" onClick="{{ cycleBrush }}"><span></span></button>
     </div>
     <div class="rbtns">
       <button data-phone="pause" class="rb glass" data-ui="1" aria-label="{{ pauseLabel }}" onClick="{{ togglePause }}">{{ pauseIcon }}</button>
       <button data-phone="options" class="rb glass" data-ui="1" aria-haspopup="dialog" aria-expanded="{{ toolsOpen }}" aria-label="Options" onClick="{{ openOptions }}">☰</button>
     </div>
-    <button class="sheet-handle" data-phone="handle" data-ui="1" aria-label="Palette and options" onPointerDown="{{ handleDown }}" onPointerUp="{{ handleUp }}" onPointerCancel="{{ handleUp }}"><i></i></button>
+    <button class="sheet-handle" data-phone="handle" data-ui="1" aria-label="Palette and options" onPointerDown="{{ handleDown }}" onPointerUp="{{ handleUp }}" onPointerCancel="{{ handleUp }}" onClick="{{ handleClick }}"><i></i></button>
   </div>
 
   <sc-if value="{{ sheetOpen }}" hint-placeholder-val="{{ false }}">
@@ -1890,13 +1890,26 @@ class Component extends DCLogic {
     this.sessionFinds?.delete(id);
   }
   pickElement(id) { this.noteBrush(id); this.setState({ brush: id, sheet: '', radial: false, radialHot: -1 }); }
+  armSheetTap(tab) {
+    this.sheetTap = tab;
+    clearTimeout(this.sheetTapT);
+    // preventDefault on pointerdown can swallow the click. Open from the
+    // click when it arrives; if it never does, open shortly after.
+    this.sheetTapT = setTimeout(() => {
+      if (this.sheetTap !== tab) return;
+      this.sheetTap = '';
+      this.openSheet(tab);
+    }, 400);
+  }
   openSheet(tab) {
     const s = this.state, next = tab || 'elements';
+    this.sheetTap = '';
+    clearTimeout(this.sheetTapT);
     if (s.sheet === 'studio' && s.sheetTab === next) { this.sheetGuardUntil = 0; this.setState({ sheet: '' }); return; }
-    // The tap that opens the sheet is followed by a click. The new backdrop
-    // would catch that click and close the sheet again. Ignore it briefly.
-    this.sheetGuardUntil = performance.now() + 350;
     this.setState({ sheet: 'studio', sheetTab: next, radial: false, radialHot: -1 });
+    // The synthetic click is hit-tested after the backdrop exists and can
+    // land a few hundred milliseconds later. Start the quiet period now.
+    this.sheetGuardUntil = performance.now() + 500;
   }
   closeSheet() {
     if (performance.now() < (this.sheetGuardUntil || 0)) return;
@@ -1914,6 +1927,8 @@ class Component extends DCLogic {
     if (e.button != null && e.button !== 0) return;
     e.preventDefault(); e.stopPropagation();
     const r = e.currentTarget.getBoundingClientRect();
+    this.sheetTap = '';
+    clearTimeout(this.sheetTapT);
     this.orbHold = { x: e.clientX, y: e.clientY, cx: r.left + r.width / 2, cy: r.top + r.height / 2, held: false, moved: false };
     try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
     clearTimeout(this.orbT);
@@ -1944,7 +1959,10 @@ class Component extends DCLogic {
       if (hot >= 0) this.pickElement(geom.ids[hot]);
       return;
     }
-    if (!hold.moved) { if (e && e.preventDefault) e.preventDefault(); this.openSheet('elements'); }
+    if (!hold.moved) { if (e && e.preventDefault) e.preventDefault(); this.armSheetTap('elements'); }
+  }
+  onOrbClick() {
+    if (this.sheetTap) this.openSheet(this.sheetTap);
   }
   onOrbCancel() {
     clearTimeout(this.orbT); this.orbHold = null;
@@ -1952,6 +1970,8 @@ class Component extends DCLogic {
   }
   onHandleDown(e) {
     e.preventDefault(); e.stopPropagation();
+    this.sheetTap = '';
+    clearTimeout(this.sheetTapT);
     this.handleDrag = e.clientY;
     try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
   }
@@ -1959,7 +1979,14 @@ class Component extends DCLogic {
     if (this.handleDrag == null) return;
     const dy = e.clientY - this.handleDrag;
     this.handleDrag = null;
-    if (dy < -24 || Math.abs(dy) < 12) { if (e && e.preventDefault) e.preventDefault(); this.openSheet('elements'); }
+    if (e && e.preventDefault) e.preventDefault();
+    // A flick often produces no click, so open now. A tap opens on the click,
+    // before the backdrop exists to catch it.
+    if (dy < -24) this.openSheet('elements');
+    else if (Math.abs(dy) < 12) this.armSheetTap('elements');
+  }
+  onHandleClick() {
+    if (this.sheetTap) this.openSheet(this.sheetTap);
   }
   onGrabDown(e) {
     e.preventDefault(); e.stopPropagation();
@@ -2412,8 +2439,8 @@ class Component extends DCLogic {
       showElements: this.hnd('tabEl', () => this.setState({ sheetTab: 'elements' })), showTools: this.hnd('tabTl', () => this.setState({ sheetTab: 'tools' })),
       showVessel: this.hnd('tabVs', () => this.setState({ sheetTab: 'vessel' })), showCodexTab: this.hnd('tabCx', () => this.setState({ sheetTab: 'codex' })),
       openOptions: () => this.openSheet('tools'), closeSheet: () => this.closeSheet(),
-      orbDown: this.hnd('orbDown', e => this.onOrbDown(e)), orbMove: this.hnd('orbMove', e => this.onOrbMove(e)), orbUp: this.hnd('orbUp', e => this.onOrbUp(e)), orbCancel: this.hnd('orbCancel', () => this.onOrbCancel()),
-      handleDown: this.hnd('handleDown', e => this.onHandleDown(e)), handleUp: this.hnd('handleUp', e => this.onHandleUp(e)),
+      orbDown: this.hnd('orbDown', e => this.onOrbDown(e)), orbMove: this.hnd('orbMove', e => this.onOrbMove(e)), orbUp: this.hnd('orbUp', e => this.onOrbUp(e)), orbCancel: this.hnd('orbCancel', () => this.onOrbCancel()), orbClick: this.hnd('orbClick', () => this.onOrbClick()),
+      handleDown: this.hnd('handleDown', e => this.onHandleDown(e)), handleUp: this.hnd('handleUp', e => this.onHandleUp(e)), handleClick: this.hnd('handleClick', () => this.onHandleClick()),
       grabDown: this.hnd('grabDown', e => this.onGrabDown(e)), grabUp: this.hnd('grabUp', e => this.onGrabUp(e)),
       onMatQuery: this.hnd('matQ', e => this.setState({ matQuery: e.target.value })), matQuery: s.matQuery || '', searchPlaceholder: 'Search materials…',
       foundCount: '', foundAria: 'Discoveries', orbName: '',

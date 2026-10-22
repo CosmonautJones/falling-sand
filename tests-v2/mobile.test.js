@@ -79,7 +79,10 @@ test('a wide coarse screen caps the sheet and fills tile columns', () => {
   assert.match(html, /@media \(pointer:coarse\) and \(min-width:701px\) and \(min-height:521px\)/);
   assert.match(html, /width:min\(560px,calc\(100% - 32px\)\)/);
   assert.match(html, /repeat\(auto-fill,minmax\(104px,1fr\)\)/);
-  assert.match(html, /sheetGuardUntil = performance\.now\(\) \+ 350/);
+  assert.match(html, /sheetGuardUntil = performance\.now\(\) \+ 500/);
+  assert.match(html, /onClick="\{\{ orbClick \}\}"/);
+  assert.match(html, /onClick="\{\{ handleClick \}\}"/);
+  assert.match(html, /armSheetTap\(tab\)/);
   assert.match(html, /chromeCover\(\) \{[\s\S]*?\.orb, \.size-orb, \.rb, \.rec, \.sheet-handle/);
   assert.match(html, /\.pour-hint\{left:auto;right:max\(84px,calc\(env\(safe-area-inset-right\) \+ 72px\)\)/);
 });
