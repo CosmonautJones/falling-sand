@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as E from '../public/v2/alembic-engine-v2.js';
 import {
-  IDLE_MS, HOLD_MS, arcSlots, createIdleChrome, familyOf, groupKnown, nearestSlot, nextSnap,
+  IDLE_MS, HOLD_MS, arcSlots, createIdleChrome, familyOf, fanRadius, groupKnown, nearestSlot, nextSnap,
   pickerIds, placeSlot, recentAround, rememberRecent,
 } from '../public/v2/touch-ui.js';
 
@@ -55,6 +55,11 @@ test('radial slots arc above the orb and a finger lands on the nearest one', () 
   assert.equal(nearestSlot(400, 400, slots, 36), -1);
   const placed = placeSlot(slots[1], { x: 33, y: 51 }, 38);
   assert.ok(placed.bottom > 51, 'a slot above the orb is placed higher');
+  const recents = arcSlots(3, 78).map(slot => placeSlot(slot, { x: 33, y: 51 }, 38));
+  assert.ok(recents.every(slot => slot.left >= 0), 'recents stay on screen beside a left-edge orb');
+  const picker = arcSlots(8, fanRadius(8, 46)).map(slot => placeSlot(slot, { x: 33, y: 51 }, 44));
+  assert.ok(picker.every(slot => slot.left >= 0), 'the hold fan stays to the right of the left edge');
+  assert.ok(picker[0].bottom > picker[7].bottom);
 });
 
 test('the sheet snaps between half, full, and closed', () => {

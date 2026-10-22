@@ -53,6 +53,7 @@ test('on phones the zoom buttons leave the vessel and the pills sit outside it',
   assert.ok(!vessel.includes('data-phone="almanac"'), 'pills are not drawn inside the vessel');
   assert.match(html, /toggleAttribute\('data-idle'/);
   assert.match(html, /createIdleChrome\(/);
+  assert.match(html, /addEventListener\('pointerdown', down, \{ passive: true, capture: true \}\)/);
 });
 
 test('mini-map hides itself shortly after the view stops moving', () => {

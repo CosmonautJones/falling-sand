@@ -64,8 +64,12 @@ export function pickerIds(known, current, history, starters, limit = PICKER_SLOT
   return out.slice(0, limit);
 }
 
-// Slots sit on an arc above the orb. x grows right, y grows down (screen space).
-export function arcSlots(count, radius = 78, start = Math.PI * 0.95, end = Math.PI * 0.18) {
+// The orb sits in the left thumb's corner, so the fan runs from straight up to
+// up-right. A slot that reaches left of the orb falls off the screen.
+const FAN_START = Math.PI * 0.5;
+const FAN_END = Math.PI * 0.16;
+
+export function arcSlots(count, radius = 78, start = FAN_START, end = FAN_END) {
   if (count <= 0) return [];
   const slots = [];
   for (let i = 0; i < count; i++) {
@@ -74,6 +78,13 @@ export function arcSlots(count, radius = 78, start = Math.PI * 0.95, end = Math.
     slots.push({ x: Math.cos(angle) * radius, y: -Math.sin(angle) * radius });
   }
   return slots;
+}
+
+// Radius that keeps `count` slots about `gap` px apart inside the fan.
+export function fanRadius(count, gap = 46) {
+  const span = FAN_START - FAN_END;
+  if (count <= 1) return 96;
+  return Math.max(96, Math.ceil(((count - 1) * gap) / span));
 }
 
 export function placeSlot(slot, origin, size) {
