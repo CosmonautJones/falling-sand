@@ -9,40 +9,46 @@ import { createWalkerState, stepWalker, dropWalkerIn, stepWalkerOut } from './wa
 export const W = 480, H = 270, N = W * H;
 export const AIR=0,SAND=1,WATER=2,STONE=3,FIRE=4,PLANT=5,OIL=6,SEED=7,ASH=8,MUD=9,GLASS=10,MOSS=11,ICE=12,WOOD=13,SALT=14,STEAM=15,LAVA=16,EMBER=17,OBSIDIAN=18,BRINE=19,CRYSTAL=20,ACID=21,LEAD=22,MERCURY=23,GOLD=24,AETHER=25,AZOTH=26,VOID=27,POWDER=28,BRICK=29,RIFT=30,TNT=31,NITRO=32,MITE=33,MINNOW=34,BLOOM=35,PEARL=36,SMOKE=37,PLASMA=38,CLOUD=39,VISITOR=40,ICHOR=41,RELIC=42,
   SNOW=43,CHARCOAL=44,SULFUR=45,HONEY=46,AMBER=47,FUNGUS=48,SPORE=49,FIREFLY=50,CORAL=51,PUMICE=52,BEETLE=53,NEWT=54,
-  NAPALM=55,METHANE=56,WAX=57,MOLTEN_WAX=58,CONCRETE=59,C4=60,FUSE=61,CRYO=62,FONT=63;
-// Material tables are sized 64, so 63 is the last id: a new material needs the tables widened first.
-export const COUNT = 64;
+  NAPALM=55,METHANE=56,WAX=57,MOLTEN_WAX=58,CONCRETE=59,C4=60,FUSE=61,CRYO=62,FONT=63,
+  COPPER=64,STEEL=65,HELIUM=66,LIQUID_NITROGEN=67,NITROGEN=68,TUNGSTEN=69,FERROFLUID=70,AEROGEL=71,MAGNET=72;
+// Material-indexed tables share COUNT. Uint8 cell IDs leave room for future discoveries.
+export const COUNT = 73;
 
-export const NAMES = ['air','sand','water','stone','fire','plant','oil','seed','ash','mud','glass','moss','ice','wood','salt','steam','lava','ember','obsidian','brine','crystal','acid','lead','mercury','gold','aether','azoth','void','powder','brick','rift','tnt','nitro','mite','minnow','bloom','pearl','smoke','plasma','cloud','visitor','ichor','relic','snow','charcoal','sulfur','honey','amber','fungus','spore','firefly','coral','pumice','beetle','newt','napalm','methane','wax','molten wax','concrete','c-4','fuse','cryo','font'];
+export const NAMES = ['air','sand','water','stone','fire','plant','oil','seed','ash','mud','glass','moss','ice','wood','salt','steam','lava','ember','obsidian','brine','crystal','acid','lead','mercury','gold','aether','azoth','void','powder','brick','rift','tnt','nitro','mite','minnow','bloom','pearl','smoke','plasma','cloud','visitor','ichor','relic','snow','charcoal','sulfur','honey','amber','fungus','spore','firefly','coral','pumice','beetle','newt','napalm','methane','wax','molten wax','concrete','c-4','fuse','cryo','font','copper','steel','helium','liquid nitrogen','nitrogen','tungsten','ferrofluid','aerogel','magnet'];
 export const COLORS = [[14,14,20],[214,176,96],[58,122,214],[110,110,118],[255,84,28],[42,158,68],[138,72,24],[186,142,48],[168,168,172],[92,64,40],[148,206,196],[28,92,48],[176,214,232],[118,78,42],[236,232,224],[198,206,214],[255,106,12],[220,64,32],[28,24,36],[36,148,168],[186,154,220],[156,214,48],[86,90,98],[176,186,196],[232,178,48],[120,220,255],[218,88,168],[8,0,18],[48,42,38],[176,92,64],[92,44,148],[196,52,44],[72,160,64],[196,152,78],[74,186,198],[236,64,112],[210,198,178],[74,68,66],[214,232,255],[150,156,172],[120,255,150],[96,236,128],[64,196,186],
   [232,240,250],[46,40,40],[226,204,72],[232,158,40],[214,126,34],[178,150,192],[206,196,150],[222,244,120],[238,118,108],[184,174,162],[88,118,72],[62,148,118],
-  [176,70,36],[150,190,120],[236,222,180],[248,214,150],[150,146,138],[184,176,132],[120,84,52],[170,230,255],[214,190,255]];
+  [176,70,36],[150,190,120],[236,222,180],[248,214,150],[150,146,138],[184,176,132],[120,84,52],[170,230,255],[214,190,255],
+  [206,126,72],[142,157,176],[240,166,222],[100,220,255],[154,196,220],[82,90,112],[45,52,86],[174,225,239],[224,70,100]];
 const DENS = Uint8Array.from([10,160,100,255,3,40,70,130,45,170,255,30,255,255,150,2,205,18,255,118,255,108,195,188,220,1,255,40,85,255,255,255,95,52,88,35,255,4,3,0,50,104,230,
   40,150,140,120,255,255,5,3,255,60,50,86,
-  90,2,255,85,180,255,255,60,255]);
+  90,2,255,85,180,255,255,60,255,
+  220,240,1,80,9,250,170,20,255]);
 const MOV = Uint8Array.from([1,1,1,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,1,0,1,1,1,1,1,0,1,1,0,0,0,1,1,1,0,0,1,0,1,1,1,1,
   1,1,1,1,0,0,1,1,0,1,1,1,
-  1,1,0,1,1,0,0,1,0]);
+  1,1,0,1,1,0,0,1,0,
+  0,0,1,1,1,1,1,1,0]);
 const K_STATIC=0, K_POWDER=1, K_LIQUID=2, K_GAS=3;
 export const KIND = Uint8Array.from([0,1,2,0,0,0,2,1,1,1,0,0,0,0,1,3,2,1,0,2,0,2,1,2,1,3,0,1,1,0,0,0,2,1,1,0,0,3,0,3,0,2,1,
   1,1,1,2,0,0,3,0,0,1,1,1,
-  2,3,0,2,2,0,0,1,0]);
+  2,3,0,2,2,0,0,1,0,
+  0,0,3,2,3,1,2,1,0]);
 const SHADE = Uint8Array.from([0,18,14,5,22,12,16,14,12,14,10,10,10,12,16,18,20,18,6,12,14,14,8,16,18,20,22,4,10,8,16,10,14,16,14,12,10,10,10,14,10,12,10,
   6,6,10,10,12,12,10,8,14,12,14,12,
-  10,8,6,6,10,6,8,12,0]);
-const DISP = new Uint8Array(64);
-Object.entries({[WATER]:8,[BRINE]:6,[ACID]:6,[OIL]:3,[MERCURY]:3,[NITRO]:3,[LAVA]:1,[ICHOR]:3,[HONEY]:1,[NAPALM]:2,[MOLTEN_WAX]:2,[CONCRETE]:1}).forEach(([k,v])=>DISP[k]=v);
+  10,8,6,6,10,6,8,12,0,
+  12,6,6,8,4,8,12,12,6]);
+const DISP = new Uint8Array(COUNT);
+Object.entries({[WATER]:8,[BRINE]:6,[ACID]:6,[OIL]:3,[MERCURY]:3,[NITRO]:3,[LAVA]:1,[ICHOR]:3,[HONEY]:1,[NAPALM]:2,[MOLTEN_WAX]:2,[CONCRETE]:1,[LIQUID_NITROGEN]:8,[FERROFLUID]:2}).forEach(([k,v])=>DISP[k]=v);
 // Feel tables: FRIC = chance a powder refuses a diagonal slide (>=0.5 also needs a 2-deep drop, so piles stand steeper); VISC = chance a liquid refuses to flow sideways/diagonally this tick.
-const FRIC = new Float32Array(64), VISC = new Float32Array(64);
-Object.entries({[ASH]:0.6,[MUD]:0.7,[SALT]:0.3,[SNOW]:0.35,[CHARCOAL]:0.3,[SULFUR]:0.2,[PUMICE]:0.4,[CRYO]:0.1}).forEach(([k,v])=>FRIC[k]=v);
-Object.entries({[LAVA]:0.8,[OIL]:0.4,[MERCURY]:0.3,[NITRO]:0.3,[ICHOR]:0.5,[HONEY]:0.9,[NAPALM]:0.85,[MOLTEN_WAX]:0.6,[CONCRETE]:0.85}).forEach(([k,v])=>VISC[k]=v);
-const CR = new Int16Array(64), CG = new Int16Array(64), CB = new Int16Array(64);
+const FRIC = new Float32Array(COUNT), VISC = new Float32Array(COUNT);
+Object.entries({[ASH]:0.6,[MUD]:0.7,[SALT]:0.3,[SNOW]:0.35,[CHARCOAL]:0.3,[SULFUR]:0.2,[PUMICE]:0.4,[CRYO]:0.1,[TUNGSTEN]:0.25,[AEROGEL]:0.55}).forEach(([k,v])=>FRIC[k]=v);
+Object.entries({[LAVA]:0.8,[OIL]:0.4,[MERCURY]:0.3,[NITRO]:0.3,[ICHOR]:0.5,[HONEY]:0.9,[NAPALM]:0.85,[MOLTEN_WAX]:0.6,[CONCRETE]:0.85,[FERROFLUID]:0.65}).forEach(([k,v])=>VISC[k]=v);
+const CR = new Int16Array(COUNT), CG = new Int16Array(COUNT), CB = new Int16Array(COUNT);
 COLORS.forEach((c, i) => { CR[i] = c[0]; CG[i] = c[1]; CB[i] = c[2]; });
 
 export const STARTER = [SAND,WATER,STONE,SEED,OIL,FIRE,AIR,ICE,WOOD,SALT,LAVA,ACID,LEAD,TNT];
 export const TRANSMUTED = [PLANT,ASH,MUD,GLASS,MOSS,STEAM,SMOKE,EMBER,OBSIDIAN,BRINE,CRYSTAL,MERCURY,GOLD,AETHER,AZOTH,VOID,POWDER,BRICK,RIFT,NITRO,MITE,MINNOW,BLOOM,PEARL,CLOUD,PLASMA,VISITOR,ICHOR,RELIC,
   SNOW,CHARCOAL,SULFUR,HONEY,AMBER,FUNGUS,SPORE,FIREFLY,CORAL,PUMICE,BEETLE,NEWT,
-  NAPALM,METHANE,WAX,MOLTEN_WAX,CONCRETE,C4,FUSE,CRYO,FONT];
+  NAPALM,METHANE,WAX,MOLTEN_WAX,CONCRETE,C4,FUSE,CRYO,FONT,COPPER,STEEL,HELIUM,LIQUID_NITROGEN,NITROGEN,TUNGSTEN,FERROFLUID,AEROGEL,MAGNET];
 export const BRUSH_SIZES = [1, 3, 6, 12, 22];
 
 // The cold side of the vessel. Heat values are the engine's 0-255 scale; still water rests at 34.
@@ -160,23 +166,23 @@ export const CLASSIC = Object.freeze({
   methaneFade: 3000,    // methane thins away about once in this many ticks
 });
 const AMBIENT = new Uint8Array(256).fill(18), CONDUCT = new Uint8Array(256).fill(4), SOURCE = new Uint8Array(256), SEEDHEAT = new Uint8Array(256);
-Object.entries({[ICE]:COLD.iceRest,[WATER]:34,[BRINE]:32,[STEAM]:88,[FIRE]:220,[LAVA]:255,[EMBER]:200,[OIL]:22,[ACID]:28,[MERCURY]:24,[NITRO]:26,[AETHER]:40,[OBSIDIAN]:14,[GLASS]:16,[CRYSTAL]:12,[SMOKE]:40,[CLOUD]:16,[PLASMA]:255,[SNOW]:6,[CRYO]:0}).forEach(([k,v])=>AMBIENT[k]=v);
-Object.entries({[AIR]:7,[STEAM]:7,[AETHER]:7,[SMOKE]:7,[CLOUD]:7,[WATER]:6,[BRINE]:6,[ACID]:6,[MERCURY]:8,[GOLD]:8,[LEAD]:8,[RELIC]:8,[ICE]:5,[GLASS]:2,[WOOD]:2,[PLANT]:3,[BLOOM]:3,[MOSS]:3,[OBSIDIAN]:1,[FIRE]:6,[LAVA]:6,[EMBER]:6,[PLASMA]:6,[CRYO]:8,[WAX]:2}).forEach(([k,v])=>CONDUCT[k]=v);
+Object.entries({[ICE]:COLD.iceRest,[WATER]:34,[BRINE]:32,[STEAM]:88,[FIRE]:220,[LAVA]:255,[EMBER]:200,[OIL]:22,[ACID]:28,[MERCURY]:24,[NITRO]:26,[AETHER]:40,[OBSIDIAN]:14,[GLASS]:16,[CRYSTAL]:12,[SMOKE]:40,[CLOUD]:16,[PLASMA]:255,[SNOW]:6,[CRYO]:0,[LIQUID_NITROGEN]:0,[NITROGEN]:8}).forEach(([k,v])=>AMBIENT[k]=v);
+Object.entries({[AIR]:7,[STEAM]:7,[AETHER]:7,[SMOKE]:7,[CLOUD]:7,[WATER]:6,[BRINE]:6,[ACID]:6,[MERCURY]:8,[GOLD]:8,[LEAD]:8,[RELIC]:8,[ICE]:5,[GLASS]:2,[WOOD]:2,[PLANT]:3,[BLOOM]:3,[MOSS]:3,[OBSIDIAN]:1,[FIRE]:6,[LAVA]:6,[EMBER]:6,[PLASMA]:6,[CRYO]:8,[WAX]:2,[COPPER]:8,[STEEL]:5,[TUNGSTEN]:6,[MAGNET]:5,[FERROFLUID]:5,[AEROGEL]:0,[LIQUID_NITROGEN]:7}).forEach(([k,v])=>CONDUCT[k]=v);
 Object.entries({[FIRE]:220,[LAVA]:255,[EMBER]:200,[STEAM]:90,[PLASMA]:255}).forEach(([k,v])=>SOURCE[k]=v);
 for (let i = 0; i < 256; i++) SEEDHEAT[i] = SOURCE[i] > 0 ? SOURCE[i] : AMBIENT[i];
 
 // Renderer LUT: R liquid (255 clear, 128 opaque), G bevel (255 powder, 128 solid), B glassy, A gas.
-export const LUT = new Uint8Array(64 * 4);
-for (const m of [WATER, BRINE, ACID, ICHOR]) LUT[m*4] = 255;
-for (const m of [OIL, LAVA, MERCURY, NITRO, HONEY, NAPALM, MOLTEN_WAX, CONCRETE]) LUT[m*4] = 128;
-for (const m of [SAND, SEED, ASH, MUD, SALT, EMBER, LEAD, GOLD, POWDER, MITE, RELIC, SNOW, CHARCOAL, SULFUR, PUMICE, BEETLE, NEWT, CRYO]) LUT[m*4+1] = 255;
-for (const m of [STONE, PLANT, MOSS, WOOD, OBSIDIAN, BRICK, TNT, BLOOM, PEARL, FUNGUS, CORAL, WAX, C4, FUSE, FONT]) LUT[m*4+1] = 128;
+export const LUT = new Uint8Array(COUNT * 4);
+for (const m of [WATER, BRINE, ACID, ICHOR, LIQUID_NITROGEN]) LUT[m*4] = 255;
+for (const m of [OIL, LAVA, MERCURY, NITRO, HONEY, NAPALM, MOLTEN_WAX, CONCRETE, FERROFLUID]) LUT[m*4] = 128;
+for (const m of [SAND, SEED, ASH, MUD, SALT, EMBER, LEAD, GOLD, POWDER, MITE, RELIC, SNOW, CHARCOAL, SULFUR, PUMICE, BEETLE, NEWT, CRYO, TUNGSTEN, AEROGEL]) LUT[m*4+1] = 255;
+for (const m of [STONE, PLANT, MOSS, WOOD, OBSIDIAN, BRICK, TNT, BLOOM, PEARL, FUNGUS, CORAL, WAX, C4, FUSE, FONT, COPPER, STEEL, MAGNET]) LUT[m*4+1] = 128;
 for (const m of [GLASS, CRYSTAL, ICE, AZOTH, AMBER]) LUT[m*4+2] = 255;
-for (const m of [STEAM, AETHER, SMOKE, CLOUD, SPORE, METHANE]) LUT[m*4+3] = 255;
-const EMF = new Uint8Array(64);
+for (const m of [STEAM, AETHER, SMOKE, CLOUD, SPORE, METHANE, HELIUM, NITROGEN]) LUT[m*4+3] = 255;
+const EMF = new Uint8Array(COUNT);
 Object.entries({[FIRE]:255,[LAVA]:230,[EMBER]:230,[GOLD]:40,[AETHER]:140,[AZOTH]:150,[RIFT]:170,[BLOOM]:50,[CRYSTAL]:30,[ACID]:25,[STEAM]:12,[MINNOW]:20,[PEARL]:25,[MERCURY]:15,[PLASMA]:255,[VISITOR]:170,[ICHOR]:110,[RELIC]:110,
   [FIREFLY]:200,[AMBER]:50,[FUNGUS]:22,[CORAL]:25,[SULFUR]:10,[CRYO]:30,[FONT]:60}).forEach(([k,v])=>EMF[k]=v);
-const NOAO = new Uint8Array(64); for (const m of [FIRE,GLASS,CRYSTAL,STEAM,AETHER,AZOTH,VOID,RIFT,PLASMA,SMOKE,CLOUD,SPORE,FIREFLY,AMBER,METHANE]) NOAO[m] = 1;
+const NOAO = new Uint8Array(COUNT); for (const m of [FIRE,GLASS,CRYSTAL,STEAM,AETHER,AZOTH,VOID,RIFT,PLASMA,SMOKE,CLOUD,SPORE,FIREFLY,AMBER,METHANE,HELIUM,NITROGEN,AEROGEL]) NOAO[m] = 1;
 
 export const PAGES = [
   {w:'The first emptiness.', l:'Grains fall through it. The vessel is a box of this, and every other reagent is an argument against it.'},
@@ -243,6 +249,15 @@ export const PAGES = [
   {w:'Plant fibre soaked in powder.', l:'Lay it in lines. A spark walks it at a steady pace and sets off whatever waits at the end. Water does not save it once lit.'},
   {w:'Aether touched ice and fell as frost.', l:'A cold powder. It freezes water to ice, quenches lava to obsidian and snuffs fire, spending itself as snow.'},
   {w:'Aether found a pearl and would not stop.', l:'It learns the first thing that touches it and gives it back forever: a well, a spout, a torch. The tap tool sets one down already taught.'},
+  {w:'Copper carries the heat.', l:'A fixed conductor. Heat travels through it quickly; use it as a bridge between a hot chamber and a cold one.'},
+  {w:'Steel holds the shape.', l:'A fixed structural metal. Use it for vessels, frames, and experiment scaffolding.'},
+  {w:'A lighter sky.', l:'An inert, buoyant gas. It rises opposite the gravity vector and drifts with the air.'},
+  {w:'A cold spill.', l:'A fast cryogenic liquid. It draws heat from its surroundings, freezing adjacent water, then boils into nitrogen gas. Heat uses the vessel scale, not degrees Celsius.'},
+  {w:'The cold becomes air.', l:'Nitrogen left by a cryogenic spill. It drifts and warms; its density is close to air.'},
+  {w:'Heavy dust, stubborn heat.', l:'Dense, heat-resistant tungsten grains. They sink through liquids and make useful ballast.'},
+  {w:'Liquid follows a field.', l:'A viscous magnetic suspension. Nearby magnets pull the liquid into spikes and streams, even in zero gravity.'},
+  {w:'Almost air, still a solid.', l:'Very light, insulating grains. They float on water and slow the flow of heat.'},
+  {w:'An invisible hand.', l:'A fixed magnet. Its bounded field attracts nearby ferrofluid; distance weakens the pull.'},
 ];
 export const HINTS = {
   [PLANT]:'A promise, given water.', [ASH]:'What fire keeps when it starves.', [MUD]:'Grey, slaked.', [GLASS]:'Sand that saw fire.',
@@ -265,8 +280,8 @@ const DX = [-1,0,1,-1,1,-1,0,1], DY = [-1,-1,-1,0,0,1,1,1];
 const CS = 8, CW = 60, CH = 34, CNN = CW * CH;
 const G = 0.16, MAXV = 7;
 const GOLD_CARRY = 90, MUD_CARRY = -40;
-const FLAMMABLE = new Uint8Array(64); for (const m of [PLANT, WOOD, OIL, SEED, BLOOM, POWDER, FUNGUS, SULFUR, METHANE]) FLAMMABLE[m] = 1;
-const WET_FUEL = new Uint8Array(64); for (const m of [PLANT, SEED, BLOOM, FUNGUS]) WET_FUEL[m] = 1;
+const FLAMMABLE = new Uint8Array(COUNT); for (const m of [PLANT, WOOD, OIL, SEED, BLOOM, POWDER, FUNGUS, SULFUR, METHANE]) FLAMMABLE[m] = 1;
+const WET_FUEL = new Uint8Array(COUNT); for (const m of [PLANT, SEED, BLOOM, FUNGUS]) WET_FUEL[m] = 1;
 const BOIL = 90, IGNITE = 62;
 // Heat alone lights dry fuel (wood, oil, powder, sulfur) at IGNITE. Living, water-filled growth (plant,
 // seed, bloom, fungus) needs more than steam can ever give (steam is pinned at 90), so a steamy cave
@@ -274,11 +289,11 @@ const BOIL = 90, IGNITE = 62;
 export const IGNITE_WET = 100;
 // Restless materials keep their 8x8 chunk awake even when nothing moved: they act on their own
 // (fire, critters, growth, decay, random drips) or ride the draft (gases, light powders).
-const ALIVE = new Uint8Array(64);
+const ALIVE = new Uint8Array(COUNT);
 for (const m of [FIRE, EMBER, LAVA, PLANT, MOSS, MUD, SMOKE, STEAM, CLOUD, PLASMA, MITE, MINNOW, VISITOR, ACID, VOID, RIFT, ICE, CRYSTAL, AZOTH, AETHER, ICHOR, ASH,
-  SNOW, SULFUR, FUNGUS, SPORE, FIREFLY, CORAL, BEETLE, NEWT, MOLTEN_WAX, CONCRETE, CRYO, FONT]) ALIVE[m] = 1;
+  SNOW, SULFUR, FUNGUS, SPORE, FIREFLY, CORAL, BEETLE, NEWT, MOLTEN_WAX, CONCRETE, CRYO, FONT, LIQUID_NITROGEN, FERROFLUID]) ALIVE[m] = 1;
 // A font learns any powder, liquid or gas, and fire (a torch). Walls, doors and creatures it will not copy.
-export const fontLearns = m => m > 0 && m < 64 && m !== FONT && m !== VOID && m !== RIFT && m !== RELIC &&
+export const fontLearns = m => m > 0 && m < COUNT && m !== FONT && m !== VOID && m !== RIFT && m !== RELIC &&
   m !== MITE && m !== MINNOW && m !== VISITOR && m !== FIREFLY && m !== BEETLE && m !== NEWT && (KIND[m] !== 0 || m === FIRE);
 const CC = new Uint16Array(CNN);
 for (let cy = 0; cy < CH; cy++) for (let cx = 0; cx < CW; cx++) CC[cy * CW + cx] = 8 * Math.max(1, Math.min(8, H - cy * 8));
@@ -291,6 +306,18 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
   // ---------- grid ----------
   const cells = new Uint8Array(N), shades = new Int8Array(N), heat = new Uint8Array(N).fill(18), trails = new Uint8Array(N);
   const VX = new Float32Array(N), VY = new Float32Array(N);
+  // Optional laboratory solver. Legacy worlds retain their original tick-for-tick rules.
+  let gravity = null;
+  const PX = new Float32Array(N), PY = new Float32Array(N);
+  function setGravity(value) {
+    if (!value || !Number.isFinite(value.x) || !Number.isFinite(value.y)) throw new Error('Invalid gravity vector');
+    const largest = Math.max(Math.abs(value.x), Math.abs(value.y));
+    const norm = largest ? Math.hypot(value.x / largest, value.y / largest) : 1;
+    gravity = largest > 4 / norm ? { x: value.x / largest * 4 / norm, y: value.y / largest * 4 / norm } : { x: value.x, y: value.y };
+    dirty.fill(1); tQuiet.fill(0);
+    return getGravity();
+  }
+  function getGravity() { return gravity ? { ...gravity } : { x: 0, y: 1 }; }
   const born = new Uint8Array(N), heatOut = new Uint8Array(N), trailOut = new Uint8Array(N);
   const meltList = new Int32Array(N);
   // Sleeping chunks: a chunk runs the cell pass if it holds restless material, or if it or a neighbour changed.
@@ -309,7 +336,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
   function grain(m) { return m === PLASMA ? 3 + ri(3) : rshade(SHADE[m]); }
   function inb(x, y) { return x >= 0 && y >= 0 && x < W && y < H; }
   function get(x, y) { return (x >= 0 && y >= 0 && x < W && y < H) ? cells[y * W + x] : STONE; }
-  function setc(x, y, m, s) { if (!inb(x, y)) return; const i = y * W + x; cells[i] = m; shades[i] = s; heat[i] = SEEDHEAT[m]; VX[i] = 0; VY[i] = 0; markDirty(x, y); }
+  function setc(x, y, m, s) { if (!inb(x, y)) return; const i = y * W + x; cells[i] = m; shades[i] = s; heat[i] = SEEDHEAT[m]; VX[i] = 0; VY[i] = 0; PX[i] = 0; PY[i] = 0; markDirty(x, y); }
   function swap(ax, ay, bx, by) {
     if (!inb(ax, ay) || !inb(bx, by)) return;
     markDirty(ax, ay); markDirty(bx, by);
@@ -319,12 +346,14 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     t = heat[a]; heat[a] = heat[b]; heat[b] = t;
     t = VX[a]; VX[a] = VX[b]; VX[b] = t;
     t = VY[a]; VY[a] = VY[b]; VY[b] = t;
+    t = PX[a]; PX[a] = PX[b]; PX[b] = t;
+    t = PY[a]; PY[a] = PY[b]; PY[b] = t;
   }
   function paint(cx, cy, r, m) {
     const r2 = r * r;
     for (let y = cy - r; y <= cy + r; y++) for (let x = cx - r; x <= cx + r; x++) {
       const dx = x - cx, dy = y - cy;
-      if (dx * dx + dy * dy <= r2) setc(x, y, m, grain(m));
+      if (dx * dx + dy * dy <= r2 && !(gravity && m !== AIR && get(x, y) === m)) setc(x, y, m, grain(m));
     }
   }
   function paintLine(x0, y0, x1, y1, r, m) {
@@ -353,7 +382,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     }
   }
   function fill(x0, y0, x1, y1, m) { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) setc(x, y, m, grain(m)); }
-  function clearGrid() { dirty.fill(1); tQuiet.fill(0); cells.fill(AIR); shades.fill(0); heat.fill(AMBIENT[AIR]); trails.fill(0); VX.fill(0); VY.fill(0); trailsLive = false; }
+  function clearGrid() { dirty.fill(1); tQuiet.fill(0); cells.fill(AIR); shades.fill(0); heat.fill(AMBIENT[AIR]); trails.fill(0); VX.fill(0); VY.fill(0); PX.fill(0); PY.fill(0); trailsLive = false; }
 
   // ---------- convection field (coarse stable-fluids lite) ----------
   const WU = new Float32Array(CNN), WV = new Float32Array(CNN), WU0 = new Float32Array(CNN), WV0 = new Float32Array(CNN);
@@ -369,7 +398,10 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       WS[c] = SOL[c] / CC[c] > 0.55 ? 1 : 0;
       if (WS[c]) { WU[c] = 0; WV[c] = 0; continue; }
       const avg = HS[c] / CC[c];
-      WV[c] -= (avg - 22) * 0.0014;
+      if (gravity) {
+        WU[c] -= (avg - 22) * 0.0014 * gravity.x;
+        WV[c] -= (avg - 22) * 0.0014 * gravity.y;
+      } else WV[c] -= (avg - 22) * 0.0014;
     }
     WU0.set(WU); WV0.set(WV);
     for (let cy = 0; cy < CH; cy++) for (let cx = 0; cx < CW; cx++) {
@@ -416,6 +448,154 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
 
   // ---------- motion ----------
   const isCritter = n => n === MITE || n === MINNOW || n === VISITOR || n === FIREFLY || n === BEETLE || n === NEWT;
+  // Semi-implicit Euler at the fixed simulation tick, with per-grain subcell positions.
+  // Gravity is in Earth multiples; lengths remain vessel cells, not SI metres.
+  function vectorCanMove(x, y, nx, ny) {
+    if (!inb(nx, ny)) return false;
+    const m = get(x, y), d = get(nx, ny);
+    if (d === AIR) return true;
+    if (!MOV[d] || d === m || isCritter(d)) return false;
+    if (KIND[d] === K_GAS && KIND[m] !== K_GAS) return true;
+    return (DENS[m] - DENS[d]) * ((nx - x) * gravity.x + (ny - y) * gravity.y) > 0;
+  }
+  function moveVector(x, y, creature = false) {
+    const i = y * W + x, m = cells[i], kind = KIND[m], rho = DENS[m];
+    let medium = DENS[AIR], neighbours = 0, total = 0;
+    for (const [dx, dy] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+      const d = get(x + dx, y + dy);
+      if (d !== m && KIND[d] === K_LIQUID) { total += DENS[d]; neighbours++; }
+    }
+    if (neighbours >= 2) medium = total / neighbours;
+    const buoyancy = Math.max(-1, Math.min(1, (rho - medium) / Math.max(rho, medium, 1)));
+    let vx = VX[i] + gravity.x * G * buoyancy, vy = VY[i] + gravity.y * G * buoyancy;
+    const c = windC(x, y);
+    if (kind === K_GAS || m === AEROGEL || m === SNOW) {
+      vx += (WU[c] - vx) * 0.035; vy += (WV[c] - vy) * 0.035;
+    }
+    if (m === FERROFLUID) {
+      // Sample the coarse magnet index, not every surrounding grain for every liquid cell.
+      for (const magnet of magnets) {
+        const dx = magnet.x - x, dy = magnet.y - y, d2 = dx * dx + dy * dy;
+        if (d2 < 1 || d2 > 48 * 48) continue;
+        const force = Math.min(0.48, magnet.mass * 5 / (d2 + 16)), d = Math.sqrt(d2);
+        vx += dx / d * force; vy += dy / d * force;
+      }
+    }
+    const speed = Math.hypot(vx, vy);
+    if (speed > MAXV) { vx *= MAXV / speed; vy *= MAXV / speed; }
+    // DDA visits each crossed cell. Fast grains cannot tunnel through a one-cell wall.
+    const steps = Math.max(1, Math.ceil(Math.max(Math.abs(vx), Math.abs(vy)) * 2));
+    let px = x + 0.5 + PX[i], py = y + 0.5 + PY[i], cx = x, cy = y, blocked = false;
+    for (let s = 0; s < steps; s++) {
+      const tx = px + vx / steps, ty = py + vy / steps, nx = Math.floor(tx), ny = Math.floor(ty);
+      if (nx === cx && ny === cy) { px = tx; py = ty; continue; }
+      const corner = nx !== cx && ny !== cy && !vectorCanMove(cx, cy, nx, cy) && !vectorCanMove(cx, cy, cx, ny);
+      if (!corner && vectorCanMove(cx, cy, nx, ny)) {
+        const dst = get(nx, ny), oi = cy * W + cx;
+        swap(cx, cy, nx, ny); born[oi] = 1; cx = nx; cy = ny; px = tx; py = ty;
+        if (KIND[dst] === K_LIQUID) { vx *= 0.7; vy *= 0.7; }
+        continue;
+      }
+      // Inelastic contact removes inward normal velocity; tangential momentum survives.
+      if (nx !== cx) vx *= -0.08;
+      if (ny !== cy) vy *= -0.08;
+      vx *= 0.8; vy *= 0.8; blocked = true;
+      px = cx + 0.5; py = cy + 0.5;
+      break;
+    }
+    let j = cy * W + cx;
+    if (blocked && !creature && (kind === K_POWDER || kind === K_LIQUID) && Math.hypot(gravity.x, gravity.y) > 0) {
+      const g = Math.hypot(gravity.x, gravity.y), gx = gravity.x / g, gy = gravity.y / g;
+      const dx = Math.abs(gx) > 0.4 ? Math.sign(gx) : 0, dy = Math.abs(gy) > 0.4 ? Math.sign(gy) : 0;
+      const side = vx * -gy + vy * gx > 0.1 ? 1 : vx * -gy + vy * gx < -0.1 ? -1 : (ri(2) ? 1 : -1);
+      const mobility = kind === K_LIQUID ? 1 - VISC[m] : 1 - FRIC[m];
+      if (rf() < Math.min(1, g) * mobility) {
+        for (const sign of [side, -side]) {
+          const tx = -dy * sign, ty = dx * sign;
+          let nx = cx + dx + tx, ny = cy + dy + ty;
+          if (!vectorCanMove(cx, cy, nx, ny) || !vectorCanMove(cx, cy, cx + tx, cy + ty)) {
+            if (kind !== K_LIQUID) continue;
+            nx = cx + tx; ny = cy + ty;
+          }
+          if (!vectorCanMove(cx, cy, nx, ny)) continue;
+          swap(cx, cy, nx, ny); born[j] = 1; cx = nx; cy = ny; j = cy * W + cx;
+          px = cx + 0.5; py = cy + 0.5; vx += tx * 0.12; vy += ty * 0.12;
+          break;
+        }
+      }
+    }
+    VX[j] = Math.abs(vx) < 0.0001 ? 0 : vx; VY[j] = Math.abs(vy) < 0.0001 ? 0 : vy;
+    PX[j] = Math.max(-0.499, Math.min(0.499, px - cx - 0.5)); PY[j] = Math.max(-0.499, Math.min(0.499, py - cy - 0.5));
+    if (j !== i) born[j] = 1;
+    if (vx || vy || gravity.x || gravity.y || m === FERROFLUID) markDirty(cx, cy);
+    return j !== i;
+  }
+  let magnets = [];
+  function locateMagnets() {
+    const mass = new Uint16Array(CNN), mx = new Float32Array(CNN), my = new Float32Array(CNN);
+    for (let i = 0; i < N; i++) if (cells[i] === MAGNET) {
+      const x = i % W, y = i / W | 0, c = windC(x, y); mass[c]++; mx[c] += x; my[c] += y;
+    }
+    magnets = [];
+    for (let c = 0; c < CNN; c++) if (mass[c]) magnets.push({ x: mx[c] / mass[c], y: my[c] / mass[c], mass: mass[c] });
+  }
+  const structural = new Uint8Array(COUNT);
+  for (const m of [STONE, GLASS, ICE, WOOD, OBSIDIAN, BRICK, CRYSTAL, STEEL, COPPER, MAGNET,
+    TNT, C4, FUSE, WAX, AMBER, PEARL, FONT, AZOTH, PLANT, MOSS, BLOOM, FUNGUS, CORAL]) structural[m] = 1;
+  const bodyLabels = new Int32Array(N), bodyQueue = new Int32Array(N);
+  function moveStructures() {
+    bodyLabels.fill(0); let label = 0;
+    for (let start = 0; start < N; start++) {
+      if (!structural[cells[start]] || bodyLabels[start]) continue;
+      label++;
+      let head = 0, length = 1, anchored = false;
+      bodyQueue[0] = start; bodyLabels[start] = label;
+      while (head < length) {
+        const i = bodyQueue[head++], x = i % W, y = i / W | 0;
+        if (x === 0 || x === W - 1 || y === 0 || y === H - 1) anchored = true;
+        for (const j of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, y > 0 ? i - W : -1, y < H - 1 ? i + W : -1]) {
+          if (j < 0 || bodyLabels[j] || !structural[cells[j]]) continue;
+          bodyLabels[j] = label; bodyQueue[length++] = j;
+        }
+      }
+      if (anchored) {
+        for (let n = 0; n < length; n++) { const i = bodyQueue[n]; VX[i] = VY[i] = PX[i] = PY[i] = 0; }
+        continue;
+      }
+      let vx = Math.max(-MAXV, Math.min(MAXV, VX[start] + gravity.x * G));
+      let vy = Math.max(-MAXV, Math.min(MAXV, VY[start] + gravity.y * G));
+      let px = PX[start], py = PY[start], ox = 0, oy = 0;
+      const steps = Math.max(1, Math.ceil(Math.max(Math.abs(vx), Math.abs(vy)) * 2));
+      const body = Array.from(bodyQueue.subarray(0, length));
+      const open = (i, dx, dy) => {
+        const x = i % W + ox + dx, y = (i / W | 0) + oy + dy;
+        if (!inb(x, y)) return false;
+        const j = y * W + x, d = cells[j];
+        return bodyLabels[j] === label || d === AIR || MOV[d] && !isCritter(d) && DENS[d] < DENS[cells[i + oy * W + ox]];
+      };
+      for (let s = 0; s < steps; s++) {
+        px += vx / steps; py += vy / steps;
+        const dx = Math.floor(px + 0.5), dy = Math.floor(py + 0.5);
+        if (!dx && !dy) continue;
+        if (body.some(i => !open(i, dx, dy) || dx && dy && !open(i, dx, 0) && !open(i, 0, dy))) {
+          if (dx) vx = 0; if (dy) vy = 0; px = py = 0; break;
+        }
+        body.sort((a, b) => ((b % W) * dx + (b / W | 0) * dy) - ((a % W) * dx + (a / W | 0) * dy));
+        for (const i of body) {
+          const x = i % W + ox, y = (i / W | 0) + oy;
+          swap(x, y, x + dx, y + dy);
+          bodyLabels[y * W + x] = 0;
+          bodyLabels[(y + dy) * W + x + dx] = label;
+        }
+        ox += dx; oy += dy; px -= dx; py -= dy;
+      }
+      for (const i of body) {
+        const j = i + oy * W + ox;
+        VX[j] = vx; VY[j] = vy; PX[j] = px; PY[j] = py;
+        if (vx || vy || gravity.x || gravity.y) markDirty(j % W, j / W | 0);
+      }
+    }
+  }
   function canMove(sx, sy, nx, ny) {
     if (!inb(sx, sy) || !inb(nx, ny)) return false;
     const d = cells[ny * W + nx];
@@ -805,7 +985,10 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       return true;
     }
     // Up to three grains a tick across the mouth, so the stream reads as a stream; the sides only when the mouth is blocked.
-    const order = KIND[m] === K_GAS || m === FIRE ? FONT_UP : FONT_DOWN;
+    const order = gravity ? Array.from({ length: 8 }, (_, k) => k).sort((a, b) => {
+      const sign = KIND[m] === K_GAS || m === FIRE ? -1 : 1;
+      return sign * ((DX[b] - DX[a]) * gravity.x + (DY[b] - DY[a]) * gravity.y);
+    }) : KIND[m] === K_GAS || m === FIRE ? FONT_UP : FONT_DOWN;
     let poured = 0;
     for (let n = 0; n < order.length && poured < 3; n++) {
       if (n >= 3 && poured) break;
@@ -1371,6 +1554,19 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
   // ---------- reactions ----------
   function react(x, y, m) {
     switch (m) {
+      case LIQUID_NITROGEN: {
+        const i = y * W + x;
+        for (let k = 0; k < 8; k++) {
+          const nx = x + DX[k], ny = y + DY[k]; if (!inb(nx, ny)) continue;
+          const j = ny * W + nx, n = cells[j];
+          if (n === LIQUID_NITROGEN || n === NITROGEN) continue;
+          if (heat[j] > 0) { heat[j] = Math.max(0, heat[j] - 8); markDirty(nx, ny); }
+          if ((n === WATER || n === BRINE) && heat[j] <= COLD.freezeBelow) { transmute(nx, ny, ICE); heat[j] = 0; }
+          if (n === FIRE) transmute(nx, ny, SMOKE);
+        }
+        if (heat[i] > 5) { transmute(x, y, NITROGEN); heat[i] = 0; return true; }
+        return false;
+      }
       case SEED: if (vegetation === 'native' && (hasN(x, y, WATER) || hasN(x, y, MUD))) { transmute(x, y, PLANT); return true; } return false;
       case ASH: if (hasN(x, y, WATER)) { transmute(x, y, MUD); return true; } return false;
       case SALT:
@@ -1462,7 +1658,10 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
         return false;
       }
       case CONCRETE: {
-        const below = get(x, y + 1);
+        const dx = gravity ? Math.round(gravity.x / (Math.hypot(gravity.x, gravity.y) || 1)) : 0;
+        const dy = gravity ? Math.round(gravity.y / (Math.hypot(gravity.x, gravity.y) || 1)) : 1;
+        if (!dx && !dy) return false;
+        const below = get(x + dx, y + dy);
         if (below === AIR || ((KIND[below] === K_LIQUID || KIND[below] === K_GAS) && below !== CONCRETE)) return false;
         const fast = hasN(x, y, STONE) || hasN(x, y, BRICK) || hasN(x, y, GLASS);
         if (ri(fast ? CLASSIC.concreteSetFast : CLASSIC.concreteSet) === 0) { transmute(x, y, STONE); return true; }
@@ -1478,11 +1677,18 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
         if (m === NITRO && hasN(x, y, WAX)) { transmute(x, y, C4); return true; }
         return false;
       case RIFT: riftPull(x, y); return false;
-      case SAND: if (get(x, y + 1) === BRINE) { transmute(x, y, STONE); return true; } return false;
+      case SAND: {
+        const g = gravity ? Math.hypot(gravity.x, gravity.y) : 1;
+        const dx = gravity ? Math.round(gravity.x / (g || 1)) : 0, dy = gravity ? Math.round(gravity.y / (g || 1)) : 1;
+        if (g && get(x + dx, y + dy) === BRINE) { transmute(x, y, STONE); return true; }
+        return false;
+      }
       case SNOW: {
         // Deep snow packs to ice under its own weight; a winter's drift can become a small glacier.
-        if (ri(SNOWFALL.packOdds) !== 0 || get(x, y + 1) === AIR) return false;
-        for (let d = 1; d <= SNOWFALL.packDepth; d++) { const a = get(x, y - d); if (a !== SNOW && a !== ICE) return false; }
+        const g = gravity ? Math.hypot(gravity.x, gravity.y) : 1;
+        const dx = gravity ? Math.round(gravity.x / (g || 1)) : 0, dy = gravity ? Math.round(gravity.y / (g || 1)) : 1;
+        if (!g || ri(SNOWFALL.packOdds) !== 0 || get(x + dx, y + dy) === AIR) return false;
+        for (let d = 1; d <= SNOWFALL.packDepth; d++) { const a = get(x - dx * d, y - dy * d); if (a !== SNOW && a !== ICE) return false; }
         transmute(x, y, ICE); return true;
       }
       case CRYSTAL:
@@ -1508,7 +1714,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       case EMBER: {
         const fueled = smolderEmber(x, y);
         if (wetN(x, y)) { transmute(x, y, STEAM); return true; }
-        const moved = tryDownAndDiags(x, y);
+        const moved = gravity ? moveVector(x, y) : tryDownAndDiags(x, y);
         // Starved in open air it is ash; buried with no air at all, it keeps as charcoal.
         if (!moved && !fueled) transmute(x, y, gatherAir(x, y) ? ASH : CHARCOAL);
         return true;
@@ -1520,7 +1726,21 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
   // ---------- fields ----------
   function thermals() {
     for (let i = 0; i < N; i++) { const s = SOURCE[cells[i]]; if (s > heat[i]) heat[i] = s; }
-    for (let y = H - 1; y >= 1; y--) {
+    if (gravity) {
+      const strength = Math.hypot(gravity.x, gravity.y);
+      const dx = Math.round(-gravity.x / (strength || 1)), dy = Math.round(-gravity.y / (strength || 1));
+      if (strength) for (let i = 0; i < N; i++) {
+        const m = cells[i], k = KIND[m];
+        if (born[i] || k !== K_LIQUID && k !== K_GAS) continue;
+        const x = i % W, y = i / W | 0, nx = x + dx, ny = y + dy;
+        if (!inb(nx, ny)) continue;
+        const j = ny * W + nx;
+        if (!born[j] && cells[j] === m && heat[i] > heat[j] + 16 && rf() < Math.min(1, strength) * 0.25) {
+          swap(x, y, nx, ny); born[j] = 1;
+        }
+      }
+    }
+    for (let y = H - 1; y >= 1 && !gravity; y--) {
       const row = y * W;
       for (let x = 0; x < W; x++) {
         const i = row + x;
@@ -1554,8 +1774,16 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
           const rt = x < W - 1 ? heat[i + 1] : t, lf = x > 0 ? heat[i - 1] : t;
           // Both steps are symmetric. A bare >> floors, which made every small exchange lose heat, so
           // the coldest thing in a pool (any ice) slowly dragged the whole pool down to its own heat.
-          const dq = CONDUCT[m] * (up + dn + rt + lf - (t << 2));
-          let next = t + (dq >= 0 ? (dq + 16) >> 5 : -((16 - dq) >> 5));
+          let dq = CONDUCT[m] * (up + dn + rt + lf - (t << 2));
+          if (gravity) {
+            // Harmonic interface conductivity: an insulator blocks exchange from either side.
+            const k = CONDUCT[m], flux = j => {
+              const other = CONDUCT[cells[j]], sum = k + other;
+              return sum ? 2 * k * other / sum * (heat[j] - t) : 0;
+            };
+            dq = (y > 0 ? flux(i - W) : 0) + (y < H - 1 ? flux(i + W) : 0) + (x > 0 ? flux(i - 1) : 0) + (x < W - 1 ? flux(i + 1) : 0);
+          }
+          let next = t + (gravity ? Math.round(dq / 32) : dq >= 0 ? (dq + 16) >> 5 : -((16 - dq) >> 5));
           // The pull back to resting heat moves at least one step, so warmed or chilled things settle.
           const da = AMBIENT[m] - next, wa = m === AIR || m === STEAM || m === SMOKE ? 10 : 2;
           next += da > 0 ? (da * wa + 255) >> 8 : da < 0 ? -((255 - da * wa) >> 8) : 0;
@@ -1616,9 +1844,11 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     if (born[i]) return;
     const m = cells[i];
     if (m === AIR) return;
+    if (gravity && isCritter(m) && moveVector(x, y, true)) return;
     if (react(x, y, m)) return;
     const k = KIND[cells[i]];
-    if (k === K_POWDER) movePowder(x, y);
+    if (gravity && k !== K_STATIC) moveVector(x, y);
+    else if (k === K_POWDER) movePowder(x, y);
     else if (k === K_LIQUID) moveLiquid(x, y);
     else if (k === K_GAS) tryGas(x, y, dir);
   }
@@ -1653,6 +1883,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
   function simulate() {
     const dir = scanDir; scanDir = -scanDir;
     born.fill(0);
+    if (gravity) { moveStructures(); locateMagnets(); }
     climate = weather ? climateAt(initialSeed, tickIndex) : 0; cold = climate < 0 ? -climate : 0; warm = climate > 0 ? climate : 0;
     season = weather ? seasonAt(tickIndex) : 0;
     if (weather && tickIndex > 0) {
@@ -1681,7 +1912,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       else { for (let cx = CW - 1; cx >= 0; cx--) if (awake[row + cx]) for (let x = (cx << 3) + 7, e = cx << 3; x >= e; x--) processCell(x, y, dir); }
     }
     stigmergy();
-    if (dir === 1) levelLiquids();
+    if (dir === 1 && !gravity) levelLiquids();
     stormStep();
     shipStep();
     weatherSweep();
@@ -1834,7 +2065,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
         if (m === NAPALM || m === FUSE) { if (s >= CLASSIC.lit) { lit = 1; s = 0; } }
         else if (m === FONT) s = 0;
         let r = CR[m] + s, g = CG[m] + s, b = CB[m] + s;
-        if (m === FONT && shades[i] > 0 && shades[i] < 64) { const q = shades[i]; r = (r + CR[q] * 3) >> 2; g = (g + CG[q] * 3) >> 2; b = (b + CB[q] * 3) >> 2; }
+        if (m === FONT && shades[i] > 0 && shades[i] < COUNT) { const q = shades[i]; r = (r + CR[q] * 3) >> 2; g = (g + CG[q] * 3) >> 2; b = (b + CB[q] * 3) >> 2; }
         if (!NOAO[m]) {
           let ao = 0;
           if (y + 1 < H && cells[i + W] !== AIR) ao += 4;
@@ -1892,7 +2123,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       }
     }
   }
-  const COUNTS = new Uint32Array(64);
+  const COUNTS = new Uint32Array(COUNT);
   function census() {
     COUNTS.fill(0); let gx = 0, gy = 0;
     for (let y = 0; y < H; y++) {
@@ -2071,6 +2302,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       scanDir, trailsLive, blastKick, windEnergy, ship,
       shipCd, storm, stormT, stormCd, boltCd, flash, goldCount, goldCX, goldCY, visitorCount,
       wipe, wipeC, wipeS, events: EV, random: random.captureState(), commands, dirty,
+      ...(gravity ? { gravity, PX, PY } : {}),
     };
   }
   function captureState() {
@@ -2083,6 +2315,10 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     const next = validateWorldState(state);
     initialSeed = next.seed; initialScene = next.scene; tickIndex = next.tickIndex;
     cells.set(next.cells); shades.set(next.shades); heat.set(next.heat);
+    gravity = next.gravity ? { ...next.gravity } : null;
+    PX.fill(0); PY.fill(0);
+    if (next.PX) PX.set(next.PX);
+    if (next.PY) PY.set(next.PY);
     VX.set(next.VX); VY.set(next.VY); trails.set(next.trails); WU.set(next.WU); WV.set(next.WV);
     scanDir = next.scanDir; trailsLive = next.trailsLive; blastKick = next.blastKick; windEnergy = next.windEnergy;
     ship.active = next.ship.active; ship.x = next.ship.x; ship.y = next.ship.y; ship.t = next.ship.t;
@@ -2102,7 +2338,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
   function inspect() {
     return {
       cells, shades, heat, trails, VX, VY, born, WU, WV, awake, dirty, W, H, step, setc, get, paint, paintLine, detonate,
-      clear: clearGrid, seed: n => random.reset(n), DENS, KIND, DISP, G, MAXV,
+      clear: clearGrid, seed: n => random.reset(n), DENS, KIND, DISP, G, MAXV, PX, PY, setGravity, getGravity,
       // Scratch is rebuilt before being read on the next tick/operation: born, heatOut,
       // trailOut, meltList, PRE, WU0/WV0, WP/WP2/WD, HS/SOL/WS, neighbor/sense scratch.
       scratch: { heatOut, trailOut, meltList, PRE, WU0, WV0, WP, WP2, WD, HS, SOL, WS, AX, AY, BX, BY, SX, SY, SS, COUNTS },
@@ -2114,7 +2350,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
   function clearWalker() { stepWalkerOut(walker); walkerInput = null; }
 
   return { step, advanceTicks, applyOperation, applyOperations, commandsForNextTick,
-    captureState, restore, reset, render: blit, inspect, finishFrame, setWalkerInput, dropWalkerAt, clearWalker };
+    captureState, restore, reset, render: blit, inspect, finishFrame, setWalkerInput, dropWalkerAt, clearWalker, setGravity, getGravity };
 }
 
 // Every test/bench receives hooks for one new world; there is no shared simulation.

@@ -8,6 +8,25 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and t
 
 ## [Unreleased]
 
+### Added
+
+- Matter Lab at `/v2/lab/index.html`: adjustable 0–4g gravity in any direction,
+  weightless momentum, detached solid assemblies, magnetic ferrofluid and nine
+  new materials. Paint, blast, heat and cool the world; inspect heat or velocity.
+- Eight reusable artifact blueprints and five full setups, including a townhouse,
+  bridge, creature habitats, reactor and cryogenic chamber. Capture, rotate,
+  mirror, save and export your own inventions. World saves include gravity.
+- Integrated the local Waterworks campaign and Turning Valley seasonal/journal
+  preview. The three games can be packaged as self-contained offline HTML files.
+
+### Changed
+
+- Expanded the material catalog from 64 to 73 entries and made the V2 renderer
+  lookup texture follow the catalog size. Legacy saves remain readable.
+- Lab rendering uses linear-light surface shading, transmission and reflections.
+  Lab held pours preserve existing particle momentum. Original campaigns retain
+  their existing motion model. See [model limits and provenance](docs/matter-lab.md).
+
 ## [0.2.0] - 2026-10-21
 
 Everything merged to `main` since the `v2-2026-10-16` release.

@@ -73,7 +73,8 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
       <div class="hd-line" style="min-height:1.4em; max-width:42rem; width:100%; font-size:14px; font-style:italic; line-height:1.35; color:{{ lineColor }}; text-wrap:pretty;">{{ line }}</div>
     </div>
     <div class="hd-btns" style="display:flex; justify-content:flex-end; align-items:center; gap:6px;">
-      <a href="./catch/" target="_blank" rel="noopener" title="Try a finite-resource water puzzle in a separate tab" style="color:#dbc18b; font-size:13px; padding:10px 6px;">catch the pour</a>
+      <a href="./lab/index.html" style="color:#9edcf5; font-size:14px; padding:10px 6px;">Matter Lab</a>
+      <a href="./catch/index.html" target="_blank" rel="noopener" title="Play the three-chapter Waterworks campaign" style="color:#dbc18b; font-size:13px; padding:10px 6px;">Waterworks</a>
       <a href="../" title="Back to Alembic v1" style="color:#8f7d62; font-size:13px; letter-spacing:.06em; margin-right:6px; text-decoration:none;">v1</a>
       <button onClick="{{ openCodex }}" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:6px 12px; font-size:13px; letter-spacing:.06em; cursor:pointer;" style-hover="border-color:#c49a4a;" class="hb">codex</button>
       <button onClick="{{ openRites }}" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:6px 12px; font-size:13px; letter-spacing:.06em; cursor:pointer;" style-hover="border-color:#c49a4a;" class="hb">rites</button>
@@ -282,7 +283,8 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
     <section class="sheet" data-sheet="options" role="dialog" aria-modal="true" aria-label="Options">
       <div class="sheet-head"><span>Options</span><button class="sheet-x" onClick="{{ closeSheet }}" aria-label="Close">✕</button></div>
       <div class="sheet-body" data-scroll>
-        <a href="./catch/" target="_blank" rel="noopener" style="display:flex; align-items:center; min-height:44px; color:#dbc18b;">Catch the Pour · finite-resource puzzle</a>
+        <a href="./lab/index.html" style="display:flex; align-items:center; min-height:44px; color:#9edcf5;">Matter Lab · gravity and blueprints</a>
+        <a href="./catch/index.html" target="_blank" rel="noopener" style="display:flex; align-items:center; min-height:44px; color:#dbc18b;">Waterworks · three-chapter campaign</a>
         <div class="sheet-label">Tool</div>
         <div class="seg seg-3">
           <sc-for list="{{ tools }}" as="t" hint-placeholder-count="7">
@@ -328,7 +330,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
         <div class="seg">
           <a href="../">v1</a>
           <span aria-current="page">v2</span>
-          <a href="../v3/index.html">Living Valley</a>
+          <a href="../v3/index.html">Turning Valley</a>
           <a href="https://github.com/CosmonautJones/falling-sand/releases" target="_blank" rel="noopener noreferrer">what's new</a>
         </div>
         <div class="sheet-label">Progress</div>
@@ -1135,7 +1137,7 @@ class Component extends DCLogic {
     };
     this.tMap = tex(0, M.W, M.H, 1, false);
     this.tEmis = tex(1, M.W, M.H, 9, true);
-    this.tLut = tex(2, 64, 1, 1, false, M.LUT);
+    this.tLut = tex(2, M.COUNT, 1, 1, false, M.LUT);
     this.tFx = tex(3, M.W, M.H, 9, true);
     gl.useProgram(prog);
     const U = n => gl.getUniformLocation(prog, n);

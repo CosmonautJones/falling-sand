@@ -2,7 +2,7 @@
 // Float32 payloads use little-endian bytes. Exact continuation is same-version/runtime.
 export const MAX_CHECKPOINT_BYTES = 16 * 1024 * 1024;
 export const SAFE_VELOCITY = 1e6;
-const WIDTH = 480, HEIGHT = 270, SIZE = WIDTH * HEIGHT, FIELD_SIZE = 60 * 34, MATERIALS = 64;
+const WIDTH = 480, HEIGHT = 270, SIZE = WIDTH * HEIGHT, FIELD_SIZE = 60 * 34, MATERIALS = 73;
 // Every valid command serializes to more than 32 bytes, so this defensive list
 // bound cannot reject a command queue that fits the serialized byte ceiling.
 const MAX_COMMANDS = Math.floor(MAX_CHECKPOINT_BYTES / 32);
@@ -196,7 +196,7 @@ export function validateCommands(commands, tickIndex) {
 // Intake also checks the complete world envelope before installing a new queue.
 export function validateCheckpointSize(value) { checkSerializedSize(value, true); }
 function stateValue(state, mode) {
-  record(state, [...SCALAR_FIELDS, ...GRID_FIELDS, 'ship', 'wipeC', 'wipeS', 'events', 'random', 'commands'], ['dirty']);
+  record(state, [...SCALAR_FIELDS, ...GRID_FIELDS, 'ship', 'wipeC', 'wipeS', 'events', 'random', 'commands'], ['dirty', 'gravity', 'PX', 'PY']);
   const out = {
     seed: integer(state.seed, 0, 0xffffffff), scene: choice(state.scene, ['empty', 'vessel']),
     tickIndex: integer(state.tickIndex), scanDir: choice(state.scanDir, [-1, 1]),
@@ -213,6 +213,13 @@ function stateValue(state, mode) {
   }
   // Optional sleep marks (one per 8x8 chunk); older checkpoints omit them.
   if (Object.hasOwn(state, 'dirty')) out.dirty = typed(state.dirty, Uint8Array, FIELD_SIZE, mode);
+  if (Object.hasOwn(state, 'gravity')) {
+    record(state.gravity, ['x', 'y']);
+    out.gravity = { x: finite(state.gravity.x, -4, 4), y: finite(state.gravity.y, -4, 4) };
+    if (Math.hypot(out.gravity.x, out.gravity.y) > 4.000001) fail('gravity exceeds 4g');
+    out.PX = typed(state.PX, Float32Array, SIZE, mode, false, 0.5);
+    out.PY = typed(state.PY, Float32Array, SIZE, mode, false, 0.5);
+  } else if (Object.hasOwn(state, 'PX') || Object.hasOwn(state, 'PY')) fail('subcell positions require gravity');
   record(state.ship, SHIP_FIELDS);
   out.ship = {
     active: boolean(state.ship.active), x: finite(state.ship.x), y: finite(state.ship.y),

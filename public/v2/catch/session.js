@@ -1,8 +1,8 @@
 import {createCatch} from './contract.js';
 
 // FIFO worker requests; no wall clock, timers, browser storage or sandbox adapter.
-export function createCatchSession() {
- const game=createCatch();let lastId=0;
+export function createCatchSession(levelId) {
+ const game=createCatch(levelId);let lastId=0;
  return {handle(request) {
   const id=request?.id;
   try {

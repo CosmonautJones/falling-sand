@@ -8,17 +8,17 @@
       name="description"
       content="Break a dam. Grow a valley. Burn it down and see what returns. A living falling-sand playground."
     />
-    <title>Living Valley · Alembic III</title>
+    <title>Turning Valley · Alembic</title>
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
     <main class="app">
       <header class="header">
         <div class="identity">
-          <a class="brand" href="../v2/index.html" aria-label="Return to Alembic v2"
+          <a class="brand" href="../v2/lab/index.html" aria-label="Return to Matter Lab"
             >ALEMBIC <span>III</span></a
           >
-          <h1>Living Valley</h1>
+          <h1>Turning Valley</h1>
         </div>
         <div class="header-actions">
           <span class="study">A SMALL WORLD WITH A MEMORY</span>
@@ -74,9 +74,13 @@
           ><span id="landform" class="prototype">FIRST GROWTH</span>
         </div>
         <div class="view-controls">
-          <button id="view" title="Switch between close view and overview">Overview</button
+          <button id="lens" aria-pressed="false" title="Show the soil lens">Soil lens</button
+          ><button id="view" title="Switch between close view and overview">Overview</button
           ><button id="pause" aria-pressed="false" title="Pause simulation">Pause</button>
         </div>
+        <output id="soil-reading" class="soil-reading" aria-live="off" hidden
+          >Patch reading · waiting for a survey</output
+        >
         <div class="invitation">
           <p id="hint">A dry valley. A full reservoir.<br />See what the water wakes.</p>
           <button id="dam">Break the dam <span aria-hidden="true">↘</span></button>
@@ -86,6 +90,25 @@
           ><span><i class="plant-dot"></i><b id="growth">0</b> living grains</span>
         </div>
         <div id="toast" role="status" aria-live="polite"></div>
+      </section>
+      <section class="season-strip" aria-label="Valley season and climate">
+        <div class="season-mark">
+          <span class="season-kicker">THE TURNING YEAR</span>
+          <strong id="season-name">Rain</strong>
+          <span id="season-year">Year 1</span>
+        </div>
+        <div class="season-track">
+          <progress id="season-progress" max="1" value="0" aria-label="Season progress"></progress>
+          <p id="season-note">Rain is on its way. New roots are listening.</p>
+        </div>
+        <button
+          id="fast"
+          type="button"
+          aria-pressed="false"
+          title="Switch between 1x and 3x simulation speed"
+        >
+          1×
+        </button>
       </section>
       <nav class="toolbar" aria-label="Valley tools">
         <div class="tools" role="group" aria-label="Brush material">
@@ -111,6 +134,28 @@
         </button>
         <button id="rain"><span aria-hidden="true">☂</span> Rain</button>
       </nav>
+      <section class="journal-panel" aria-labelledby="journal-title">
+        <div class="journal-lead">
+          <span class="season-kicker">YOUR FIELD NOTE</span>
+          <h2 id="journal-title">Choose what this valley becomes</h2>
+          <label for="intention"
+            >I am watching for
+            <select id="intention">
+              <option value="observe">Whatever returns</option>
+              <option value="wetland">A living wetland</option>
+              <option value="refuge">A refuge from drought</option>
+              <option value="renewal">Renewal after burning</option>
+            </select></label
+          >
+          <p id="intention-note">
+            Keep looking. The first memory will arrive when the valley surprises you.
+          </p>
+        </div>
+        <div class="journal-ledger">
+          <ol id="journal" aria-live="polite"></ol>
+          <p id="journal-empty">No memories yet. Open the dam, then give the valley time.</p>
+        </div>
+      </section>
       <footer>
         <span id="field-note">Water stays in the soil. The valley remembers.</span
         ><span class="explore-hint">PINCH TO EXPLORE · NO SCORE, JUST CONSEQUENCES</span>

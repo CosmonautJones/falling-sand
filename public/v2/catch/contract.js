@@ -1,16 +1,14 @@
 import {createWorld, AIR, STONE, SAND, WATER, W, H, N} from '../engine/world.js';
+import {getLevel, LEVELS} from './levels.js';
 
-// Authored fixture v1. No ambient sources, weather, free paint or sandbox storage.
-export const LEVEL = Object.freeze({
- id:'split-cistern-v1', seed:0x504f5552, sourceCells:2000, quota:1320, holdTicks:60, deadline:900,
- budget:Object.freeze({stone:160,sand:240}),
- build:Object.freeze({x0:104,y0:90,x1:343,y1:179}),
- receiver:Object.freeze({x0:236,y0:190,x1:345,y1:245}),
-});
+export const LEVEL=LEVELS[0];
 const materials={stone:STONE,sand:SAND};
 export function evaluateHold(previous,retained) {
- const hold=retained>=LEVEL.quota?previous.hold+1:0;
- return {hold,won:hold>=LEVEL.holdTicks};
+ return evaluateReceivers(previous,[retained],LEVEL);
+}
+function evaluateReceivers(previous,counts,level) {
+ const hold=level.receivers.every((receiver,i)=>counts[i]>=receiver.quota)?previous.hold+1:0;
+ return {hold,won:hold>=level.holdTicks};
 }
 function footprint(stroke) {
  if(!stroke || !Object.hasOwn(materials,stroke.material) || !Number.isInteger(stroke.radius) || stroke.radius<0 || stroke.radius>4 ||
@@ -28,25 +26,27 @@ function footprint(stroke) {
  return [...cells];
 }
 
-export function createCatch() {
- let world,view,phase,tick,retained,goal,budget,history; const emis=new Uint8Array(N*4),fx=new Uint8Array(N*4);
- const box=(x0,y0,x1,y1,m)=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)view.setc(x,y,m,0);};
+export function createCatch(levelId) {
+ const level=getLevel(levelId);
+ let world,view,phase,tick,counts,goal,budget,history; const emis=new Uint8Array(N*4),fx=new Uint8Array(N*4);
+ const box=({x0,y0,x1,y1},m)=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)view.setc(x,y,m,0);};
  function retry() {
-  world=createWorld({seed:LEVEL.seed,scene:'empty',weather:false,ambientEmbers:false});view=world.inspect();
-  box(98,90,101,249,STONE);box(346,90,349,249,STONE);box(98,246,349,249,STONE);box(228,150,235,249,STONE);
-  box(100,130,347,133,STONE);box(142,130,157,133,AIR);box(278,130,293,133,AIR);
-  box(166,28,169,83,STONE);box(250,28,253,83,STONE);box(166,80,253,83,STONE);box(170,35,249,59,WATER);
-  phase='build';tick=0;retained=0;goal={hold:0,won:false};budget={...LEVEL.budget};history=[];
+  world=createWorld({seed:level.seed,scene:'empty',weather:false,ambientEmbers:false});view=world.inspect();
+  for(const wall of level.stone)box(wall,STONE);
+  for(const hole of level.cutouts)box(hole,AIR);
+  box(level.source,WATER);
+  phase='build';tick=0;counts=level.receivers.map(()=>0);goal={hold:0,won:false};budget={...level.budget};history=[];
   return status();
  }
  function status() {
 
-  return {level:LEVEL.id,phase,tick,retained,quota:LEVEL.quota,hold:goal.hold,holdTicks:LEVEL.holdTicks,deadline:LEVEL.deadline,
-   budget:{...budget},spent:{stone:LEVEL.budget.stone-budget.stone,sand:LEVEL.budget.sand-budget.sand},
-   sourceCells:LEVEL.sourceCells,canUndo:phase==='build'&&history.length>0};
+  return {level:level.id,phase,tick,retained:counts[0],quota:level.quota,hold:goal.hold,holdTicks:level.holdTicks,deadline:level.deadline,
+   receivers:level.receivers.map((receiver,i)=>({...receiver,retained:counts[i]})),
+   budget:{...budget},spent:{stone:level.budget.stone-budget.stone,sand:level.budget.sand-budget.sand},
+   sourceCells:level.sourceCells,canUndo:phase==='build'&&history.length>0};
  }
  function preview(stroke) {
-  const all=footprint(stroke),b=LEVEL.build;
+  const all=footprint(stroke),b=level.build;
   const cells=all.filter(i=>{const x=i%W,y=Math.floor(i/W);return x>=b.x0&&x<=b.x1&&y>=b.y0&&y<=b.y1&&view.cells[i]===AIR;});
   return {cells,cost:cells.length,affordable:phase==='build'&&cells.length<=budget[stroke.material]};
  }
@@ -66,18 +66,22 @@ export function createCatch() {
  }
  function release() {
   if(phase!=='build')return {ok:false,reason:'This pour is already released.'};
-  box(202,80,217,83,AIR);phase='run';history=[];return {ok:true,reason:'Valve open. Construction is locked.'};
+  box(level.valve,AIR);phase='run';history=[];return {ok:true,reason:'Valve open. Construction is locked.'};
  }
  function advance(count=1) {
   if(!Number.isInteger(count)||count<0||count>900)throw new Error('Advance must be 0–900 fixed ticks.');
   for(let n=0;n<count&&phase==='run';n++){
-   world.advanceTicks(1);tick++;retained=0;const b=LEVEL.receiver;
-   for(let y=b.y0;y<=b.y1;y++)for(let x=b.x0;x<=b.x1;x++)if(view.cells[y*W+x]===WATER)retained++;
-   goal=evaluateHold(goal,retained);
-   if(goal.won)phase='won';else if(tick>=LEVEL.deadline)phase='lost';
+   world.advanceTicks(1);tick++;
+   for(let i=0;i<level.receivers.length;i++){
+    const b=level.receivers[i];let retained=0;
+    for(let y=b.y0;y<=b.y1;y++)for(let x=b.x0;x<=b.x1;x++)if(view.cells[y*W+x]===WATER)retained++;
+    counts[i]=retained;
+   }
+   goal=evaluateReceivers(goal,counts,level);
+   if(goal.won)phase='won';else if(tick>=level.deadline)phase='lost';
   }
  }
- function checkpoint() {return {world:world.captureState(),phase,tick,retained,goal:{...goal},budget:{...budget},history:structuredClone(history)};}
+ function checkpoint() {return {world:world.captureState(),phase,tick,retained:counts[0],counts:[...counts],goal:{...goal},budget:{...budget},history:structuredClone(history)};}
  function render(color=new Uint8Array(N*4)) {
   world.render(color,emis,fx,tick);
   // The simulation stores material id in alpha; the challenge uses ordinary canvas pixels.

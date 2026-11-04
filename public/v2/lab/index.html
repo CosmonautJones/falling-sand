@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101e2c">
+  <title>Matter Lab · Alembic</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="masthead">
+    <a class="brand" href="../index.html">Alembic <span>Matter Lab</span></a>
+    <p>Build something. Change the rules.</p>
+    <button id="help-button" class="quiet" aria-label="Open Matter Lab help">How to play</button>
+  </header>
+  <main class="workbench">
+    <section class="experiment" aria-label="Experiment vessel">
+      <div class="transport">
+        <div class="button-group">
+          <button id="play" class="primary" aria-pressed="false">Pause</button>
+          <button id="step" title="Advance one simulation tick">Step</button>
+          <label class="compact-label">Speed <select id="speed" aria-label="Simulation speed"><option value="0.5">½×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="3">3×</option></select></label>
+        </div>
+        <div class="button-group">
+          <label class="compact-label">Lens <select id="lens" aria-label="Observation lens"><option value="natural">Natural</option><option value="heat">Heat</option><option value="velocity">Velocity</option></select></label>
+          <button id="undo" title="Undo the last edit (Z)" disabled>Undo</button>
+          <button id="library-toggle" aria-expanded="false" aria-controls="library">Library</button>
+        </div>
+      </div>
+      <div class="vessel" id="vessel">
+        <canvas id="world" width="480" height="270" aria-label="Matter Lab world"></canvas>
+        <canvas id="overlay" width="480" height="270" tabindex="0" aria-label="Interactive vessel. Arrow keys move the cursor. Enter paints or places a blueprint. Space pauses."></canvas>
+        <span class="vessel-label" id="scene-label">Chaos yard</span>
+        <span id="paused-label" hidden>Paused</span>
+        <div class="gravity-compass" aria-hidden="true"><span id="gravity-arrow">↓</span><small id="gravity-readout">1.00 g</small></div>
+      </div>
+      <div class="instrument-line"><span id="probe">Move over the vessel to inspect matter.</span><span id="performance">Starting…</span></div>
+      <div class="tools" role="group" aria-label="Vessel tools">
+        <button data-tool="paint" class="selected" aria-pressed="true">Pour <kbd>P</kbd></button>
+        <button data-tool="erase" aria-pressed="false">Erase <kbd>E</kbd></button>
+        <button data-tool="heat" aria-pressed="false">Heat <kbd>H</kbd></button>
+        <button data-tool="cool" aria-pressed="false">Cool <kbd>C</kbd></button>
+        <button data-tool="blast" aria-pressed="false">Blast <kbd>B</kbd></button>
+        <button data-tool="capture" aria-pressed="false">Capture <kbd>X</kbd></button>
+        <label class="brush-label">Brush <input id="brush" type="range" min="1" max="24" value="6"><output id="brush-value">6</output></label>
+      </div>
+      <div class="gravity-controls">
+        <div class="gravity-heading"><strong>Gravity</strong><output id="gravity-value">1.00 g · Down</output></div>
+        <label>Strength <input id="gravity-strength" type="range" min="0" max="4" step="0.05" value="1"></label>
+        <label>Direction <input id="gravity-angle" type="range" min="0" max="360" step="1" value="90"></label>
+        <div class="gravity-presets"><button data-gravity="earth">Earth</button><button data-gravity="moon">Moon</button><button data-gravity="zero">Zero</button><button data-gravity="reverse">Reverse</button><button id="gravity-spin" aria-pressed="false">Orbit gravity</button></div>
+      </div>
+      <p class="hint" id="hint">Try Blast on the bridge, or Reverse gravity. Cut a structure loose and watch it fall together.</p>
+      <div class="save-controls">
+        <button id="save-world">Save world</button><button id="load-world">Load saved</button><button id="export-world">Export world</button><button id="import-file">Import file</button>
+        <button id="clear-world" class="danger">Clear vessel</button>
+        <input id="file-input" type="file" accept=".json,application/json" hidden>
+      </div>
+    </section>
+    <aside id="library" class="library" aria-label="Matter and blueprint library">
+      <div class="library-tabs" role="tablist" aria-label="Library pages">
+        <button id="materials-tab" role="tab" aria-selected="true" aria-controls="materials-panel">Matter</button>
+        <button id="blueprints-tab" role="tab" aria-selected="false" aria-controls="blueprints-panel">Blueprints</button>
+        <button id="setups-tab" role="tab" aria-selected="false" aria-controls="setups-panel">Setups</button>
+      </div>
+      <div id="materials-panel" class="library-panel" role="tabpanel" aria-labelledby="materials-tab">
+        <div class="selected-matter"><i id="selected-swatch"></i><div><strong id="selected-name">Sand</strong><p id="selected-description">Loose grains. Build dunes or bury a structure.</p></div></div>
+        <label class="search-label"><span class="sr-only">Find a material</span><input id="material-search" type="search" placeholder="Find a material…" autocomplete="off"></label>
+        <div class="category-filter" id="categories" role="group" aria-label="Material categories"></div>
+        <div id="materials" class="material-grid"></div>
+        <p id="no-materials" hidden>No materials match that search.</p>
+        <p class="library-note">Real materials meet alchemical ones. Temperature is a game scale, not degrees Celsius.</p>
+      </div>
+      <div id="blueprints-panel" class="library-panel" role="tabpanel" aria-labelledby="blueprints-tab" hidden>
+        <p class="panel-intro">Place a working object. Its grains become part of the world.</p>
+        <div class="blueprint-actions"><button id="rotate">Rotate <kbd>R</kbd></button><button id="mirror">Mirror <kbd>M</kbd></button><button id="cancel-placement">Cancel</button></div>
+        <div id="blueprints" class="blueprint-list"></div>
+        <div class="capture-save"><label>Name your capture <input id="blueprint-name" maxlength="60" placeholder="My invention"></label><button id="save-blueprint" disabled>Save capture</button><button id="export-blueprint" disabled>Export blueprint</button><button id="delete-blueprint" disabled>Delete saved</button></div>
+        <p class="library-note">Capture: drag a rectangle in the vessel, name it, then save it here. Empty cells are transparent when placed.</p>
+      </div>
+      <div id="setups-panel" class="library-panel" role="tabpanel" aria-labelledby="setups-tab" hidden>
+        <p class="panel-intro">Full experiments, ready to disrupt. Loading a setup replaces the vessel; Undo brings it back.</p>
+        <div class="setup-list">
+          <button data-setup="chaos"><strong>Chaos yard</strong><span>A townhouse, truss bridge and magnetic fountain.</span></button>
+          <button data-setup="volcano"><strong>Fire meets water</strong><span>A volcano and thermal reactor. Find the breaking point.</span></button>
+          <button data-setup="biosphere"><strong>Little worlds</strong><span>Three habitats with swimming and foraging creatures.</span></button>
+          <button data-setup="magnetic"><strong>Magnetic playground</strong><span>Ferrofluid, two magnets and gravity in your hands.</span></button>
+          <button data-setup="cryo"><strong>Thermal shock</strong><span>Cryogenic liquid meets a warm conductor and lava.</span></button>
+        </div>
+      </div>
+    </aside>
+  </main>
+  <div id="status" class="status" role="status" aria-live="polite"></div>
+  <dialog id="help-dialog">
+    <form method="dialog"><button class="dialog-close" aria-label="Close help">Close</button></form>
+    <h1>Make a beautiful mess.</h1>
+    <p>Pick a material and drag inside the vessel. Use Heat, Cool or Blast to start reactions. Reverse gravity to turn a familiar scene inside out.</p>
+    <ul><li><strong>Blueprints</strong> are real simulated materials. Place a building, reactor or creature habitat, then experiment.</li><li><strong>Capture</strong> freezes the world while you select a rectangle. Save and reuse your invention, or export it as a JSON file.</li><li><strong>Save world</strong> stores the current simulation in this browser. Export a world to keep a portable copy.</li><li><strong>Gravity</strong> moves grains and disconnected structures. Structures joined to a vessel edge stay anchored. Creatures still use their own movement rules.</li><li><strong>Heat and Velocity lenses</strong> reveal what the particles are doing. The heat scale is qualitative; exotic materials use playful rules.</li></ul>
+    <p>Keyboard: Space pauses; P/E/H/C/B/X select tools; R rotates; M mirrors; Z undoes; Esc cancels. Focus the vessel, move with arrows and press Enter to act. Hold Shift with arrows for larger steps.</p>
+    <p><a href="../index.html">Classic vessel</a> · <a href="../catch/index.html">Waterworks</a> · <a href="../../v3/index.html">Turning Valley</a></p>
+  </dialog>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

@@ -16,18 +16,20 @@ import {
 import { encodeCheckpoint, decodeCheckpoint, validateCheckpoint } from '../v2/engine/checkpoint.js';
 import { createEcology, validateEcology, ECO_TICKS } from './ecology.js';
 import { createTerrain, TERRAIN_VERSION } from './terrain.js';
+import { seasonAt } from './climate.js';
 
 export const SAVE_KEY = 'alembic-living-valley-v1';
 export const SAVE_LIMIT = 17 * 1024 * 1024;
 const uint = (v) => Number.isSafeInteger(v) && v >= 0 && v <= 0xffffffff;
 
-export function createValley({ seed = 0xc00c17, terrainVersion = TERRAIN_VERSION } = {}) {
+export function createValley({ seed = 0xc00c17, terrainVersion = TERRAIN_VERSION, seasonal = false } = {}) {
   if (!uint(seed)) throw new Error('Invalid valley seed');
   let terrain = createTerrain(seed, terrainVersion);
   const world = createWorld({ seed, scene: 'empty', vegetation: 'managed', ambientEmbers: false, weather: false });
   const sim = world.inspect();
   let valleySeed = seed,
     tick = 0;
+  let seasonalMode = seasonal;
   let surface = new Uint16Array(W);
   let ecology;
   const rect = (x0, y0, x1, y1, m) => {
@@ -65,7 +67,8 @@ export function createValley({ seed = 0xc00c17, terrainVersion = TERRAIN_VERSION
     const state = world.captureState();
     return {
       format: 'alembic-valley',
-      version: 2,
+      version: seasonalMode ? 3 : 2,
+      ...(seasonalMode ? { seasonal: true } : {}),
       terrainVersion,
       seed: valleySeed,
       tick,
@@ -90,8 +93,15 @@ export function createValley({ seed = 0xc00c17, terrainVersion = TERRAIN_VERSION
       seed: valleySeed,
       terrainVersion,
       landform: terrain.name,
+      seasonal: seasonalMode,
     }),
-    stats: () => ({ ...ecology.stats(), tick, seed: valleySeed, damIntact: damIntact() }),
+    stats: () => ({
+      ...ecology.stats(),
+      tick,
+      seed: valleySeed,
+      damIntact: damIntact(),
+      ...(seasonalMode ? { season: seasonAt(tick) } : {}),
+    }),
     advanceTicks(count) {
       if (
         !Number.isSafeInteger(count) ||
@@ -101,10 +111,19 @@ export function createValley({ seed = 0xc00c17, terrainVersion = TERRAIN_VERSION
       )
         throw new Error('Invalid valley ticks');
       for (let i = 0; i < count; i++) {
+        const season = seasonalMode ? seasonAt(tick) : null;
+        if (season && season.elapsed % 180 === 0 && season.id !== 'dry') {
+          const spacing = season.id === 'rain' ? 4 : 6;
+          const offset = ((tick / 180) % spacing + valleySeed % spacing) % spacing;
+          for (let x = 1 + offset; x < W - 1; x += spacing) {
+            const y = 1 + ((x * 7 + tick) % 12);
+            if (sim.cells[y * W + x] === AIR) sim.setc(x, y, WATER, ((x + tick) % 9) - 4);
+          }
+        }
         world.advanceTicks(1);
         ecology.observeFire();
         tick++;
-        if (tick % ECO_TICKS === 0) ecology.step();
+        if (tick % ECO_TICKS === 0) ecology.step({ drought: season?.id === 'dry' });
       }
     },
     openDam() {
@@ -155,6 +174,7 @@ export function createValley({ seed = 0xc00c17, terrainVersion = TERRAIN_VERSION
       const prepared = validateValley(input);
       // All fallible schema checks happen before mutating either subsystem.
       world.restore(prepared.world.state);
+      seasonalMode = prepared.seasonal ?? seasonal;
       valleySeed = prepared.seed;
       terrainVersion = prepared.terrainVersion;
       terrain = createTerrain(valleySeed, terrainVersion);
@@ -174,17 +194,19 @@ function validateValley(input) {
   if (
     !input ||
     input.format !== 'alembic-valley' ||
-    ![1, 2].includes(input.version) ||
+    ![1, 2, 3].includes(input.version) ||
     !uint(input.seed) ||
     !Number.isSafeInteger(input.tick) ||
     input.tick < 0
   )
     fail();
-  const keys =
-    input.version === 1
-      ? 'ecology,format,seed,surface,tick,version,world'
-      : 'ecology,format,seed,surface,terrainVersion,tick,version,world';
+  const keys = [
+    'ecology,format,seed,surface,tick,version,world',
+    'ecology,format,seed,surface,terrainVersion,tick,version,world',
+    'ecology,format,seasonal,seed,surface,terrainVersion,tick,version,world',
+  ][input.version - 1];
   if (Object.keys(input).sort().join() !== keys) fail();
+  if (input.version === 3 && input.seasonal !== true) fail();
   const terrainVersion = input.version === 1 ? 1 : input.terrainVersion;
   if (![1, 2].includes(terrainVersion)) fail();
   if (!Array.isArray(input.surface) || input.surface.length !== W) fail();
@@ -200,6 +222,7 @@ function validateValley(input) {
   )
     fail();
   return {
+    ...(input.version === 3 ? { seasonal: true } : {}),
     seed: input.seed,
     terrainVersion,
     tick: input.tick,
@@ -213,7 +236,7 @@ export function stringifyValley(input) {
   const text = JSON.stringify({
     ...input,
     ...next,
-    version: 2,
+    version: next.seasonal ? 3 : 2,
     world: encodeCheckpoint(next.world),
   });
   if (text.length > SAVE_LIMIT) throw new Error('Valley save exceeds size limit');
@@ -228,5 +251,6 @@ export function parseValley(text) {
     throw new Error('Valley save exceeds size limit');
   const input = JSON.parse(text);
   input.world = decodeCheckpoint(input.world);
-  return { ...input, ...validateValley(input), version: 2 };
+  const next = validateValley(input);
+  return { ...input, ...next, version: next.seasonal ? 3 : 2 };
 }
