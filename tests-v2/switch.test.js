@@ -8,9 +8,9 @@ const markup = html.slice(0, html.indexOf('<script type="text/x-dc"'));
 const options = markup.slice(markup.indexOf('data-sheet="options"'));
 
 test('version switch: v1 is one tap away on phones and desktop, v2 is marked current', () => {
-  assert.match(options, /<a [^>]*href="\.\.\/"[^>]*>v1<\/a>/);
+  assert.match(options, /<a [^>]*href="\.\.\/classic\.html"[^>]*>v1<\/a>/);
   assert.match(options, /aria-current="page"[^>]*>v2</);
-  assert.match(markup.slice(0, markup.indexOf('</header>')), /<a [^>]*href="\.\.\/"[^>]*>v1<\/a>/);
+  assert.match(markup.slice(0, markup.indexOf('</header>')), /<a [^>]*href="\.\.\/classic\.html"[^>]*>v1<\/a>/);
 });
 
 test('start over: two taps erase every Alembic v2 key and reload to a first run', () => {
