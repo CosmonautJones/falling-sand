@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 describe('shipped page', () => {
   it('is a window ES module with a wide canvas game loop and no Node require', () => {
-    const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+    const html = readFileSync(new URL('../classic.html', import.meta.url), 'utf8');
     expect(html).toContain('type="module"');
     expect(html).toContain('id="stage"');
     expect(html).toContain('Alembic');
@@ -54,7 +54,7 @@ describe('shipped page', () => {
   });
 
   it('fits the vessel with the toolbar in one window instead of filling the view', () => {
-    const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+    const html = readFileSync(new URL('../classic.html', import.meta.url), 'utf8');
     expect(html).toMatch(/100dvh/);
     expect(html).toMatch(/container-type:\s*size/);
     expect(html).toMatch(/100cqh/);
