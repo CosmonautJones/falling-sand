@@ -2,11 +2,17 @@ import * as E from '../engine/world.js';
 import { encodeCheckpoint, decodeCheckpoint, MAX_CHECKPOINT_BYTES } from '../engine/checkpoint.js';
 import { createLabRenderer } from './render.js';
 import { builtInBlueprints, validateBlueprint, transformBlueprint, placeBlueprint, captureBlueprint, createSetup } from './blueprints.js';
+import { createCodex } from './codex.js';
+import { readProgress, saveProgress, reveal, canPour, setAccess, mergeProgress, JOURNAL_KEY, LEGACY_KEY } from './discovery.js';
 
 const $ = id => document.getElementById(id);
 const world = E.createWorld({ scene: 'empty', seed: 0xabad1dea, ambientEmbers: false, weather: false });
 const renderer = createLabRenderer($('world')), overlay = $('overlay'), pen = overlay.getContext('2d');
 const savedKey = 'alembic-lab-blueprints-v1';
+let journalStorage;
+try { journalStorage = localStorage; } catch { /* The lab can still run without browser storage. */ }
+const journal = readProgress(journalStorage), progress = journal.state;
+let journalWarningShown = false;
 let running = true, speed = 1, lens = 'natural', tool = 'paint', selected = E.SAND, brush = 6;
 let hover = null, pointer = null, captureStart = null, captureEnd = null;
 let placement = null, placementId = null, turns = 0, mirrored = false, pendingCapture = null;
@@ -32,6 +38,32 @@ const exotic = new Set(['aether','azoth','void','rift','plasma','ichor','relic',
 const energy = new Set(['fire','lava','ember','powder','tnt','nitro','napalm','methane','c-4','fuse','plasma']);
 const label = name => name ? name[0].toUpperCase() + name.slice(1) : '';
 const rgb = m => `rgb(${E.COLORS[m].join(',')})`;
+const codex = createCodex({
+  onSelect: m => { selectMaterial(m); closeMobileLibrary(); },
+  onTry: experiment => { selectMaterial(experiment.brush); closeMobileLibrary(); $('hint').textContent = experiment.text; overlay.focus({ preventScroll: true }); $('vessel').scrollIntoView({ block: 'nearest' }); },
+  onMode: mode => {
+    setAccess(progress, mode); const mayAnnounce = persistProgress();
+    if (!canPour(progress, selected)) selectMaterial(E.SAND);
+    refreshProgress();
+    if (mayAnnounce) announce(mode === 'workshop' ? 'All materials available. Reactions still write pages; painting and placement do not.' : 'Discovery palette restored. Your codex keeps everything you have learned.');
+  },
+});
+
+function persistProgress() {
+  if (!saveProgress(journalStorage, progress) && !journalWarningShown) {
+    journalWarningShown = true; announce('Your codex works for this visit, but browser storage is unavailable. Progress may not survive a reload.', true);
+    return false;
+  }
+  return true;
+}
+function refreshProgress() { renderMaterials(); codex.render(progress); }
+function collectDiscoveries() {
+  const records = world.takeDiscoveries(); if (!records.length) return;
+  const result = reveal(progress, records); if (!result.changed) return;
+  const mayAnnounce = persistProgress(); refreshProgress();
+  if (result.found.length) codex.celebrate(result.found);
+  if (result.awards.length && mayAnnounce) announce(`Research supplies earned: ${result.awards.map(award => `${award.name} — ${award.rewards.map(m => label(E.NAMES[m])).join(', ')}`).join('; ')}. Open the codex to read your new pages.`);
+}
 
 function announce(message, error = false) {
   $('status').textContent = message;
@@ -78,6 +110,7 @@ function closeMobileLibrary() {
   if (matchMedia('(max-width:760px)').matches) { $('library').classList.remove('open'); $('library-toggle').setAttribute('aria-expanded', 'false'); }
 }
 function selectMaterial(m) {
+  if (!canPour(progress, m)) { announce('That page is still unwritten. Follow its codex clue, or choose All materials workshop.'); return; }
   selected = m; selectTool('paint');
   $('selected-name').textContent = label(E.NAMES[m]); $('selected-swatch').style.background = rgb(m);
   $('selected-whisper').textContent = m === E.STONE ? 'A foundation, until you free it.' : E.PAGES[m]?.w || '';
@@ -85,8 +118,11 @@ function selectMaterial(m) {
   document.querySelectorAll('[data-material]').forEach(button => { const yes = +button.dataset.material === m; button.classList.toggle('selected', yes); button.setAttribute('aria-pressed', String(yes)); });
 }
 function renderMaterials() {
-  const search = $('material-search').value.trim().toLowerCase(), container = $('materials'); container.replaceChildren();
+  const search = $('material-search').value.trim().toLowerCase(), container = $('materials');
+  const focused = container.contains(document.activeElement) ? document.activeElement.dataset.material : null;
+  container.replaceChildren();
   for (let m = 1; m < E.COUNT; m++) {
+    if (!canPour(progress, m)) continue;
     const name = E.NAMES[m];
     const matches = filter === 'All' || filter === 'Everyday' && !living.has(name) && !exotic.has(name) && !energy.has(name) || filter === 'Liquids' && E.KIND[m] === 2 || filter === 'Life' && living.has(name) || filter === 'Exotic' && exotic.has(name) || filter === 'Energy' && energy.has(name);
     if (!matches || !name.includes(search)) continue;
@@ -96,6 +132,8 @@ function renderMaterials() {
     button.append(swatch, text); button.addEventListener('click', () => { selectMaterial(m); closeMobileLibrary(); }); container.append(button);
   }
   $('no-materials').hidden = container.childElementCount !== 0;
+  $('no-materials').textContent = progress.mode === 'discovery' ? 'No revealed materials match. The codex holds clues to unwritten pages.' : 'No materials match that search.';
+  if (focused) container.querySelector(`[data-material="${focused}"]`)?.focus({ preventScroll: true });
 }
 function thumbnail(blueprint) {
   const canvas = document.createElement('canvas'); canvas.width = blueprint.width; canvas.height = blueprint.height;
@@ -307,7 +345,7 @@ $('file-input').addEventListener('change', async () => {
 });
 $('help-button').addEventListener('click', () => $('help-dialog').showModal());
 document.addEventListener('keydown', event => {
-  if (event.ctrlKey || event.metaKey || event.altKey || event.target.closest('input,select,textarea') || $('help-dialog').open) return;
+  if (event.ctrlKey || event.metaKey || event.altKey || event.target.closest('input,select,textarea') || $('help-dialog').open || codex.isOpen()) return;
   const key = event.key.toLowerCase();
   if (key === ' ') { event.preventDefault(); setRunning(!running); }
   else if ({ p: 'paint', e: 'erase', h: 'heat', c: 'cool', b: 'blast', x: 'capture' }[key]) selectTool({ p: 'paint', e: 'erase', h: 'heat', c: 'cool', b: 'blast', x: 'capture' }[key]);
@@ -328,13 +366,19 @@ document.addEventListener('keydown', event => {
 document.addEventListener('visibilitychange', () => { accumulator = 0; lastTime = 0; pointer = null; });
 window.addEventListener('resize', () => renderer.resize());
 window.addEventListener('pagehide', event => { if (!event.persisted) renderer.dispose(); });
+window.addEventListener('storage', event => {
+  if (event.key === JOURNAL_KEY || event.key === LEGACY_KEY) {
+    if (mergeProgress(progress, readProgress(journalStorage).state)) refreshProgress();
+  }
+});
 
 try {
   const raw = localStorage.getItem(savedKey);
   if (raw && raw.length <= 1_500_000) { const values = JSON.parse(raw); if (Array.isArray(values) && values.length <= 12) custom = values.map(validateBlueprint); }
 } catch { announce('Saved blueprints could not be read. You can still import an exported file.', true); }
-createSetup(world, 'chaos'); syncGravity(); renderMaterials(); renderBlueprints(); selectMaterial(E.SAND);
+createSetup(world, 'chaos'); syncGravity(); refreshProgress(); renderBlueprints(); selectMaterial(E.SAND);
 $('hint').textContent = 'Try Blast on the bridge, or Reverse gravity. Cut a structure loose and watch it fall together.';
+if (journal.unavailable) { journalWarningShown = true; announce('Saved codex progress could not be read. You can keep experimenting for this visit.', true); }
 renderer.resize();
 function frame(now) {
   if (!lastTime) lastTime = now;
@@ -348,6 +392,7 @@ function frame(now) {
       world.step(); accumulator -= 1000 / 60; steps++; tickCount++;
     }
   }
+  collectDiscoveries();
   if (!document.hidden && now - renderTime >= 1000 / 30) {
     renderer.render(world, { lens, time: now / 1000 }); drawOverlay(); renderTime = now;
     if (now - sampleTime > 1000) { $('performance').textContent = `${Math.round(tickCount * 1000 / Math.max(1, now - sampleTime))} ticks/s`; sampleTime = now; tickCount = 0; if (hover) updateProbe(hover); }

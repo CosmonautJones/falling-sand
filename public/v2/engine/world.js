@@ -329,6 +329,17 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
   let scanDir = 1, blastKick = 0, trailsLive = false;
   const EV = [];
   const ev = e => { if (EV.length < 48) EV.push(e); };
+  // Discovery is account progress, not simulation state. Keep one representative
+  // coordinate per material until the host consumes it; checkpoints never carry it.
+  const pendingDiscoveries = new Map();
+  function recordDiscovery(m, x, y) {
+    if (m !== AIR && m >= 0 && m < COUNT && !pendingDiscoveries.has(m)) pendingDiscoveries.set(m, { m, x, y });
+  }
+  function takeDiscoveries() {
+    const out = [...pendingDiscoveries.values()].sort((a, b) => a.m - b.m);
+    pendingDiscoveries.clear();
+    return out;
+  }
 
   const random = createRandomStreams(seed);
   const ri = n => random.physical.int(n), rf = () => random.physical.float();
@@ -782,6 +793,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       }
     }
     const prev = heat[i];
+    if (cells[i] !== dest) recordDiscovery(dest, x, y);
     setc(x, y, dest, grain(dest));
     const kept = prev > 20 ? prev - 20 : prev;
     if (kept > heat[i]) heat[i] = kept;
@@ -1438,7 +1450,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
         const px = sx + random.ecology.int(25) - 12, py = sy + random.ecology.int(5) - 2;
         if (!inb(px, py)) continue;
         const m = k % 3 === 0 ? ICHOR : RELIC;
-        setc(px, py, m, grain(m)); const j = py * W + px; VX[j] = (px - sx) * 0.4 + (random.ecology.float() - 0.5) * 2; VY[j] = -2 - random.ecology.float() * 3;
+        setc(px, py, m, grain(m)); recordDiscovery(m, px, py); const j = py * W + px; VX[j] = (px - sx) * 0.4 + (random.ecology.float() - 0.5) * 2; VY[j] = -2 - random.ecology.float() * 3;
       }
       detonate(sx, sy + 2, 5);
       ev({ t: 'shipdown', x: sx, y: sy });
@@ -1457,7 +1469,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     ship.beam = Math.abs(dx) < 14;
     if (ship.beam && --ship.spawnCd <= 0 && visitorCount < 14) {
       const vx = Math.round(ship.x) + random.ecology.int(5) - 2, vy = Math.round(ship.y) + 5;
-      if (inb(vx, vy) && flyable(cells[vy * W + vx])) { setc(vx, vy, VISITOR, grain(VISITOR)); visitorCount++; }
+      if (inb(vx, vy) && flyable(cells[vy * W + vx])) { setc(vx, vy, VISITOR, grain(VISITOR)); recordDiscovery(VISITOR, vx, vy); visitorCount++; }
       ship.spawnCd = 45 + random.ecology.int(30);
     }
   }
@@ -1536,7 +1548,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       x = Math.max(1, Math.min(W - 2, x));
       y++;
     }
-    for (const j of path) { cells[j] = PLASMA; shades[j] = 3 + random.weather.int(3); heat[j] = 255; VX[j] = 0; VY[j] = 0; born[j] = 1; markDirty(j % W, (j / W) | 0); }
+    for (const j of path) { cells[j] = PLASMA; shades[j] = 3 + random.weather.int(3); heat[j] = 255; VX[j] = 0; VY[j] = 0; born[j] = 1; recordDiscovery(PLASMA, j % W, (j / W) | 0); markDirty(j % W, (j / W) | 0); }
     let hx = x, hy = y;
     if (hit >= 0) { hx = hit % W; hy = (hit / W) | 0; strikeAt(hx, hy); }
     flash = 1;
@@ -1550,7 +1562,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       const x = 2 + random.weather.int(W - 4);
       const band = 7 + 5 * Math.sin(x * 0.03 + stormT * 0.004) + 3 * Math.sin(x * 0.11 - stormT * 0.006);
       const y = 1 + random.weather.int(Math.max(2, band | 0));
-      if (cells[y * W + x] === AIR) setc(x, y, CLOUD, grain(CLOUD));
+      if (cells[y * W + x] === AIR) { setc(x, y, CLOUD, grain(CLOUD)); recordDiscovery(CLOUD, x, y); }
     }
     if (--boltCd <= 0) { strike(); boltCd = 50 + random.weather.int(200); }
     if (storm === 0) { stormCd = 60 * 60; ev({ t: 'stormend' }); }
@@ -2338,6 +2350,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     goldCount = 0; goldCX = W / 2; goldCY = H / 2; visitorCount = 0;
     PBX = 0; PBY = 0; sHeat = false; sFood = -1; sFoodIchor = false; sGold = -1; sMud = -1; sKin = 0; sVis = false;
     wipe = -1; wipeC = null; wipeS = null;
+    pendingDiscoveries.clear();
     stepWalkerOut(walker); walkerInput = null;
     if (nextScene === 'vessel') seedVessel();
   }
@@ -2381,6 +2394,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     EV.length = 0; for (const event of next.events) EV.push(event);
     random.physical.reset(next.random.physical); random.ecology.reset(next.random.ecology);
     random.weather.reset(next.random.weather); random.cosmetic.reset(next.random.cosmetic);
+    pendingDiscoveries.clear();
   }
   function inspect() {
     return {
@@ -2396,7 +2410,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
   function dropWalkerAt(x, y) { dropWalkerIn(walker, x, y); }
   function clearWalker() { stepWalkerOut(walker); walkerInput = null; }
 
-  return { step, advanceTicks, applyOperation, applyOperations, commandsForNextTick,
+  return { step, advanceTicks, applyOperation, applyOperations, commandsForNextTick, takeDiscoveries,
     captureState, restore, reset, render: blit, inspect, finishFrame, setWalkerInput, dropWalkerAt, clearWalker, setGravity, getGravity };
 }
 
