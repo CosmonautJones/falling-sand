@@ -319,6 +319,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
   }
   function getGravity() { return gravity ? { ...gravity } : { x: 0, y: 1 }; }
   const born = new Uint8Array(N), heatOut = new Uint8Array(N), trailOut = new Uint8Array(N);
+  const motionPass = new Uint8Array(N), motionCounts = new Uint32Array(10);
   const meltList = new Int32Array(N);
   // Sleeping chunks: a chunk runs the cell pass if it holds restless material, or if it or a neighbour changed.
   const dirty = new Uint8Array(CNN).fill(1), awake = new Uint8Array(CNN).fill(1), live = new Uint8Array(CNN);
@@ -458,15 +459,18 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     if (KIND[d] === K_GAS && KIND[m] !== K_GAS) return true;
     return (DENS[m] - DENS[d]) * ((nx - x) * gravity.x + (ny - y) * gravity.y) > 0;
   }
-  function moveVector(x, y, creature = false) {
-    const i = y * W + x, m = cells[i], kind = KIND[m], rho = DENS[m];
+  function vectorBuoyancy(x, y, m) {
+    const rho = DENS[m];
     let medium = DENS[AIR], neighbours = 0, total = 0;
     for (const [dx, dy] of [[-1,0],[1,0],[0,-1],[0,1]]) {
       const d = get(x + dx, y + dy);
       if (d !== m && KIND[d] === K_LIQUID) { total += DENS[d]; neighbours++; }
     }
     if (neighbours >= 2) medium = total / neighbours;
-    const buoyancy = Math.max(-1, Math.min(1, (rho - medium) / Math.max(rho, medium, 1)));
+    return Math.max(-1, Math.min(1, (rho - medium) / Math.max(rho, medium, 1)));
+  }
+  function moveVector(x, y, creature = false) {
+    const i = y * W + x, m = cells[i], kind = KIND[m], buoyancy = vectorBuoyancy(x, y, m);
     let vx = VX[i] + gravity.x * G * buoyancy, vy = VY[i] + gravity.y * G * buoyancy;
     const c = windC(x, y);
     if (kind === K_GAS || m === AEROGEL || m === SNOW) {
@@ -487,7 +491,8 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
     const steps = Math.max(1, Math.ceil(Math.max(Math.abs(vx), Math.abs(vy)) * 2));
     let px = x + 0.5 + PX[i], py = y + 0.5 + PY[i], cx = x, cy = y, blocked = false;
     for (let s = 0; s < steps; s++) {
-      const tx = px + vx / steps, ty = py + vy / steps, nx = Math.floor(tx), ny = Math.floor(ty);
+      // Exact grid-line hits must agree on either side of a floating-point precision boundary.
+      const tx = px + vx / steps, ty = py + vy / steps, nx = Math.floor(tx + 1e-9), ny = Math.floor(ty + 1e-9);
       if (nx === cx && ny === cy) { px = tx; py = ty; continue; }
       const corner = nx !== cx && ny !== cy && !vectorCanMove(cx, cy, nx, cy) && !vectorCanMove(cx, cy, cx, ny);
       if (!corner && vectorCanMove(cx, cy, nx, ny)) {
@@ -525,7 +530,7 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       }
     }
     VX[j] = Math.abs(vx) < 0.0001 ? 0 : vx; VY[j] = Math.abs(vy) < 0.0001 ? 0 : vy;
-    PX[j] = Math.max(-0.499, Math.min(0.499, px - cx - 0.5)); PY[j] = Math.max(-0.499, Math.min(0.499, py - cy - 0.5));
+    PX[j] = Math.max(-0.5, Math.min(0.5, px - cx - 0.5)); PY[j] = Math.max(-0.5, Math.min(0.5, py - cy - 0.5));
     if (j !== i) born[j] = 1;
     if (vx || vy || gravity.x || gravity.y || m === FERROFLUID) markDirty(cx, cy);
     return j !== i;
@@ -1906,10 +1911,52 @@ export function createWorld({ seed = 0xa341316c, scene = 'vessel', vegetation = 
       awake[c] = on;
     }
     dirty.fill(0);
-    for (let y = H - 1; y >= 0; y--) {
-      const row = (y >> 3) * CW;
-      if (dir === 1) { for (let cx = 0; cx < CW; cx++) if (awake[row + cx]) for (let x = cx << 3, e = x + 8; x < e; x++) processCell(x, y, dir); }
-      else { for (let cx = CW - 1; cx >= 0; cx--) if (awake[row + cx]) for (let x = (cx << 3) + 7, e = cx << 3; x >= e; x--) processCell(x, y, dir); }
+    if (gravity) {
+      // Each grain follows its own motion, including inertia against gravity and independent zero-g streams.
+      // Tags belong to this tick's original slots; born prevents moved or displaced grains from running twice.
+      motionPass.fill(0); motionCounts.fill(0);
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        const i = y * W + x, m = cells[i];
+        if (!m || born[i] || !awake[(y >> 3) * CW + (x >> 3)]) continue;
+        let pass = 9;
+        if (KIND[m] !== K_STATIC || isCritter(m)) {
+          const buoyancy = vectorBuoyancy(x, y, m);
+          const vx = VX[i] + gravity.x * G * buoyancy, vy = VY[i] + gravity.y * G * buoyancy;
+          if (vx || vy) {
+            // Each principal direction has both perpendicular orders, so diagonal streams stay coherent too.
+            if (Math.abs(vx) > Math.abs(vy)) pass = (vx > 0 ? 1 : 3) + ((vy ? vy > 0 : dir < 0) ? 0 : 1);
+            else pass = (vy > 0 ? 5 : 7) + ((vx ? vx > 0 : dir < 0) ? 0 : 1);
+          }
+        }
+        motionPass[i] = pass; motionCounts[pass]++;
+      }
+      const restPass = dir === 1 ? 6 : 5;
+      for (let p = 1; p <= 8; p++) {
+        const pass = dir === 1 ? p : 9 - p;
+        if (!motionCounts[pass] && !(pass === restPass && motionCounts[9])) continue;
+        if (pass <= 4) {
+          const dx = pass <= 2 ? -1 : 1, dy = pass & 1 ? -1 : 1;
+          for (let x = dx === 1 ? 0 : W - 1; x >= 0 && x < W; x += dx) {
+            for (let y = dy === 1 ? 0 : H - 1; y >= 0 && y < H; y += dy) {
+              if (motionPass[y * W + x] === pass) processCell(x, y, dir);
+            }
+          }
+        } else {
+          const dy = pass <= 6 ? -1 : 1, dx = pass & 1 ? -1 : 1;
+          for (let y = dy === 1 ? 0 : H - 1; y >= 0 && y < H; y += dy) {
+            for (let x = dx === 1 ? 0 : W - 1; x >= 0 && x < W; x += dx) {
+              const tag = motionPass[y * W + x];
+              if (tag === pass || pass === restPass && tag === 9) processCell(x, y, dir);
+            }
+          }
+        }
+      }
+    } else {
+      for (let y = H - 1; y >= 0; y--) {
+        const row = (y >> 3) * CW;
+        if (dir === 1) { for (let cx = 0; cx < CW; cx++) if (awake[row + cx]) for (let x = cx << 3, e = x + 8; x < e; x++) processCell(x, y, dir); }
+        else { for (let cx = CW - 1; cx >= 0; cx--) if (awake[row + cx]) for (let x = (cx << 3) + 7, e = cx << 3; x >= e; x--) processCell(x, y, dir); }
+      }
     }
     stigmergy();
     if (dir === 1 && !gravity) levelLiquids();

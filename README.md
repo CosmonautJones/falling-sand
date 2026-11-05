@@ -16,8 +16,10 @@ upscale — heat haze, water caustics, gold spark, blast shake, Magnum Opus auro
 
 ## Play
 
-**[Play Alcubemy: Matter Lab](https://alcubemy.travisjohnjones.com/)** is the
-default sandbox. Paint from 73 materials, rotate gravity from zero to 4g, place working
+**[Play Alcubemy: V2 Playground](https://alcubemy.travisjohnjones.com/)** opens
+the original V2 experience, with its discoveries, weather, flasks and atmospheric rendering.
+A visible mode switch leads to **[Matter Lab](https://alcubemy.travisjohnjones.com/v2/lab/index.html)**,
+the experimental workshop. Paint from 72 materials, rotate gravity from zero to 4g, place working
 buildings and habitats, or capture your own blueprints. Heat and velocity lenses
 explain the chaos. Worlds and blueprints can be saved and exported. See the
 [physics and consolidation notes](docs/matter-lab.md) for the model's limits.
@@ -25,7 +27,7 @@ explain the chaos. Worlds and blueprints can be saved and exported. See the
 This checkout also includes the three-chapter **Waterworks** campaign at
 `/v2/catch/index.html` and the latest seasonal **Turning Valley** at
 `/v3/index.html`. The original vessel remains at `/classic.html`, and V2 remains
-at `/v2/index.html`. Root navigation opens Matter Lab on Netlify and GitHub Pages.
+at `/v2/index.html`. Root navigation opens V2 Playground on Netlify and GitHub Pages.
 Build all three portable HTML games with `node scripts/pack-lab.mjs <output-directory>`.
 
 **[Play the original Alembic](https://cosmonautjones.github.io/falling-sand/classic.html)** — no account or installation needed.

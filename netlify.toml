@@ -7,12 +7,12 @@
 
 [[redirects]]
   from = "/"
-  to = "/v2/lab/index.html"
+  to = "/v2/index.html"
   status = 302
   force = true
 
 [[redirects]]
   from = "/index.html"
-  to = "/v2/lab/index.html"
+  to = "/v2/index.html"
   status = 302
   force = true

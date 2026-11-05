@@ -58,10 +58,16 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
 .sheet{left:auto;top:0;width:min(380px,58vw);max-height:none;border-radius:18px 0 0 18px;border-top:none;border-left:1px solid rgba(196,154,74,.55);padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) 0}}
 .pb-txt{flex:1;overflow:hidden}.pb-el .sw{flex-shrink:0}.pb-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pb-brush{flex-direction:column;gap:3px}.pb-brush .dot{max-width:12px;max-height:12px}.pb-size{font-size:12px;line-height:1;font-variant-numeric:tabular-nums}
 @media(max-width:380px) and (orientation:portrait){.phone-row{gap:5px}.pb{min-width:44px;padding:0 8px}.pb-el{padding:0 7px;gap:6px}.pb-el .caret{display:none}.pb-el .sw{width:20px;height:20px}.pb-sub{letter-spacing:0}}
+.mode-switch{display:flex;flex:0 0 auto;gap:3px;padding:3px;border:1px solid #5a4630;border-radius:5px;background:#1c1612}.mode-switch a{display:flex;align-items:center;justify-content:center;min-height:44px;padding:6px 18px;border-radius:2px;color:#cbb89a;font-size:14px;letter-spacing:.02em;text-decoration:none;white-space:nowrap;touch-action:manipulation}.mode-switch a:hover{color:#f0e2c4;background:#2a2119}.mode-switch a[aria-current=page]{color:#f0e2c4;background:#43321e;box-shadow:inset 0 0 0 1px #c49a4a}.mode-switch a:focus-visible{outline:2px solid #e8c97a;outline-offset:2px}
+@media(orientation:landscape) and (max-height:520px){.root{padding-top:calc(58px + env(safe-area-inset-top))!important}.mode-switch{position:absolute;top:max(4px,env(safe-area-inset-top));left:50%;transform:translateX(-50%)}.phone-row{gap:5px}.phone-row .pb{height:44px;min-height:44px}.phone-row .pb-el{height:60px}}
 </style>
 </helmet>
 <div ref="{{ rootRef }}" class="root" style="height:100dvh; display:flex; flex-direction:column; align-items:center; gap:8px; padding:max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); overflow:hidden; color:#f0e2c4; font:15px/1.5 Palatino,'Palatino Linotype','Book Antiqua','EB Garamond',Georgia,serif; -webkit-font-smoothing:antialiased; background:radial-gradient(70% 45% at 50% -8%, rgba(176,137,72,.16), transparent 55%), #100c09;">
 
+  <nav class="mode-switch" aria-label="Playground modes">
+    <a href="./index.html" aria-current="page">V2 Playground</a>
+    <a href="./lab/index.html">Matter Lab</a>
+  </nav>
   <header class="col hd" style="width:min(96vw,1440px); display:grid; grid-template-columns:minmax(150px,1fr) minmax(0,2.4fr) minmax(max-content,1fr); align-items:center; gap:16px; flex:0 0 auto;">
     <div class="hd-tally" style="display:flex; flex-direction:column; gap:1px; font-size:13px; font-style:italic; color:#8f7d62; letter-spacing:.02em; white-space:nowrap;">
       <span>{{ tally }}</span>
@@ -73,7 +79,6 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
       <div class="hd-line" style="min-height:1.4em; max-width:42rem; width:100%; font-size:14px; font-style:italic; line-height:1.35; color:{{ lineColor }}; text-wrap:pretty;">{{ line }}</div>
     </div>
     <div class="hd-btns" style="display:flex; justify-content:flex-end; align-items:center; gap:6px;">
-      <a href="./lab/index.html" style="color:#9edcf5; font-size:14px; padding:10px 6px;">Matter Lab</a>
       <a href="./catch/index.html" target="_blank" rel="noopener" title="Play the three-chapter Waterworks campaign" style="color:#dbc18b; font-size:13px; padding:10px 6px;">Waterworks</a>
       <a href="../classic.html" title="Back to Alembic v1" style="color:#8f7d62; font-size:13px; letter-spacing:.06em; margin-right:6px; text-decoration:none;">v1</a>
       <button onClick="{{ openCodex }}" style="background:#1c1612; color:#f0e2c4; border:1px solid #3a3128; padding:6px 12px; font-size:13px; letter-spacing:.06em; cursor:pointer;" style-hover="border-color:#c49a4a;" class="hb">codex</button>

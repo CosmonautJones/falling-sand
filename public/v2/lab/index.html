@@ -3,15 +3,19 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#101e2c">
+  <meta name="theme-color" content="#100c09">
   <link rel="icon" href="../../favicon.ico">
   <title>Matter Lab · Alembic</title>
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
   <header class="masthead">
-    <a class="brand" href="../index.html">Alembic <span>Matter Lab</span></a>
+    <div class="brand-lockup"><a class="brand" href="../index.html">Alembic <span>Matter Lab</span></a><span class="mode-note">Experimental vessel</span></div>
     <p>Build something. Change the rules.</p>
+    <nav class="mode-switch" aria-label="Playground modes">
+      <a href="../index.html">V2 Playground</a>
+      <a href="./index.html" aria-current="page">Matter Lab</a>
+    </nav>
     <button id="help-button" class="quiet" aria-label="Open Matter Lab help">How to play</button>
   </header>
   <main class="workbench">
@@ -65,7 +69,7 @@
         <button id="setups-tab" role="tab" aria-selected="false" aria-controls="setups-panel">Setups</button>
       </div>
       <div id="materials-panel" class="library-panel" role="tabpanel" aria-labelledby="materials-tab">
-        <div class="selected-matter"><i id="selected-swatch"></i><div><strong id="selected-name">Sand</strong><p id="selected-description">Loose grains. Build dunes or bury a structure.</p></div></div>
+        <div class="selected-matter"><i id="selected-swatch"></i><div><strong id="selected-name">Sand</strong><p id="selected-whisper" class="material-whisper">The shore in a grain.</p><p id="selected-description">Loose grains. Build dunes or bury a structure.</p></div></div>
         <label class="search-label"><span class="sr-only">Find a material</span><input id="material-search" type="search" placeholder="Find a material…" autocomplete="off"></label>
         <div class="category-filter" id="categories" role="group" aria-label="Material categories"></div>
         <div id="materials" class="material-grid"></div>

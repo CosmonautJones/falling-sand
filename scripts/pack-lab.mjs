@@ -22,7 +22,11 @@ async function page(folder, name, transform = value => value) {
   let html = await read(path.join(source, 'index.html'));
   html = html.replace(/<link rel="stylesheet" href="\.\/style\.css"\s*\/?>/, () => `<style>${styles.get(folder)}</style>`);
   html = replaceOnce(html, '<script type="module" src="./app.js"></script>', `<script>${(await bundle(source, script)).replace(/<\/script/gi, '<\\/script')}</script>`);
-  if (folder === 'v2/lab') html = html.replace('href="../index.html"', 'href="https://cosmonautjones.github.io/falling-sand/v2/" target="_blank" rel="noopener"').replace('>Classic vessel</a>', '>Classic vessel (online)</a>');
+  if (folder === 'v2/lab') html = html.replaceAll('href="../index.html"', 'href="https://cosmonautjones.github.io/falling-sand/v2/" target="_blank" rel="noopener"')
+    .replaceAll('href="./index.html"', `href="./${names.lab}"`)
+    .replace('href="../../classic.html"', 'href="https://cosmonautjones.github.io/falling-sand/classic.html" target="_blank" rel="noopener"')
+    .replace('href="../../favicon.ico"', `href="data:image/x-icon;base64,${(await readFile(path.join(root, 'public/favicon.ico'))).toString('base64')}"`)
+    .replace('>Classic vessel</a>', '>Classic vessel (online)</a>');
   html = html.replace(/href="(?:\.\.\/){1,2}(?:v2\/)?(?:index\.html)?"/g, `href="./${names.lab}"`)
     .replace(/href="\.\.\/(?:v2\/)?lab\/index\.html"/g, `href="./${names.lab}"`)
     .replace(/href="\.\.\/catch\/(?:index\.html)?"/g, `href="./${names.water}"`)
