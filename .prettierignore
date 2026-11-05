@@ -5,3 +5,5 @@ docs
 qa-shots
 .codegraph
 .claude
+
+public/v2/index.html

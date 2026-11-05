@@ -6,6 +6,7 @@ import vm from 'node:vm';
 import { Worker } from 'node:worker_threads';
 import { once } from 'node:events';
 import * as E from '../public/v2/alembic-engine-v2.js';
+import * as cam from '../public/v2/camera.js';
 
 const buffers = () => Array.from({ length: 3 }, () => new Uint8Array(E.N * 4));
 const fingerprint = state => createHash('sha256').update(JSON.stringify(state, (_, value) =>
@@ -197,7 +198,7 @@ test('moving touch wands do not duplicate continuous tools on every pointer even
   vm.createContext(context); vm.runInContext(script + '\nthis.Component = Component;', context);
   for (const tool of ['spray', 'heat', 'cool']) {
     const ui = new context.Component(); let callbacks;
-    ui.M = E; ui.vpRef.current = surface; ui.vw = E.W; ui.vh = E.H;
+    ui.M = E; ui.cam = cam; ui.vpRef.current = surface; ui.vw = E.W; ui.vh = E.H;
     ui.touchMod = { createTouchPour(options) { callbacks = options; return {}; } };
     ui.bindInput(); ui.state.tool = tool;
     callbacks.pour(100, 50); callbacks.pour(101, 50); callbacks.pour(102, 50);
