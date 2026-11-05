@@ -67,8 +67,7 @@ a {
   text-decoration: none;
 }
 .app {
-  height: 100dvh;
-  min-height: 440px;
+  min-height: 100dvh;
   max-width: 1560px;
   margin: auto;
   padding: 20px 28px max(12px, env(safe-area-inset-bottom));
@@ -228,7 +227,7 @@ summary::-webkit-details-marker {
 }
 .stage {
   position: relative;
-  flex: 1;
+  flex: 1 0 clamp(320px, 53svh, 620px);
   min-height: 180px;
   border: 1px solid #43513c;
   border-radius: 14px;
@@ -370,6 +369,24 @@ canvas {
 #toast:empty {
   display: none;
 }
+.soil-reading {
+  position: absolute;
+  top: 58px;
+  right: 14px;
+  max-width: 210px;
+  padding: 7px 9px;
+  border: 1px solid #52665399;
+  border-radius: 6px;
+  background: #15231dd9;
+  color: #b9c8ab;
+  font-size: 10px;
+  line-height: 1.35;
+  text-align: right;
+  pointer-events: none;
+}
+.soil-reading:empty {
+  display: none;
+}
 .toolbar {
   display: flex;
   justify-content: center;
@@ -497,6 +514,15 @@ footer {
     right: 8px;
     gap: 3px;
   }
+  .soil-reading {
+    top: 52px;
+    right: 9px;
+    max-width: 165px;
+    font-size: 9px;
+  }
+  body[data-lens='true'] #hint {
+    visibility: hidden;
+  }
   .view-controls button {
     font-size: 10px;
     padding: 5px 9px;
@@ -621,5 +647,247 @@ footer {
 @media (prefers-reduced-motion: reduce) {
   button:active {
     transform: none;
+  }
+}
+
+.season-strip {
+  display: grid;
+  grid-template-columns: minmax(170px, 0.45fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  min-height: 62px;
+  padding: 10px 14px;
+  border: 1px solid #43513c;
+  border-radius: 10px;
+  background: #18251f;
+}
+.season-mark {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  column-gap: 9px;
+}
+.season-kicker {
+  grid-column: 1 / -1;
+  color: #91a68f;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.season-mark strong {
+  color: var(--cream);
+  font:
+    400 24px Georgia,
+    'Times New Roman',
+    serif;
+}
+#season-year {
+  color: var(--muted);
+  font-size: 11px;
+}
+.season-track {
+  min-width: 0;
+}
+#season-progress {
+  display: block;
+  width: 100%;
+  height: 6px;
+  accent-color: var(--accent);
+}
+#season-progress::-webkit-progress-bar {
+  border-radius: 99px;
+  background: #27382e;
+}
+#season-progress::-webkit-progress-value {
+  border-radius: 99px;
+  background: var(--accent);
+}
+#season-progress::-moz-progress-bar {
+  border-radius: 99px;
+  background: var(--accent);
+}
+#season-note {
+  margin: 6px 0 0;
+  color: #b9c6af;
+  font-size: 12px;
+  line-height: 1.35;
+}
+#fast {
+  min-width: 62px;
+  min-height: 38px;
+  color: #dbe7bd;
+  background: #2b3d2d;
+  border-color: #6b8157;
+  font:
+    600 12px ui-monospace,
+    monospace;
+}
+body[data-season='rain'] .season-strip {
+  border-color: #4f7980;
+  background: linear-gradient(100deg, #182a28, #19251f);
+}
+body[data-season='rain'] #season-progress {
+  accent-color: #8abfc3;
+}
+body[data-season='rain'] #season-progress::-webkit-progress-value {
+  background: #8abfc3;
+}
+body[data-season='dry'] .season-strip {
+  border-color: #806d49;
+  background: linear-gradient(100deg, #2b281c, #202319);
+}
+body[data-season='dry'] #season-progress {
+  accent-color: #d2ad68;
+}
+body[data-season='dry'] #season-progress::-webkit-progress-value {
+  background: #d2ad68;
+}
+body[data-season='recovery'] .season-strip {
+  border-color: #6f8060;
+  background: linear-gradient(100deg, #202d22, #19251f);
+}
+body[data-season='recovery'] #season-progress {
+  accent-color: #b8cf89;
+}
+.journal-panel {
+  display: grid;
+  grid-template-columns: minmax(250px, 0.72fr) minmax(0, 1.28fr);
+  gap: 20px;
+  padding: 14px 16px;
+  border: 1px solid #43513c;
+  border-radius: 10px;
+  background: #16221c;
+}
+.journal-lead h2 {
+  margin: 4px 0 10px;
+  color: var(--cream);
+  font:
+    400 22px/1.1 Georgia,
+    'Times New Roman',
+    serif;
+}
+.journal-lead label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  color: #b3c1aa;
+  font-size: 12px;
+}
+#intention {
+  min-height: 38px;
+  max-width: 100%;
+  padding: 7px 30px 7px 9px;
+  color: var(--cream);
+  background: #223127;
+  border: 1px solid #5a7050;
+  border-radius: 6px;
+  font: inherit;
+}
+#intention:focus-visible {
+  outline: 2px solid #d3e9a0;
+  outline-offset: 3px;
+}
+#intention-note {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+.journal-ledger {
+  min-width: 0;
+  border-left: 1px solid var(--line);
+  padding-left: 18px;
+}
+#journal {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+#journal li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 7px;
+  align-items: start;
+  padding: 8px 9px;
+  border: 1px solid #344a3a;
+  border-radius: 6px;
+  background: #1d2c23;
+}
+#journal li span {
+  color: #9bb37d;
+  font:
+    10px ui-monospace,
+    monospace;
+  white-space: nowrap;
+}
+#journal li strong,
+#journal li p {
+  grid-column: 2;
+}
+#journal li strong {
+  color: #dce8c3;
+  font-size: 12px;
+  font-weight: 600;
+}
+#journal li p {
+  margin: -3px 0 0;
+  color: #9caf9d;
+  font-size: 11px;
+  line-height: 1.35;
+}
+#journal-empty {
+  margin: 8px 0 0;
+  color: #829584;
+  font-size: 12px;
+  font-style: italic;
+}
+@media (max-width: 760px) {
+  .stage {
+    flex-basis: clamp(285px, 48svh, 460px);
+  }
+  .season-strip {
+    grid-template-columns: minmax(120px, auto) minmax(0, 1fr) auto;
+    gap: 10px;
+    min-height: 58px;
+    padding: 8px 10px;
+  }
+  .season-mark strong {
+    font-size: 20px;
+  }
+  #season-note {
+    font-size: 10px;
+  }
+  .journal-panel {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 12px;
+  }
+  .journal-ledger {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    padding: 10px 0 0;
+  }
+  #journal {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 430px) {
+  .season-strip {
+    grid-template-columns: 1fr auto;
+  }
+  .season-track {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .season-mark {
+    grid-column: 1;
+  }
+  #fast {
+    grid-column: 2;
+    grid-row: 1;
   }
 }

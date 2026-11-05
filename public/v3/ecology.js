@@ -91,7 +91,7 @@ export function createEcology({ world, surface, seed }) {
       }
     }
   }
-  function step() {
+  function step({ drought = false } = {}) {
     state.steps++;
     const { water, nutrients, litter, seeds, burn, light, plants } = state;
     // Alternating conservative pair transfers, independent of presentation frames.
@@ -206,9 +206,10 @@ export function createEcology({ world, surface, seed }) {
           }
         }
       }
-      if (state.steps % 12 === 0 && light[q] >= 80 && water[q] > 0) {
-        water[q]--;
-        state.spentWater++;
+      if ((drought || state.steps % 12 === 0) && light[q] >= 80 && water[q] > 0) {
+        const evaporated = Math.min(water[q], drought ? 6 : 1);
+        water[q] -= evaporated;
+        state.spentWater += evaporated;
       }
     }
   }
@@ -216,12 +217,22 @@ export function createEcology({ world, surface, seed }) {
     let plantGrains = 0,
       wetPatches = 0,
       nutrientUnits = 0,
-      flowers = 0;
+      flowers = 0,
+      soilWater = 0,
+      reeds = 0,
+      clover = 0,
+      livingPatches = 0,
+      burnedPatches = 0;
     for (let q = 0; q < PATCHES; q++) {
       const plant = state.plants[q];
       const n = plant?.nodes.length ?? 0;
       plantGrains += n;
       wetPatches += state.water[q] > 0;
+      soilWater += state.water[q];
+      reeds += plant?.kind === 'reed';
+      clover += plant?.kind === 'clover';
+      livingPatches += n > 0;
+      burnedPatches += state.burn[q] > 0;
       flowers += !!plant && plant.kind === 'fireflower';
       nutrientUnits += state.nutrients[q] + state.litter[q] + state.seeds[q] + n;
     }
@@ -230,6 +241,11 @@ export function createEcology({ world, surface, seed }) {
       wetPatches,
       nutrientUnits,
       flowers,
+      soilWater,
+      reeds,
+      clover,
+      livingPatches,
+      burnedPatches,
       absorbed: state.absorbed,
       spentWater: state.spentWater,
     };

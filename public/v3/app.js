@@ -1,8 +1,10 @@
-import { createValley, SAVE_KEY, SAVE_LIMIT, stringifyValley, parseValley } from './valley.js';
+import { createValley, SAVE_LIMIT, stringifyValley, parseValley } from './valley.js';
 import { createView, worldPoint, zoomView, panView, advanceClock, createStroke } from './view.js';
 import { W, H, N, AIR, STONE, BRICK, PLANT, BLOOM } from '../v2/engine/world.js';
 import { parseSeed, seedFromSearch, seedSearch, differentSeed } from './seed.js';
 import { TERRAIN_VERSION } from './terrain.js';
+import { seasonAt } from './climate.js';
+import { createFieldJournal, INTENTIONS, SEASON_NOTES } from './journal.js';
 
 const $ = (id) => document.getElementById(id);
 const canvas = $('world'),
@@ -16,8 +18,12 @@ const frame = pixels.createImageData(W, H),
 const emission = new Uint8Array(N * 4),
   effects = new Uint8Array(N * 4);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-let { seed, terrainVersion } = seedFromSearch(location.search);
-let valley = createValley({ seed, terrainVersion });
+const saveKey = 'alembic-turning-valley-v1';
+const offline = location.protocol === 'file:';
+let { seed, terrainVersion } = seedFromSearch(offline ? location.hash.slice(1) : location.search);
+let valley = createValley({ seed, terrainVersion, seasonal: true });
+let journal = createFieldJournal();
+let speed = 1, soilLens = false;
 let tool = 'dig',
   size = 1,
   paused = false,
@@ -84,16 +90,14 @@ function updateSeed() {
   $('seed-input').value = String(seed);
   $('seed-input').removeAttribute('aria-invalid');
   $('seed-error').textContent = '';
-  history.replaceState(
-    null,
-    '',
-    `${location.pathname}?${seedSearch(location.search, seed, terrainVersion)}${location.hash}`,
-  );
+  const next = seedSearch(offline ? location.hash.slice(1) : location.search, seed, terrainVersion);
+  history.replaceState(null, '', offline ? `#${next}` : `${location.pathname}?${next}${location.hash}`);
 }
 function reset(nextSeed, nextVersion = terrainVersion) {
   seed = nextSeed;
   terrainVersion = nextVersion;
-  valley = createValley({ seed, terrainVersion });
+  valley = createValley({ seed, terrainVersion, seasonal: true });
+  journal = createFieldJournal();
   clock.acc = 0;
   pointers.clear();
   gesture = null;
@@ -113,6 +117,17 @@ function reset(nextSeed, nextVersion = terrainVersion) {
 }
 function readStats() {
   const stats = valley.stats();
+  const { season } = stats;
+  document.body.dataset.season = season.id;
+  $('season-name').textContent = season.name;
+  $('season-year').textContent = `Year ${season.year}`;
+  $('season-progress').max = season.duration;
+  $('season-progress').value = season.elapsed;
+  $('season-note').textContent = SEASON_NOTES[season.id];
+  const intention = INTENTIONS[$('intention').value] ?? INTENTIONS.observe;
+  $('intention-note').textContent = `${intention.prompt} ${intention.reading(stats)}.`;
+  if (journal.observe(stats, valley.inspect().soil.plants)) renderJournal();
+  readSoil();
   $('wet').textContent = stats.wetPatches;
   $('growth').textContent = stats.plantGrains;
   if (painted) {
@@ -128,6 +143,35 @@ function readStats() {
         : 'Try fire on a green patch. Then water what remains.';
   }
   lastStats = stats.tick;
+}
+function renderJournal() {
+  const list = $('journal');
+  list.replaceChildren();
+  $('journal-empty').hidden = journal.entries.length > 0;
+  for (const entry of journal.entries) {
+    const item = document.createElement('li');
+    const time = document.createElement('span');
+    const title = document.createElement('strong');
+    const text = document.createElement('p');
+    time.textContent = entry.time;
+    title.textContent = entry.title;
+    text.textContent = entry.text;
+    item.append(time, title, text);
+    list.append(item);
+  }
+}
+function readSoil() {
+  const output = $('soil-reading');
+  output.hidden = !soilLens;
+  if (!soilLens) return;
+  if (!cursor) {
+    output.textContent = 'Blue shows stored water. Orange shows a fire scar. Point at a patch for a reading.';
+    return;
+  }
+  const { soil } = valley.inspect();
+  const patch = Math.floor(cursor.x / 8);
+  const plant = soil.plants[patch]?.kind ?? 'bare ground';
+  output.textContent = `Patch ${patch + 1} · ${soil.water[patch]} water · ${plant}${soil.burn[patch] ? ' · fire scar' : ''}`;
 }
 function draw() {
   const { world, soil, surface, tick } = valley.inspect();
@@ -187,6 +231,20 @@ function draw() {
   ctx.fillStyle = '#17261f';
   ctx.fillRect(0, 0, view.width, view.height);
   ctx.drawImage(buffer, view.x, view.y, W * view.scale, H * view.scale);
+  if (soilLens) {
+    for (let patch = 0; patch < soil.water.length; patch++) {
+      const x = patch * 8;
+      const y = surface[x + 4] * view.scale + view.y;
+      const left = x * view.scale + view.x;
+      const width = 8 * view.scale;
+      ctx.fillStyle = `rgba(96, 204, 240, ${0.12 + 0.72 * Math.min(1, soil.water[patch] / 60)})`;
+      ctx.fillRect(left, y, width, Math.max(2, 5 * view.scale));
+      if (soil.burn[patch]) {
+        ctx.fillStyle = '#f6a36b';
+        ctx.fillRect(left, y + 5 * view.scale, width, Math.max(2, 2 * view.scale));
+      }
+    }
+  }
   if (cursor && !pointers.size) {
     ctx.strokeStyle = '#e4e9cfa0';
     ctx.lineWidth = 1;
@@ -211,6 +269,12 @@ function local(event) {
 function apply(point) {
   const p = worldPoint(view, point.x, point.y);
   if (!p) return;
+  if (soilLens) {
+    cursor = p;
+    readSoil();
+    needsDraw = true;
+    return;
+  }
   valley.applyTool({ tool, x: Math.min(W - 1, p.x), y: Math.min(H - 1, p.y), r: sizes[size] });
   needsDraw = true;
 }
@@ -235,6 +299,7 @@ canvas.addEventListener('pointerdown', (event) => {
 canvas.addEventListener('pointermove', (event) => {
   const p = local(event);
   cursor = worldPoint(view, p.x, p.y);
+  if (soilLens) readSoil();
   needsDraw = true;
   if (!pointers.has(event.pointerId)) return;
   pointers.set(event.pointerId, p);
@@ -261,8 +326,11 @@ canvas.addEventListener('lostpointercapture', (event) => {
   if (pointers.has(event.pointerId)) stroke.cancel();
   pointers.delete(event.pointerId);
 });
-canvas.addEventListener('pointerleave', () => {
+canvas.addEventListener('pointerleave', (event) => {
+  // A touch leaves immediately after a tap. Keep its patch reading on screen.
+  if (soilLens && event.pointerType === 'touch') return;
   cursor = null;
+  if (soilLens) readSoil();
   needsDraw = true;
 });
 canvas.addEventListener(
@@ -280,9 +348,9 @@ canvas.addEventListener('keydown', (event) => {
     return;
   event.preventDefault();
   cursor ??= { x: 245, y: 170 };
-  if (event.key === 'Enter' || event.key === ' ')
-    valley.applyTool({ tool, ...cursor, r: sizes[size] });
-  else {
+  if (event.key === 'Enter' || event.key === ' ') {
+    if (!soilLens) valley.applyTool({ tool, ...cursor, r: sizes[size] });
+  } else {
     cursor.x = Math.max(
       1,
       Math.min(
@@ -298,11 +366,13 @@ canvas.addEventListener('keydown', (event) => {
       ),
     );
   }
+  if (soilLens) readSoil();
   needsDraw = true;
 });
 for (const button of document.querySelectorAll('[data-tool]'))
   button.addEventListener('click', () => {
     tool = button.dataset.tool;
+    if (soilLens) toggleLens(false);
     for (const other of document.querySelectorAll('[data-tool]'))
       other.setAttribute('aria-pressed', String(other === button));
   });
@@ -318,6 +388,22 @@ $('pause').onclick = () => {
   $('pause').textContent = paused ? 'Resume' : 'Pause';
   $('pause').setAttribute('aria-pressed', String(paused));
 };
+$('fast').onclick = () => {
+  speed = speed === 1 ? 3 : 1;
+  clock.acc = 0;
+  $('fast').textContent = `${speed}× time`;
+  $('fast').setAttribute('aria-pressed', String(speed === 3));
+};
+function toggleLens(enabled) {
+  soilLens = enabled;
+  document.body.dataset.lens = String(soilLens);
+  stroke.cancel();
+  $('lens').setAttribute('aria-pressed', String(soilLens));
+  readSoil();
+  needsDraw = true;
+}
+$('lens').onclick = () => toggleLens(!soilLens);
+$('intention').onchange = readStats;
 $('view').onclick = () => {
   overview = !overview;
   $('view').textContent = overview ? 'Close view' : 'Overview';
@@ -362,7 +448,7 @@ $('seed-form').onsubmit = (event) => {
 };
 $('save').onclick = () => {
   try {
-    localStorage.setItem(SAVE_KEY, stringifyValley(valley.checkpoint()));
+    localStorage.setItem(saveKey, stringifyValley(valley.checkpoint()));
     notify('Valley saved in this browser.');
   } catch {
     notify('Browser storage is full or unavailable. Export a valley file to keep it.');
@@ -371,6 +457,7 @@ $('save').onclick = () => {
 };
 function load(text) {
   valley.restore(parseValley(text));
+  journal = createFieldJournal();
   seed = valley.inspect().seed;
   terrainVersion = valley.inspect().terrainVersion;
   background();
@@ -393,7 +480,7 @@ function load(text) {
 }
 $('load').onclick = () => {
   try {
-    const text = localStorage.getItem(SAVE_KEY);
+    const text = localStorage.getItem(saveKey);
     if (!text) {
       notify('No valley saved here yet.');
       return;
@@ -410,7 +497,7 @@ $('export').onclick = () => {
     );
     const link = document.createElement('a');
     link.href = url;
-    link.download = `alembic-valley-${seed}.json`;
+    link.download = `alembic-turning-valley-${seed}.json`;
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     notify('Valley file exported.');
@@ -458,7 +545,15 @@ function animate(now) {
   if (!document.hidden) {
     if (pointers.size === 1 && stroke.sample(now)) apply(pointers.values().next().value);
     if (steps) {
-      valley.advanceTicks(steps);
+      let remaining = steps * speed;
+      while (remaining > 0) {
+        const { elapsed, duration } = seasonAt(valley.inspect().tick);
+        const untilTurn = duration - elapsed;
+        const batch = Math.min(remaining, untilTurn);
+        valley.advanceTicks(batch);
+        remaining -= batch;
+        if (batch === untilTurn) readStats();
+      }
       needsDraw = true;
     }
     if (valley.inspect().tick - lastStats >= 30) readStats();

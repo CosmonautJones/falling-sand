@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#100c09" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <title>Alembic</title>
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%231a1410'/><circle cx='8' cy='9' r='5' fill='%23b08948'/><circle cx='8' cy='9' r='2' fill='%23ff6a0c'/></svg>"
+    />
+    <style>
+      :root {
+        --lampblack: #100c09;
+        --paper: #cbb89a;
+        --brass: #c49a4a;
+        --lead: #3a3128;
+        --soot: #1c1612;
+        --ink: #f0e2c4;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background:
+          radial-gradient(70% 45% at 50% -8%, rgba(176, 137, 72, 0.14), transparent 50%),
+          var(--lampblack);
+        color: var(--ink);
+        font:
+          15px/1.5 Palatino,
+          'Palatino Linotype',
+          'Book Antiqua',
+          Georgia,
+          serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        height: 100dvh;
+        max-height: 100dvh;
+        overflow: hidden;
+        padding: 8px 12px 10px;
+        box-sizing: border-box;
+      }
+      header {
+        flex: 0 0 auto;
+        text-align: center;
+      }
+      h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        line-height: 1.05;
+        color: var(--brass);
+        text-shadow:
+          0 1px 0 #3a2a10,
+          0 -1px 0 #e8c97a;
+        cursor: pointer;
+        user-select: none;
+      }
+      .v2link {
+        display: inline-block;
+        margin-top: 2px;
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        color: var(--paper);
+        opacity: 0.75;
+        text-decoration: none;
+        border-bottom: 1px dotted var(--lead);
+      }
+      .v2link:hover,
+      .v2link:focus-visible {
+        opacity: 1;
+        color: var(--brass);
+      }
+      h1.opus {
+        letter-spacing: 0.22em;
+        color: #e8b86a;
+      }
+      h1:focus-visible {
+        outline: 2px solid var(--brass);
+        outline-offset: 4px;
+      }
+      #lore,
+      #codex {
+        max-width: 40rem;
+        margin: 0 auto;
+        color: var(--paper);
+        font-style: italic;
+        line-height: 1.35;
+        font-size: 14px;
+        text-wrap: pretty;
+        text-align: center;
+      }
+      #codex {
+        min-height: 1.4em;
+        color: #d4b56a;
+      }
+      #folio {
+        display: none;
+        position: fixed;
+        z-index: 20;
+        top: 8px;
+        right: 8px;
+        bottom: 8px;
+        width: min(26rem, 94vw);
+        flex-direction: column;
+        background: #14100c;
+        border: 1px solid var(--brass);
+        box-shadow:
+          inset 0 1px 0 rgba(232, 201, 122, 0.35),
+          0 24px 48px rgba(0, 0, 0, 0.55);
+        color: var(--ink);
+      }
+      #folio.is-open {
+        display: flex;
+      }
+      #folio-head {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        padding: 12px 14px 8px;
+        border-bottom: 1px solid var(--lead);
+        flex: 0 0 auto;
+      }
+      #folio-head strong {
+        font-size: 13px;
+        letter-spacing: 0.22em;
+        color: var(--brass);
+        font-weight: 600;
+      }
+      #folio-count {
+        flex: 1;
+        font-size: 13px;
+        font-style: italic;
+        color: var(--paper);
+      }
+      #folio-leaves {
+        list-style: none;
+        margin: 0;
+        padding: 4px 16px 20px;
+        overflow: auto;
+      }
+      #folio-leaves li {
+        border-top: 1px solid #2a2218;
+        padding: 11px 0 10px;
+      }
+      #folio-leaves li:first-child {
+        border-top: 0;
+      }
+      #folio-leaves h2 {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 4px;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        color: var(--ink);
+      }
+      #folio-leaves .swatch {
+        width: 11px;
+        height: 11px;
+        border: 1px solid #5a4630;
+        flex: 0 0 auto;
+      }
+      #folio-leaves .whisper {
+        margin: 0 0 6px;
+        font-style: italic;
+        color: #d4b56a;
+        font-size: 14px;
+      }
+      #folio-leaves .leaf {
+        margin: 0;
+        color: var(--paper);
+        font-size: 14px;
+        line-height: 1.4;
+      }
+      kbd {
+        font:
+          12px/1 ui-monospace,
+          'Cascadia Code',
+          Consolas,
+          monospace;
+        border: 1px solid var(--lead);
+        padding: 1px 5px;
+        color: var(--brass);
+      }
+      #toolbar {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        align-items: center;
+        flex: 0 0 auto;
+        width: min(96vw, 1440px);
+      }
+      #palette,
+      #tools {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      button {
+        background: var(--soot);
+        color: var(--ink);
+        border: 1px solid var(--lead);
+        padding: 6px 10px;
+        cursor: pointer;
+        font:
+          13px/1.2 Palatino,
+          'Palatino Linotype',
+          Georgia,
+          serif;
+      }
+      #palette button {
+        min-width: 4.6em;
+        letter-spacing: 0.02em;
+        box-shadow: inset 0 -8px 10px rgba(0, 0, 0, 0.22);
+      }
+      button:hover {
+        border-color: var(--brass);
+      }
+      button:focus-visible {
+        outline: 2px solid var(--brass);
+        outline-offset: 2px;
+      }
+      button[aria-pressed='true'] {
+        border-color: var(--paper);
+        box-shadow: inset 0 0 0 1px var(--paper);
+      }
+      .vessel {
+        margin: 0;
+        padding: 8px;
+        background:
+          radial-gradient(120% 80% at 50% 0%, rgba(176, 137, 72, 0.22), transparent 46%),
+          var(--lead);
+        box-shadow:
+          inset 0 1px 0 rgba(232, 201, 122, 0.65),
+          inset 0 0 0 1px #2a2118,
+          0 0 0 1px #5a4630,
+          0 24px 48px rgba(0, 0, 0, 0.62);
+        width: min(96vw, 1440px);
+        flex: 1 1 0;
+        min-height: 0;
+        min-width: 0;
+        box-sizing: border-box;
+        position: relative;
+        container-type: size;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .vessel::before,
+      .vessel::after {
+        content: '';
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        border: 1px solid rgba(196, 154, 74, 0.45);
+        pointer-events: none;
+      }
+      .vessel::before {
+        top: 4px;
+        left: 4px;
+        border-right: 0;
+        border-bottom: 0;
+      }
+      .vessel::after {
+        bottom: 4px;
+        right: 4px;
+        border-left: 0;
+        border-top: 0;
+      }
+      #viewport {
+        position: relative;
+        overflow: hidden;
+        width: min(100cqw, calc(100cqh * 480 / 270));
+        aspect-ratio: 480 / 270;
+        height: auto;
+        max-height: 100%;
+        background: #0b090e;
+        touch-action: none;
+        flex: 0 0 auto;
+      }
+      canvas {
+        display: block;
+        image-rendering: pixelated;
+        width: 100%;
+        height: 100%;
+        aspect-ratio: 480 / 270;
+        touch-action: none;
+        cursor: none;
+        background: #0b090e;
+        transform-origin: 0 0;
+      }
+      #probe {
+        position: absolute;
+        z-index: 2;
+        display: none;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 8px 4px 5px;
+        background: #1a1410;
+        border: 1px solid var(--brass);
+        color: var(--ink);
+        font:
+          13px/1 Palatino,
+          'Palatino Linotype',
+          Georgia,
+          serif;
+        letter-spacing: 0.04em;
+        pointer-events: none;
+        white-space: nowrap;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
+      }
+      #probe.is-on {
+        display: flex;
+      }
+      #probe .swatch {
+        width: 11px;
+        height: 11px;
+        border: 1px solid #5a4630;
+        flex: 0 0 auto;
+      }
+      #hud {
+        position: absolute;
+        left: 10px;
+        bottom: 8px;
+        z-index: 2;
+        font-variant-numeric: tabular-nums;
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        color: rgba(203, 184, 154, 0.82);
+        pointer-events: none;
+        text-shadow: 0 1px 2px #000;
+      }
+      #still {
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(10, 8, 7, 0.42);
+        color: var(--brass);
+        letter-spacing: 0.28em;
+        font-size: 13px;
+        pointer-events: none;
+      }
+      #viewport.is-still #still {
+        display: flex;
+      }
+      #reticle {
+        position: absolute;
+        z-index: 4;
+        width: 13px;
+        height: 13px;
+        margin: -6px 0 0 -6px;
+        pointer-events: none;
+        opacity: 0;
+      }
+      #reticle.is-on {
+        opacity: 1;
+      }
+      #reticle::before,
+      #reticle::after {
+        content: '';
+        position: absolute;
+        background: var(--brass);
+      }
+      #reticle::before {
+        left: 6px;
+        top: 0;
+        width: 1px;
+        height: 13px;
+      }
+      #reticle::after {
+        left: 0;
+        top: 6px;
+        width: 13px;
+        height: 1px;
+      }
+      #curtain {
+        position: fixed;
+        inset: 0;
+        z-index: 30;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        background: #0c0907;
+        cursor: pointer;
+        transition: opacity 0.8s ease;
+      }
+      #curtain.gone {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #curtain strong {
+        font-size: 42px;
+        letter-spacing: 0.28em;
+        font-weight: 600;
+        color: var(--brass);
+        text-shadow: 0 1px 0 #3a2a10;
+      }
+      #curtain span {
+        color: var(--paper);
+        font-style: italic;
+        letter-spacing: 0.04em;
+      }
+      @media (max-width: 640px) {
+        h1 {
+          font-size: 24px;
+          letter-spacing: 0.1em;
+        }
+        #lore {
+          font-size: 14px;
+        }
+        #palette button {
+          min-width: 3.8em;
+          padding: 6px 8px;
+        }
+        canvas,
+        #viewport {
+          cursor: crosshair;
+        }
+        #reticle {
+          display: none;
+        }
+        #curtain strong {
+          font-size: 28px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #curtain {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Alembic</h1>
+      <a class="v2link" href="./v2/lab/index.html">Matter Lab</a>
+      <a class="v2link" href="./v2/index.html">Alembic v2 &rarr;</a>
+      <p id="lore">
+        Hold to pour. Right-click names a grain; hold right-click to pan when zoomed. Scroll zooms.
+        Casks remember fire. Space pauses; <kbd>[</kbd> <kbd>]</kbd> the brush.
+      </p>
+      <p id="codex"></p>
+    </header>
+    <div id="toolbar"></div>
+    <figure class="vessel">
+      <div id="viewport">
+        <canvas id="stage"></canvas>
+        <div id="still">the vessel holds</div>
+        <div id="hud"></div>
+        <div id="probe" role="status">
+          <span class="swatch"></span><span class="name">air</span>
+        </div>
+        <div id="reticle"></div>
+      </div>
+    </figure>
+    <aside id="folio" role="dialog" aria-labelledby="folio-title" aria-hidden="true">
+      <div id="folio-head">
+        <strong id="folio-title">Codex</strong>
+        <span id="folio-count"></span>
+        <button type="button" id="folio-shut">close</button>
+      </div>
+      <ol id="folio-leaves"></ol>
+    </aside>
+    <div id="curtain">
+      <strong>ALEMBIC</strong>
+      <span>solve et coagula</span>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

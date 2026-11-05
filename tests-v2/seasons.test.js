@@ -149,7 +149,7 @@ test('the page shows the almanac, whispers seasons and omens, and frosts or warm
   assert.match(html, /case 'omen': this\.setState\(\{ whisper: OMEN_WHISPER\[e\.v\]/);
   assert.match(html, /<div ref="\{\{ frostRef \}\}" class="omen-frost"/);
   assert.match(html, /<div ref="\{\{ warmRef \}\}" class="omen-warm"/);
-  assert.match(html, /this\.almanac = r\.almanac \|\| null;\n\s*this\.paintOmens\(\);/);
+  assert.match(html, /this\.almanac = r\.almanac \|\| null;\r?\n\s*this\.paintOmens\(\);/);
   for (const k of ['almanacRef', 'frostRef', 'warmRef']) assert.match(html, new RegExp(`${k}: this\\.${k}`));
 });
 

@@ -18,11 +18,11 @@ function world(seed = 3) {
 }
 const lit = (s, x, y) => s.shades[y * E.W + x] >= E.CLASSIC.lit;
 
-test('nine new materials fill the tables to their 64-slot limit, each with a page and a hint', () => {
-  assert.equal(E.COUNT, 64);
+test('the nine classic materials keep their IDs inside the expanded tables, each with a page and a hint', () => {
+  assert.equal(E.COUNT, 73);
   for (const name of NEW) {
     const id = E[name];
-    assert.ok(Number.isInteger(id) && id >= 55 && id < E.COUNT, name);
+    assert.ok(Number.isInteger(id) && id >= 55 && id < 64, name);
     assert.ok(E.TRANSMUTED.includes(id), `${name} is discoverable`);
     assert.ok(E.PAGES[id]?.w && E.PAGES[id]?.l, `${name} page`);
     assert.ok(E.HINTS[id], `${name} hint`);
@@ -278,7 +278,7 @@ test('aether at a pearl becomes a font; the font op validates and survives a che
   a.run(2);
   assert.ok(a.count(E.FONT) === 1, 'the pearl became a font');
   assert.deepEqual(validateOperations([{ t: 'font', x: 10, y: 20, m: E.WATER }]), [{ t: 'font', x: 10, y: 20, m: E.WATER }]);
-  assert.throws(() => validateOperations([{ t: 'font', x: 10, y: 20, m: 64 }]));
+  assert.throws(() => validateOperations([{ t: 'font', x: 10, y: 20, m: E.COUNT }]));
   assert.throws(() => validateOperations([{ t: 'font', x: 10, y: 20 }]));
   const e = E.createEngine({ seed: 9, scene: 'empty', ambientEmbers: false, weather: false });
   e.advanceTicks(1, [{ tick: 1, sequence: 0, op: { t: 'font', x: 100, y: 50, m: E.WATER } }]);
