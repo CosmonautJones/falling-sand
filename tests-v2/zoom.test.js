@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const html = readFileSync(new URL('../public/v2/index.html', import.meta.url), 'utf8');
-const bar = html.slice(html.indexOf('<nav class="phone-bar"'), html.indexOf('</nav>'));
+const barStart = html.indexOf('<nav class="phone-bar"');
+const bar = html.slice(barStart, html.indexOf('</nav>', barStart));
 const method = name => { const i = html.indexOf(`  ${name}(`); return html.slice(i, html.indexOf('\n  }\n', i)); };
 
 test('the phone bar has a thumb zoom button that steps 2×, 4×, then fits', () => {
