@@ -29,6 +29,7 @@
         <div class="button-group">
           <label class="compact-label">Lens <select id="lens" aria-label="Observation lens"><option value="natural">Natural</option><option value="heat">Heat</option><option value="velocity">Velocity</option></select></label>
           <button id="undo" title="Undo the last edit (Z)" disabled>Undo</button>
+          <button id="codex-button" title="Open the Matter Codex">Codex</button>
           <button id="library-toggle" aria-expanded="false" aria-controls="library">Library</button>
         </div>
       </div>
@@ -69,6 +70,13 @@
         <button id="setups-tab" role="tab" aria-selected="false" aria-controls="setups-panel">Setups</button>
       </div>
       <div id="materials-panel" class="library-panel" role="tabpanel" aria-labelledby="materials-tab">
+        <div class="codex-strip" aria-label="Codex progress">
+          <div class="codex-strip-heading"><strong>Matter Codex</strong><span id="codex-count">13 / 72 pages revealed</span></div>
+          <progress id="codex-progress" value="13" max="72" aria-label="13 of 72 codex pages revealed"></progress>
+          <label class="access-label">Material access <select id="material-access" aria-label="Material access"><option value="discovery">Discovery first</option><option value="workshop">All materials workshop</option></select></label>
+          <span id="codex-mode" class="codex-mode">Discovery first</span>
+        </div>
+        <div id="next-experiment" class="next-experiment" hidden><div><strong>Next experiment</strong><span id="next-experiment-text"></span></div><button type="button">Try this</button></div>
         <div class="selected-matter"><i id="selected-swatch"></i><div><strong id="selected-name">Sand</strong><p id="selected-whisper" class="material-whisper">The shore in a grain.</p><p id="selected-description">Loose grains. Build dunes or bury a structure.</p></div></div>
         <label class="search-label"><span class="sr-only">Find a material</span><input id="material-search" type="search" placeholder="Find a material…" autocomplete="off"></label>
         <div class="category-filter" id="categories" role="group" aria-label="Material categories"></div>
@@ -95,11 +103,20 @@
       </div>
     </aside>
   </main>
+  <div id="codex-toast" class="codex-toast" aria-live="polite" aria-hidden="true" inert><span></span><button id="codex-toast-open" type="button" tabindex="-1">Open codex</button></div>
   <div id="status" class="status" role="status" aria-live="polite"></div>
+  <dialog id="codex-dialog" class="codex-dialog" aria-labelledby="codex-title">
+    <form method="dialog"><button class="dialog-close" aria-label="Close codex">Close</button></form>
+    <p class="codex-kicker">Alembic · Matter Lab</p>
+    <h1 id="codex-title">The Matter Codex</h1>
+    <p id="codex-lede">Experiments leave a trace. Painting and placement are practice; a reaction writes the page.</p>
+    <div id="codex-scroll" class="codex-scroll"><section id="codex-milestones" class="codex-milestones" aria-label="Research milestones"></section><div id="codex-pages" class="codex-pages"></div></div>
+  </dialog>
   <dialog id="help-dialog">
     <form method="dialog"><button class="dialog-close" aria-label="Close help">Close</button></form>
     <h1>Make a beautiful mess.</h1>
     <p>Pick a material and drag inside the vessel. Use Heat, Cool or Blast to start reactions. Reverse gravity to turn a familiar scene inside out.</p>
+    <p><strong>The Matter Codex</strong> remembers what your experiments create. Unwritten pages hold clues; research milestones earn new supplies. Choose <strong>All materials workshop</strong> in the library for unrestricted building. Painting and placing materials do not earn pages, but reactions do. Clearing the vessel keeps your journal.</p>
     <ul><li><strong>Blueprints</strong> are real simulated materials. Place a building, reactor or creature habitat, then experiment.</li><li><strong>Capture</strong> freezes the world while you select a rectangle. Save and reuse your invention, or export it as a JSON file.</li><li><strong>Save world</strong> stores the current simulation in this browser. Export a world to keep a portable copy.</li><li><strong>Gravity</strong> moves grains and disconnected structures. Structures joined to a vessel edge stay anchored. Creatures still use their own movement rules.</li><li><strong>Heat and Velocity lenses</strong> reveal what the particles are doing. The heat scale is qualitative; exotic materials use playful rules.</li></ul>
     <p>Keyboard: Space pauses; P/E/H/C/B/X select tools; R rotates; M mirrors; Z undoes; Esc cancels. Focus the vessel, move with arrows and press Enter to act. Hold Shift with arrows for larger steps.</p>
     <p><a href="../../classic.html">Classic vessel</a> · <a href="../index.html">Alembic V2</a> · <a href="../catch/index.html">Waterworks</a> · <a href="../../v3/index.html">Turning Valley</a></p>

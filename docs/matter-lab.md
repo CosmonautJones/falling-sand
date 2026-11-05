@@ -5,6 +5,35 @@ The expanded Alembic sandbox lives at `/v2/lab/index.html`. Run `npm ci`, then
 its gravity API selects the new motion model; existing campaigns and old saves
 retain the original solver unless opened in the lab.
 
+## The Matter Codex
+
+Matter Lab starts in **Discovery first** with V2's 13 paintable starter materials.
+Make something new through a reaction and its page opens: a whisper, a description,
+and a new material to pour. The codex keeps 72 pages, with clues on unwritten ones
+and a gentle next experiment. Discoveries never change the current brush.
+
+Five research milestones supply materials that cannot be synthesized in this
+engine: a living specimen, conductors and structural metals, cryogenic liquid,
+magnetic materials, and very light matter. These pages are labeled **Research
+supply**, separately from materials actually made in the vessel. Nitrogen is
+discovered by letting the earned cryogenic liquid boil.
+
+Choose **All materials workshop** to build without palette restrictions. This
+does not fill the codex. Painting, blueprint placement and world import do not
+earn pages; genuine reactions still do, in either access mode. Returning to
+Discovery first keeps progress and returns the brush to sand if necessary.
+
+Existing V2 discoveries carry into an independent Lab journal in this browser.
+Lab never rewrites V2's progress. Clearing, undoing or restoring the world does
+not erase the journal; world exports and blueprint files do not contain it.
+If browser storage is unavailable, the journal works for the current visit and
+the lab explains that it may not survive reloading.
+
+Creation notifications are separate from sampled visual sparks and checkpoint
+state. A transient material can write a page even if it disappears before the
+next rendered frame. Notifications do not consume random numbers or change the
+simulation's continuation.
+
 ## What to try
 
 - Blast the truss bridge in Chaos yard, then reverse gravity.
