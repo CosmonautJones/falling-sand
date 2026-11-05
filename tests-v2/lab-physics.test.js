@@ -42,6 +42,66 @@ test('fast particles stop at one-cell walls and preserve all grains', () => {
   assert.equal(grains(world, E.STEEL).length, E.H);
 });
 
+test('dense sand falls equally in every gravity direction without false self-collisions', () => {
+  const distances = [];
+  const d = Math.SQRT1_2;
+  for (const gravity of [{ x: 0, y: 1 }, { x: 0, y: -1 }, { x: 1, y: 0 }, { x: -1, y: 0 }, { x: d, y: d }, { x: -d, y: d }, { x: d, y: -d }, { x: -d, y: -d }]) {
+    const world = lab(gravity), s = world.inspect();
+    for (let y = 120; y < 132; y++) for (let x = 220; x < 232; x++) s.setc(x, y, E.SAND, 0);
+    world.advanceTicks(30);
+    const points = grains(world, E.SAND);
+    assert.equal(points.length, 144, 'rotation conserves every grain');
+    const dx = mean(points, 'x') - 225.5, dy = mean(points, 'y') - 125.5;
+    distances.push(dx * gravity.x + dy * gravity.y);
+    assert.ok(Math.abs(dx * gravity.y - dy * gravity.x) < 0.1, 'an unobstructed cloud has no sideways impulse');
+  }
+  assert.ok(Math.min(...distances) > 60, `dense grains accelerate in open space: ${distances}`);
+  assert.ok(Math.max(...distances) - Math.min(...distances) < 1, `rotating gravity preserves free-fall speed: ${distances}`);
+});
+
+test('dense weightless clouds keep their momentum in every direction', () => {
+  for (const velocity of [{ x: 1.25, y: 0 }, { x: -1.25, y: 0 }, { x: 0, y: 1.25 }, { x: 0, y: -1.25 }]) {
+    const world = lab({ x: 0, y: 0 }), s = world.inspect();
+    for (let y = 120; y < 132; y++) for (let x = 220; x < 232; x++) {
+      s.setc(x, y, E.SAND, 0); s.VX[y * E.W + x] = velocity.x; s.VY[y * E.W + x] = velocity.y;
+    }
+    world.advanceTicks(24);
+    const points = grains(world, E.SAND);
+    assert.equal(points.length, 144);
+    assert.ok(Math.abs(mean(points, 'x') - 225.5 - velocity.x * 24) < 0.1);
+    assert.ok(Math.abs(mean(points, 'y') - 125.5 - velocity.y * 24) < 0.1);
+    assert.ok(points.every(p => p.vx === velocity.x && p.vy === velocity.y), 'neighbouring grains do not create drag in empty space');
+  }
+});
+
+test('a thrown sand cloud follows a lone grain through a gravity turnaround', () => {
+  const cloud = lab(), lone = lab(), s = cloud.inspect(), single = lone.inspect();
+  for (let y = 120; y < 132; y++) for (let x = 220; x < 232; x++) {
+    s.setc(x, y, E.SAND, 0); s.VY[y * E.W + x] = -3;
+  }
+  single.setc(220, 120, E.SAND, 0); single.VY[120 * E.W + 220] = -3;
+  cloud.advanceTicks(30); lone.advanceTicks(30);
+  const points = grains(cloud, E.SAND), grain = grains(lone, E.SAND)[0];
+  assert.equal(points.length, 144);
+  assert.ok(Math.abs(mean(points, 'y') - 125.5 - (grain.y - 120)) < 1);
+  assert.ok(points.every(p => Math.abs(p.vy - grain.vy) < 0.001));
+});
+
+test('separate zero-g clouds carry opposite momentum independently', () => {
+  const world = lab({ x: 0, y: 0 }), s = world.inspect();
+  for (const [start, material, vx] of [[80, E.SAND, 1.25], [380, E.SALT, -1.25]]) {
+    for (let y = 120; y < 132; y++) for (let x = start; x < start + 12; x++) {
+      s.setc(x, y, material, 0); s.VX[y * E.W + x] = vx;
+    }
+  }
+  world.advanceTicks(24);
+  for (const [material, x, vx] of [[E.SAND, 115.5, 1.25], [E.SALT, 355.5, -1.25]]) {
+    const points = grains(world, material);
+    assert.equal(points.length, 144); assert.equal(mean(points, 'x'), x);
+    assert.ok(points.every(p => p.vx === vx && p.vy === 0));
+  }
+});
+
 test('a held brush preserves existing grain momentum and keeps pouring', () => {
   const world = lab(), s = world.inspect(), i = 30 * E.W + 100;
   s.setc(100, 30, E.WATER, 0); s.VY[i] = 0.5; s.PY[i] = 0.1; s.heat[i] = 60;

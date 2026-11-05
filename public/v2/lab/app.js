@@ -80,6 +80,7 @@ function closeMobileLibrary() {
 function selectMaterial(m) {
   selected = m; selectTool('paint');
   $('selected-name').textContent = label(E.NAMES[m]); $('selected-swatch').style.background = rgb(m);
+  $('selected-whisper').textContent = m === E.STONE ? 'A foundation, until you free it.' : E.PAGES[m]?.w || '';
   $('selected-description').textContent = descriptions[E.NAMES[m]] || (E.KIND[m] === 1 ? 'A loose granular material. Try it under changing gravity.' : E.KIND[m] === 2 ? 'A flowing liquid. Mix it with other matter and watch.' : E.KIND[m] === 3 ? 'A drifting gas. Try a change in gravity or temperature.' : 'A structural material. Build, heat, break and experiment.');
   document.querySelectorAll('[data-material]').forEach(button => { const yes = +button.dataset.material === m; button.classList.toggle('selected', yes); button.setAttribute('aria-pressed', String(yes)); });
 }

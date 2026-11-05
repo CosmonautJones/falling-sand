@@ -33,6 +33,14 @@ handles displacement and buoyancy relative to the gravity vector. Warm-fluid
 convection follows the opposite direction. Magnetic attraction uses a softened,
 bounded field for the ferrofluid.
 
+The cell pass follows each grain's predicted motion, moving leading grains
+before their followers. This avoids false self-collisions when a dense stream
+falls upward or sideways, keeps drifting in zero gravity, or turns against gravity.
+Grid-line crossings use a small floating-point tolerance so identical grains
+do not choose different destination cells at numerical precision boundaries.
+Quiet 8×8 regions can skip physics work, but grains
+are never merged into larger particles and the renderer redraws every cell.
+
 Connected solid assemblies translate as units. Any component connected to a
 world boundary is anchored. Cutting a connection detaches a component; changing
 gravity affects its acceleration. This is a grid approximation: there is no
@@ -74,7 +82,9 @@ changed by the initial local consolidation.
 
 The release uses the existing Netlify project `alcubemy` and domain
 `alcubemy.travisjohnjones.com`, connected to this repository's `main` branch.
-`netlify.toml` builds `dist` on Node 22 and sends root requests to Matter Lab.
+`netlify.toml` builds `dist` on Node 22 and sends root requests to V2 Playground.
+Both V2 and Matter Lab have a visible mode switch; Matter Lab is the experimental
+gravity-and-blueprint workshop, while V2 preserves the original playground experience.
 The root HTML also redirects relatively so GitHub Pages' `/falling-sand/`
 base works. The original root app is built as `/classic.html`; V2, Waterworks
 and Turning Valley retain their routes. Both CI and Pages check the V3 suite.
