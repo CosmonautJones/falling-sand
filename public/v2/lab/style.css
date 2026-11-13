@@ -23,3 +23,4 @@ body{min-height:100vh;background:radial-gradient(70% 45% at 50% -8%,#b0894829,tr
 .codex-toast{bottom:76px;visibility:hidden}
 .codex-toast.visible{visibility:visible}
 @media(max-width:760px){.codex-toast{bottom:64px}}
+.build-label{letter-spacing:.06em;text-transform:none;font-variant-numeric:tabular-nums;opacity:.8}.build-label:not(:empty)::before{content:"· "}

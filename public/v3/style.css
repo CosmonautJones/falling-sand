@@ -891,3 +891,11 @@ body[data-season='recovery'] #season-progress {
     grid-row: 1;
   }
 }
+.menu .build-label {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  opacity: 0.8;
+}
+.build-label:empty {
+  display: none;
+}

@@ -9,6 +9,7 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" href="../icon-192.png">
 <script src="./support.js"></script>
+<script src="../build-info.js"></script>
 </head>
 <body>
 <x-dc>
@@ -58,6 +59,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
 .sheet{left:auto;top:0;width:min(380px,58vw);max-height:none;border-radius:18px 0 0 18px;border-top:none;border-left:1px solid rgba(196,154,74,.55);padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) 0}}
 .pb-txt{flex:1;overflow:hidden}.pb-el .sw{flex-shrink:0}.pb-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pb-brush{flex-direction:column;gap:3px}.pb-brush .dot{max-width:12px;max-height:12px}.pb-size{font-size:12px;line-height:1;font-variant-numeric:tabular-nums}
 @media(max-width:380px) and (orientation:portrait){.phone-row{gap:5px}.pb{min-width:44px;padding:0 8px}.pb-el{padding:0 7px;gap:6px}.pb-el .caret{display:none}.pb-el .sw{width:20px;height:20px}.pb-sub{letter-spacing:0}}
+.build-label{font-size:12px;letter-spacing:.04em;color:#8f7d62;font-variant-numeric:tabular-nums;text-transform:none;white-space:nowrap}.more-panel .build-label{align-self:center;padding:6px 4px}
 .mode-switch{display:flex;flex:0 0 auto;gap:3px;padding:3px;border:1px solid #5a4630;border-radius:5px;background:#1c1612}.mode-switch a{display:flex;align-items:center;justify-content:center;min-height:44px;padding:6px 18px;border-radius:2px;color:#cbb89a;font-size:14px;letter-spacing:.02em;text-decoration:none;white-space:nowrap;touch-action:manipulation}.mode-switch a:hover{color:#f0e2c4;background:#2a2119}.mode-switch a[aria-current=page]{color:#f0e2c4;background:#43321e;box-shadow:inset 0 0 0 1px #c49a4a}.mode-switch a:focus-visible{outline:2px solid #e8c97a;outline-offset:2px}
 @media(orientation:landscape) and (max-height:520px){.root{padding-top:calc(58px + env(safe-area-inset-top))!important}.mode-switch{position:absolute;top:max(4px,env(safe-area-inset-top));left:50%;transform:translateX(-50%)}.phone-row{gap:5px}.phone-row .pb{height:44px;min-height:44px}.phone-row .pb-el{height:60px}}
 </style>
@@ -241,6 +243,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
         </sc-for>
       </div>
       <a href="https://github.com/CosmonautJones/falling-sand/releases" target="_blank" rel="noopener noreferrer" style="font-size:13px; padding:6px 10px;">what's new</a>
+      <span class="build-label" data-build="more">{{ buildLabel }}</span>
         </div>
       </details>
     </div>
@@ -331,7 +334,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #e8
           <button onClick="{{ openAmbitions }}">ambitions</button>
           <button onClick="{{ openFlasks }}">flasks</button>
         </div>
-        <div class="sheet-label">Version</div>
+        <div class="sheet-label">Version <span class="build-label" data-build="options">{{ buildLabel }}</span></div>
         <div class="seg">
           <a href="../classic.html">v1</a>
           <span aria-current="page">v2</span>
@@ -508,6 +511,8 @@ function almanacDial(a) {
 const TAP_ZOOM = 3, SNAP_ZOOM = 0.12, ZOOM_STEPS = [2, 4];
 const CLOCKS = [0.25, 0.5, 1, 2], CLOCK_LABEL = { 0.25: '¼×', 0.5: '½×', 1: '1×', 2: '2×' };
 const SAVE_KEYS = [DKEY, RKEY, FKEY, SKEY, TKEY, PKEY, AKEY, GKEY];
+// The build stamp from ../build-info.js (generated at build time); empty when the page runs without it.
+const BUILD_LABEL = (globalThis.ALCUBEMY_BUILD && globalThis.ALCUBEMY_BUILD.label) || '';
 const today = () => { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
 const safeThumb = t => typeof t === 'string' && t.startsWith('data:image/png;base64,') ? `url(${t})` : 'none';
 const VERT = `#version 300 es
@@ -1885,6 +1890,7 @@ class Component extends DCLogic {
       openCodex: () => this.setState({ folio: true, tab: 'codex', sheet: '' }), openRites: () => this.setState({ folio: true, tab: 'rites', sheet: '' }), openFlasks: () => this.setState({ folio: true, tab: 'flasks', sheet: '' }),
       closeFolio: () => this.setState({ folio: false }),
       openAmbitions: () => this.setState({ folio: true, tab: 'ambitions', sheet: '' }), onDaily: () => this.dailyVessel(),
+      buildLabel: BUILD_LABEL,
       onStartOver: () => this.startOver(), startOverLabel: s.wipeArmed ? 'tap again to erase everything' : 'start over',
       tabAmbitions: s.tab === 'ambitions',
       ambitionsList: (this.goals ? this.goals.AMBITIONS : []).map(a => { const on = this.ambDone.has(a.key); return { name: a.name, desc: a.desc, color: on ? '#f0e2c4' : '#6f6150', mark: on ? '#9fd0ff' : '#4a3e30', fill: on ? '#5f8fbf' : 'transparent', glow: on ? '0 0 10px rgba(159,208,255,.5)' : 'none' }; }),
