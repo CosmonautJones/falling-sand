@@ -7,6 +7,7 @@ import { BRUSH_SIZES, HEIGHT, WIDTH, seedVessel } from './world';
 import { createRite, rainFromCeiling, type RiteName } from './secrets';
 import { blanks, stained, whisper } from './codex';
 import { createView, panBy, screenToCell, zoomAt } from './view';
+import { APP_VERSION, APP_COMMIT, versionLabel } from './build-info';
 
 function requireEl<T extends Element>(selector: string): T {
   const node = document.querySelector<T>(selector);
@@ -30,6 +31,11 @@ const folio = requireEl<HTMLElement>('#folio');
 const folioCount = requireEl<HTMLSpanElement>('#folio-count');
 const folioLeaves = requireEl<HTMLOListElement>('#folio-leaves');
 const folioShut = requireEl<HTMLButtonElement>('#folio-shut');
+const buildStamp = requireEl<HTMLSpanElement>('#build');
+
+buildStamp.textContent = versionLabel();
+buildStamp.title = `Build ${APP_VERSION}${APP_COMMIT ? ` (commit ${APP_COMMIT})` : ''}`;
+console.info(`Alcubemy ${versionLabel()}`);
 
 const grid = new Grid(WIDTH, HEIGHT);
 seedVessel(grid);

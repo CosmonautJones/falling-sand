@@ -2,6 +2,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
+import { buildInfoScript } from './build-info.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const output = path.resolve(process.argv[2] || path.join(root, 'dist', 'offline'));
@@ -20,6 +21,7 @@ async function page(folder, name, transform = value => value) {
   const source = path.join(root, 'public', folder);
   const script = await transform(await read(path.join(source, 'app.js')), source);
   let html = await read(path.join(source, 'index.html'));
+  html = html.replace(/<script src="(?:\.\.\/)+build-info\.js"><\/script>/, () => `<script>${buildInfoScript()}</script>`);
   html = html.replace(/<link rel="stylesheet" href="\.\/style\.css"\s*\/?>/, () => `<style>${styles.get(folder)}</style>`);
   html = replaceOnce(html, '<script type="module" src="./app.js"></script>', `<script>${(await bundle(source, script)).replace(/<\/script/gi, '<\\/script')}</script>`);
   if (folder === 'v2/lab') html = html.replaceAll('href="../index.html"', 'href="https://cosmonautjones.github.io/falling-sand/v2/" target="_blank" rel="noopener"')

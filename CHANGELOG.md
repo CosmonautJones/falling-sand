@@ -8,8 +8,16 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and t
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-12
+
+Everything merged to `main` since 0.2.0.
+
 ### Added
 
+- Every page now shows which build it is: a small `v0.2.1 · <commit>` label in V2's
+  **More** panel and phone **Options** sheet, beside the Matter Lab and classic titles,
+  at the foot of Waterworks and in the Turning Valley menu. The browser console logs it on start.
+  The version comes from `package.json` and the commit from the Netlify or GitHub Pages build.
 - Matter Lab at `/v2/lab/index.html`: adjustable 0–4g gravity in any direction,
   weightless momentum, detached solid assemblies, magnetic ferrofluid and nine
   new materials. Paint, blast, heat and cool the world; inspect heat or velocity.
@@ -194,5 +202,6 @@ Shipped in [#27](https://github.com/CosmonautJones/falling-sand/pull/27).
 - Added deterministic single-step while paused: **.** for one tick, **Shift+.** for ten, plus desktop/phone step buttons.
 - Added a phone zoom button, two-finger tap zoom toggle and pinch snapping near whole zoom levels for crisper grains.
 
-[Unreleased]: https://github.com/CosmonautJones/falling-sand/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/CosmonautJones/falling-sand/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/CosmonautJones/falling-sand/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/CosmonautJones/falling-sand/compare/v2-2026-10-16...v0.2.0

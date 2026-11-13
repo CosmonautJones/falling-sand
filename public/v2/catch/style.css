@@ -328,3 +328,5 @@ body[data-phase=lost] #phase { color: #ffc2ad; }
   .chapter { padding-left: 17px; }
   .chapter::before { left: 5px; }
 }
+.build-label { margin: 14px 0 0; font-size: 11px; letter-spacing: .04em; color: var(--muted); opacity: .75; font-variant-numeric: tabular-nums; }
+.build-label:empty { display: none; }
